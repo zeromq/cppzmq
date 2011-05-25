@@ -270,20 +270,20 @@ namespace zmq
 
         inline bool send (message_t &msg_, int flags_ = 0)
         {
-            int rc = zmq_send (ptr, &msg_, flags_);
-            if (rc == 0)
+            int nbytes = zmq_sendmsg (ptr, &msg_, flags_);
+            if (nbytes >= 0)
                 return true;
-            if (rc == -1 && zmq_errno () == EAGAIN)
+            if (zmq_errno () == EAGAIN)
                 return false;
             throw error_t ();
         }
 
         inline bool recv (message_t *msg_, int flags_ = 0)
         {
-            int rc = zmq_recv (ptr, msg_, flags_);
-            if (rc == 0)
+            int nbytes = zmq_recvmsg (ptr, msg_, flags_);
+            if (nbytes >= 0)
                 return true;
-            if (rc == -1 && zmq_errno () == EAGAIN)
+            if (zmq_errno () == EAGAIN)
                 return false;
             throw error_t ();
         }
