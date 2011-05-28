@@ -21,7 +21,7 @@
 #ifndef __ZMQ_HPP_INCLUDED__
 #define __ZMQ_HPP_INCLUDED__
 
-#include "zmq.h"
+#include <zmq.h>
 
 #include <cassert>
 #include <cstring>
@@ -62,19 +62,12 @@ namespace zmq
         return rc;
     }
 
-    inline void device (int device_, void * insocket_, void* outsocket_)
-    {
-        int rc = zmq_device (device_, insocket_, outsocket_);
-        if (rc != 0)
-            throw error_t ();
-    }
-
     inline void version (int *major_, int *minor_, int *patch_)
     {
         zmq_version (major_, minor_, patch_);
     }
 
-    class message_t : private zmq_msg_t
+    class message_t
     {
         friend class socket_t;
 
@@ -82,14 +75,14 @@ namespace zmq
 
         inline message_t ()
         {
-            int rc = zmq_msg_init (this);
+            int rc = zmq_msg_init (&msg);
             if (rc != 0)
                 throw error_t ();
         }
 
         inline message_t (size_t size_)
         {
-            int rc = zmq_msg_init_size (this, size_);
+            int rc = zmq_msg_init_size (&msg, size_);
             if (rc != 0)
                 throw error_t ();
         }
@@ -97,33 +90,33 @@ namespace zmq
         inline message_t (void *data_, size_t size_, free_fn *ffn_,
             void *hint_ = NULL)
         {
-            int rc = zmq_msg_init_data (this, data_, size_, ffn_, hint_);
+            int rc = zmq_msg_init_data (&msg, data_, size_, ffn_, hint_);
             if (rc != 0)
                 throw error_t ();
         }
 
         inline ~message_t ()
         {
-            int rc = zmq_msg_close (this);
+            int rc = zmq_msg_close (&msg);
             assert (rc == 0);
         }
 
         inline void rebuild ()
         {
-            int rc = zmq_msg_close (this);
+            int rc = zmq_msg_close (&msg);
             if (rc != 0)
                 throw error_t ();
-            rc = zmq_msg_init (this);
+            rc = zmq_msg_init (&msg);
             if (rc != 0)
                 throw error_t ();
         }
 
         inline void rebuild (size_t size_)
         {
-            int rc = zmq_msg_close (this);
+            int rc = zmq_msg_close (&msg);
             if (rc != 0)
                 throw error_t ();
-            rc = zmq_msg_init_size (this, size_);
+            rc = zmq_msg_init_size (&msg, size_);
             if (rc != 0)
                 throw error_t ();
         }
@@ -131,39 +124,42 @@ namespace zmq
         inline void rebuild (void *data_, size_t size_, free_fn *ffn_,
             void *hint_ = NULL)
         {
-            int rc = zmq_msg_close (this);
+            int rc = zmq_msg_close (&msg);
             if (rc != 0)
                 throw error_t ();
-            rc = zmq_msg_init_data (this, data_, size_, ffn_, hint_);
+            rc = zmq_msg_init_data (&msg, data_, size_, ffn_, hint_);
             if (rc != 0)
                 throw error_t ();
         }
 
         inline void move (message_t *msg_)
         {
-            int rc = zmq_msg_move (this, (zmq_msg_t*) msg_);
+            int rc = zmq_msg_move (&msg, &(msg_->msg));
             if (rc != 0)
                 throw error_t ();
         }
 
         inline void copy (message_t *msg_)
         {
-            int rc = zmq_msg_copy (this, (zmq_msg_t*) msg_);
+            int rc = zmq_msg_copy (&msg, &(msg_->msg));
             if (rc != 0)
                 throw error_t ();
         }
 
         inline void *data ()
         {
-            return zmq_msg_data (this);
+            return zmq_msg_data (&msg);
         }
 
         inline size_t size ()
         {
-            return zmq_msg_size (this);
+            return zmq_msg_size (&msg);
         }
 
     private:
+
+        //  The underlying message
+        zmq_msg_t msg;
 
         //  Disable implicit message copying, so that users won't use shared
         //  messages (less efficient) without being aware of the fact.
@@ -270,7 +266,7 @@ namespace zmq
 
         inline bool send (message_t &msg_, int flags_ = 0)
         {
-            int nbytes = zmq_sendmsg (ptr, &msg_, flags_);
+            int nbytes = zmq_sendmsg (ptr, &(msg_.msg), flags_);
             if (nbytes >= 0)
                 return true;
             if (zmq_errno () == EAGAIN)
@@ -280,7 +276,7 @@ namespace zmq
 
         inline bool recv (message_t *msg_, int flags_ = 0)
         {
-            int nbytes = zmq_recvmsg (ptr, msg_, flags_);
+            int nbytes = zmq_recvmsg (ptr, &(msg_->msg), flags_);
             if (nbytes >= 0)
                 return true;
             if (zmq_errno () == EAGAIN)
