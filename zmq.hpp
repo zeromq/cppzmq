@@ -264,6 +264,16 @@ namespace zmq
                 throw error_t ();
         }
 
+        inline size_t send (const void *buf_, size_t len_, int flags_ = 0)
+        {
+            int nbytes = zmq_send (ptr, buf_, len_, flags_);
+            if (nbytes >= 0)
+                return (size_t) nbytes;
+            if (zmq_errno () == EAGAIN)
+                return 0;
+            throw error_t ();
+        }
+
         inline bool send (message_t &msg_, int flags_ = 0)
         {
             int nbytes = zmq_sendmsg (ptr, &(msg_.msg), flags_);
@@ -271,6 +281,16 @@ namespace zmq
                 return true;
             if (zmq_errno () == EAGAIN)
                 return false;
+            throw error_t ();
+        }
+
+        inline size_t recv (void *buf_, size_t len_, int flags_ = 0)
+        {
+            int nbytes = zmq_recv (ptr, buf_, len_, flags_);
+            if (nbytes >= 0)
+                return (size_t) nbytes;
+            if (zmq_errno () == EAGAIN)
+                return 0;
             throw error_t ();
         }
 
