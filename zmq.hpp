@@ -1,15 +1,16 @@
 /*
-    Copyright (c) 2007-2011 iMatix Corporation
-    Copyright (c) 2007-2011 Other contributors as noted in the AUTHORS file
+    Copyright (c) 2009-2011 250bpm s.r.o.
+    Copyright (c) 2011 Botond Ballo
+    Copyright (c) 2007-2009 iMatix Corporation
 
-    This file is part of 0MQ.
+    This file is part of cppzmq.
 
-    0MQ is free software; you can redistribute it and/or modify it under
+    cppzmq is free software; you can redistribute it and/or modify it under
     the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
-    0MQ is distributed in the hope that it will be useful,
+    cppzmq is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
@@ -25,7 +26,23 @@
 
 #include <cassert>
 #include <cstring>
+#include <algorithm>
 #include <exception>
+
+//  Detect whether the compiler supports C++11 rvalue references.
+#if (defined(__GNUC__) && (__GNUC__ > 4 || \
+      (__GNUC__ == 4 && __GNUC_MINOR__ > 2)) && \
+      defined(__GXX_EXPERIMENTAL_CXX0X__))
+    #define ZMQ_HAS_RVALUE_REFS
+#endif
+#if (defined(__clang__))
+    #if __has_feature(cxx_rvalue_references)
+        #define ZMQ_HAS_RVALUE_REFS
+    #endif
+#endif
+#if (defined(_MSC_VER) && (_MSC_VER >= 1600))
+    #define ZMQ_HAS_RVALUE_REFS
+#endif
 
 namespace zmq
 {
@@ -180,8 +197,22 @@ namespace zmq
                 throw error_t ();
         }
 
+#ifdef ZMQ_HAS_RVALUE_REFS
+        inline context_t (context_t &&rhs) : ptr (rhs.ptr)
+        {
+            rhs.ptr = NULL;
+        }
+        inline context_t &operator = (context_t &&rhs)
+        {
+            std::swap (ptr, rhs.ptr);
+            return *this;
+        }
+#endif
+
         inline ~context_t ()
         {
+            if (ptr == NULL)
+                return;
             int rc = zmq_term (ptr);
             assert (rc == 0);
         }
@@ -212,6 +243,18 @@ namespace zmq
             if (ptr == NULL)
                 throw error_t ();
         }
+
+#ifdef ZMQ_HAS_RVALUE_REFS
+        inline socket_t(socket_t&& rhs) : ptr(rhs.ptr)
+        {
+            rhs.ptr = NULL;
+        }
+        inline socket_t& operator=(socket_t&& rhs)
+        {
+            std::swap(ptr, rhs.ptr);
+            return *this;
+        }
+#endif
 
         inline ~socket_t ()
         {
