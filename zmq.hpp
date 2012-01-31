@@ -275,8 +275,7 @@ namespace zmq
                 // already closed
                 return ;
             int rc = zmq_close (ptr);
-            if (rc != 0)
-                throw error_t ();
+            assert (rc == 0);
             ptr = 0 ;
         }
 
