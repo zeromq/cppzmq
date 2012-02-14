@@ -47,6 +47,14 @@
     #define ZMQ_HAS_RVALUE_REFS
 #endif
 
+// In order to prevent unused variable warnings when building in non-debug
+// mode use this macro to make assertions.
+#ifndef NDEBUG
+#   define ZMQ_ASSERT(expression) assert(expression)
+#else
+#   define ZMQ_ASSERT(expression) (expression)
+#endif
+
 namespace zmq
 {
 
@@ -118,7 +126,7 @@ namespace zmq
         inline ~message_t ()
         {
             int rc = zmq_msg_close (&msg);
-            assert (rc == 0);
+            ZMQ_ASSERT (rc == 0);
         }
 
         inline void rebuild ()
@@ -217,7 +225,7 @@ namespace zmq
             if (ptr == NULL)
                 return;
             int rc = zmq_term (ptr);
-            assert (rc == 0);
+            ZMQ_ASSERT (rc == 0);
         }
 
         //  Be careful with this, it's probably only useful for
@@ -275,7 +283,7 @@ namespace zmq
                 // already closed
                 return ;
             int rc = zmq_close (ptr);
-            assert (rc == 0);
+            ZMQ_ASSERT (rc == 0);
             ptr = 0 ;
         }
 
