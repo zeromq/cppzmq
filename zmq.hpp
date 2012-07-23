@@ -123,6 +123,21 @@ namespace zmq
                 throw error_t ();
         }
 
+#ifdef ZMQ_HAS_RVALUE_REFS
+        inline message_t (message_t &&rhs) : msg (rhs.msg)
+        {
+            int rc = zmq_msg_init (&rhs.msg);
+            if (rc != 0)
+                throw error_t ();
+        }
+
+        inline message_t &operator = (message_t &&rhs)
+        {
+            std::swap (msg, rhs.msg);
+            return *this;
+        }
+#endif
+
         inline ~message_t ()
         {
             int rc = zmq_msg_close (&msg);
@@ -179,9 +194,14 @@ namespace zmq
             return zmq_msg_data (&msg);
         }
 
-        inline size_t size ()
+		inline const void* data () const
         {
-            return zmq_msg_size (&msg);
+            return zmq_msg_data (const_cast<zmq_msg_t*>(&msg));
+        }
+
+        inline size_t size () const
+        {
+            return zmq_msg_size (const_cast<zmq_msg_t*>(&msg));
         }
 
     private:
