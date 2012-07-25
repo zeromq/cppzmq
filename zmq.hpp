@@ -179,9 +179,14 @@ namespace zmq
             return zmq_msg_data (&msg);
         }
 
-        inline size_t size ()
+        inline const void* data () const
         {
-            return zmq_msg_size (&msg);
+            return zmq_msg_data (const_cast<zmq_msg_t*>(&msg));
+        }
+
+        inline size_t size () const
+        {
+            return zmq_msg_size (const_cast<zmq_msg_t*>(&msg));
         }
 
     private:
