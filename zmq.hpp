@@ -123,6 +123,21 @@ namespace zmq
                 throw error_t ();
         }
 
+#ifdef ZMQ_HAS_RVALUE_REFS
+        inline message_t (message_t &&rhs) : msg (rhs.msg)
+        {
+            int rc = zmq_msg_init (&rhs.msg);
+            if (rc != 0)
+                throw error_t ();
+        }
+
+        inline message_t &operator = (message_t &&rhs)
+        {
+            std::swap (msg, rhs.msg);
+            return *this;
+        }
+#endif
+
         inline ~message_t ()
         {
             int rc = zmq_msg_close (&msg);
