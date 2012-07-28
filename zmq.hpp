@@ -317,6 +317,11 @@ namespace zmq
                 throw error_t ();
         }
 
+        inline bool connected()
+        {
+            return(ptr != NULL);
+        }
+
         inline size_t send (const void *buf_, size_t len_, int flags_ = 0)
         {
             int nbytes = zmq_send (ptr, buf_, len_, flags_);
