@@ -237,10 +237,16 @@ namespace zmq
 
         inline ~context_t ()
         {
+            close();
+        }
+
+        inline void close()
+        {
             if (ptr == NULL)
                 return;
             int rc = zmq_term (ptr);
             ZMQ_ASSERT (rc == 0);
+            ptr = NULL;
         }
 
         //  Be careful with this, it's probably only useful for
