@@ -27,9 +27,9 @@
 
 #include <zmq.h>
 
+#include <algorithm>
 #include <cassert>
 #include <cstring>
-#include <algorithm>
 #include <exception>
 
 //  Detect whether the compiler supports C++11 rvalue references.
@@ -360,7 +360,7 @@ namespace zmq
 
         inline bool send (message_t &msg_, int flags_ = 0)
         {
-            int nbytes = zmq_sendmsg (ptr, &(msg_.msg), flags_);
+            int nbytes = zmq_msg_send (&(msg_.msg), ptr, flags_);
             if (nbytes >= 0)
                 return true;
             if (zmq_errno () == EAGAIN)
@@ -380,7 +380,7 @@ namespace zmq
 
         inline bool recv (message_t *msg_, int flags_ = 0)
         {
-            int nbytes = zmq_recvmsg (ptr, &(msg_->msg), flags_);
+            int nbytes = zmq_msg_recv (&(msg_->msg), ptr, flags_);
             if (nbytes >= 0)
                 return true;
             if (zmq_errno () == EAGAIN)
