@@ -37,14 +37,20 @@
       (__GNUC__ == 4 && __GNUC_MINOR__ > 2)) && \
       defined(__GXX_EXPERIMENTAL_CXX0X__))
     #define ZMQ_HAS_RVALUE_REFS
-#endif
-#if (defined(__clang__))
+    #define ZMQ_DELETED_FUNCTION = delete
+#elif defined(__clang__)
     #if __has_feature(cxx_rvalue_references)
         #define ZMQ_HAS_RVALUE_REFS
     #endif
-#endif
-#if (defined(_MSC_VER) && (_MSC_VER >= 1600))
+
+    #if __has_feature(cxx_deleted_functions)
+        #define ZMQ_DELETED_FUNCTION = delete
+    #endif
+#elif defined(_MSC_VER) && (_MSC_VER >= 1600)
     #define ZMQ_HAS_RVALUE_REFS
+    #define ZMQ_DELETED_FUNCTION
+#else
+    #define ZMQ_DELETED_FUNCTION
 #endif
 
 // In order to prevent unused variable warnings when building in non-debug
@@ -392,11 +398,10 @@ namespace zmq
 
         void *ptr;
 
-        socket_t (const socket_t&);
-        void operator = (const socket_t&);
+        socket_t (const socket_t&) ZMQ_DELETED_FUNCTION;
+        void operator = (const socket_t&) ZMQ_DELETED_FUNCTION;
     };
 
 }
 
 #endif
-
