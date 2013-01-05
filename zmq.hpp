@@ -114,7 +114,7 @@ namespace zmq
                 throw error_t ();
         }
 
-        inline message_t (size_t size_)
+        inline explicit message_t (size_t size_)
         {
             int rc = zmq_msg_init_size (&msg, size_);
             if (rc != 0)
@@ -227,7 +227,7 @@ namespace zmq
 
     public:
 
-        inline context_t (int io_threads_)
+        inline explicit context_t (int io_threads_)
         {
             ptr = zmq_init (io_threads_);
             if (ptr == NULL)
