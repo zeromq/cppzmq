@@ -27,9 +27,9 @@
 
 #include <zmq.h>
 
+#include <algorithm>
 #include <cassert>
 #include <cstring>
-#include <algorithm>
 #include <exception>
 
 //  Detect whether the compiler supports C++11 rvalue references.
@@ -37,14 +37,20 @@
       (__GNUC__ == 4 && __GNUC_MINOR__ > 2)) && \
       defined(__GXX_EXPERIMENTAL_CXX0X__))
     #define ZMQ_HAS_RVALUE_REFS
-#endif
-#if (defined(__clang__))
+    #define ZMQ_DELETED_FUNCTION = delete
+#elif defined(__clang__)
     #if __has_feature(cxx_rvalue_references)
         #define ZMQ_HAS_RVALUE_REFS
     #endif
-#endif
-#if (defined(_MSC_VER) && (_MSC_VER >= 1600))
+
+    #if __has_feature(cxx_deleted_functions)
+        #define ZMQ_DELETED_FUNCTION = delete
+    #endif
+#elif defined(_MSC_VER) && (_MSC_VER >= 1600)
     #define ZMQ_HAS_RVALUE_REFS
+    #define ZMQ_DELETED_FUNCTION
+#else
+    #define ZMQ_DELETED_FUNCTION
 #endif
 
 // In order to prevent unused variable warnings when building in non-debug
@@ -360,7 +366,7 @@ namespace zmq
 
         inline bool send (message_t &msg_, int flags_ = 0)
         {
-            int nbytes = zmq_sendmsg (ptr, &(msg_.msg), flags_);
+            int nbytes = zmq_msg_send (&(msg_.msg), ptr, flags_);
             if (nbytes >= 0)
                 return true;
             if (zmq_errno () == EAGAIN)
@@ -380,7 +386,7 @@ namespace zmq
 
         inline bool recv (message_t *msg_, int flags_ = 0)
         {
-            int nbytes = zmq_recvmsg (ptr, &(msg_->msg), flags_);
+            int nbytes = zmq_msg_recv (&(msg_->msg), ptr, flags_);
             if (nbytes >= 0)
                 return true;
             if (zmq_errno () == EAGAIN)
@@ -392,11 +398,10 @@ namespace zmq
 
         void *ptr;
 
-        socket_t (const socket_t&);
-        void operator = (const socket_t&);
+        socket_t (const socket_t&) ZMQ_DELETED_FUNCTION;
+        void operator = (const socket_t&) ZMQ_DELETED_FUNCTION;
     };
 
 }
 
 #endif
-
