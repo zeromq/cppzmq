@@ -277,7 +277,7 @@ namespace zmq
     };
 
     class monitor_t
-	{
+    {
 	public:
 		virtual void on_event_connected() = 0;
     	virtual void on_event_connect_delayed() = 0;
@@ -289,8 +289,8 @@ namespace zmq
 		virtual void on_event_closed() = 0;
 		virtual void on_event_close_failed() = 0;
 		virtual void on_event_disconnected() = 0;
-		virtual void on_event_unknown(event.event) = 0;
-	};
+		virtual void on_event_unknown(int event) = 0;
+    };
 
     class socket_t
     {
