@@ -296,7 +296,7 @@ namespace zmq
     {
     public:
 
-        inline socket_t (context_t &context_, int type_)
+        inline socket_t (context_t &context_, int type_) : is_monitored(false)
         {
             ptr = zmq_socket (context_.ptr, type_);
             if (ptr == NULL)
@@ -304,7 +304,7 @@ namespace zmq
         }
 
 #ifdef ZMQ_HAS_RVALUE_REFS
-        inline socket_t(socket_t&& rhs) : ptr(rhs.ptr)
+        inline socket_t(socket_t&& rhs) : ptr(rhs.ptr), is_monitored(false)
         {
             rhs.ptr = NULL;
         }
@@ -350,17 +350,25 @@ namespace zmq
             if (rc != 0)
                 throw error_t ();
         }
+        
+        inlinde void init_monitor(const char *addr_)
+        {
+            std::string myaddr = std::string(addr_);
+            std::string monaddr = "inproc://monitor/" + myaddr;
+			rc = zmq_socket_monitor (ptr, monaddr.c_str(), ZMQ_EVENT_ALL);
+            if (rc != 0)
+                throw error_t ();
+        }
 
         inline void bind (const char *addr_)
         {
             int rc = zmq_bind (ptr, addr_);
             if (rc != 0)
                 throw error_t ();
-			myaddr = std::string(addr_);
-			monaddr = "inproc://monitor/" + myaddr;
-			rc = zmq_socket_monitor (ptr, monaddr.c_str(), ZMQ_EVENT_ALL);
-            if (rc != 0)
-                throw error_t ();
+            if (is_monitored)
+            {
+                init_monitor()
+            }
         }
 
         inline void connect (const char *addr_)
@@ -368,11 +376,10 @@ namespace zmq
             int rc = zmq_connect (ptr, addr_);
             if (rc != 0)
                 throw error_t ();
-			myaddr = std::string(addr_);
-			monaddr = "inproc://monitor/" + myaddr;
-			rc = zmq_socket_monitor (ptr, monaddr.c_str(), ZMQ_EVENT_ALL);
-            if (rc != 0)
-                throw error_t ();
+            if (is_monitored)
+            {
+                init_monitor()
+            }
         }
 
         inline bool connected()
@@ -404,7 +411,7 @@ namespace zmq
 
 				switch (event.event) {
 				case ZMQ_EVENT_CONNECTED:
-					mon->on_event_connected();
+					mon->on_event_connected(event.connected.addr);
 					break;
 				case ZMQ_EVENT_CONNECT_DELAYED:
 					mon->on_event_connect_delayed();
@@ -483,9 +490,14 @@ namespace zmq
                 return false;
             throw error_t ();
         }
+        
+        inline void enable_monitoring()
+        {
+            is_monitored = true;
+        }
 
     private:
-
+        bool is_monitored;
         void *ptr;
 		monitor_t *mon;
 		std::string monaddr;
