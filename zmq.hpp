@@ -45,6 +45,8 @@
 
     #if __has_feature(cxx_deleted_functions)
         #define ZMQ_DELETED_FUNCTION = delete
+    #else
+        #define ZMQ_DELETED_FUNCTION
     #endif
 #elif defined(_MSC_VER) && (_MSC_VER >= 1600)
     #define ZMQ_HAS_RVALUE_REFS
