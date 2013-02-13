@@ -96,6 +96,13 @@ namespace zmq
         return rc;
     }
 
+    inline void proxy (void *frontend, void *backend, void *capture)
+    {
+        int rc = zmq_proxy (frontend, backend, capture);
+        if (rc != 0)
+            throw error_t ();
+    }
+
     inline void version (int *major_, int *minor_, int *patch_)
     {
         zmq_version (major_, minor_, patch_);
