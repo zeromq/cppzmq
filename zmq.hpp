@@ -365,6 +365,13 @@ namespace zmq
                 throw error_t ();
         }
 
+        inline void disconnect (const char *addr_)
+        {
+            int rc = zmq_disconnect (ptr, addr_);
+            if (rc != 0)
+                throw error_t ();
+        }
+
         inline bool connected()
         {
             return(ptr != NULL);
