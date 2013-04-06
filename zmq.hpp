@@ -60,7 +60,7 @@
 #ifndef NDEBUG
 #   define ZMQ_ASSERT(expression) assert(expression)
 #else
-#   define ZMQ_ASSERT(expression) (expression)
+#   define ZMQ_ASSERT(expression) (void)(expression)
 #endif
 
 namespace zmq
