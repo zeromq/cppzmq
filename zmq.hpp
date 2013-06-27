@@ -285,12 +285,29 @@ namespace zmq
         void operator = (const context_t&);
     };
 
+    class monitor_t
+    {
+        public:
+        virtual void on_event_connected(const char *addr_) = 0;
+        virtual void on_event_connect_delayed(const char *addr_) = 0;
+        virtual void on_event_connect_retried(const char *addr_) = 0;
+        virtual void on_event_listening(const char *addr_) = 0;
+        virtual void on_event_bind_failed(const char *addr_) = 0;
+        virtual void on_event_accepted(const char *addr_) = 0;
+        virtual void on_event_accept_failed(const char *addr_) = 0;
+        virtual void on_event_closed(const char *addr_) = 0;
+        virtual void on_event_close_failed(const char *addr_) = 0;
+        virtual void on_event_disconnected(const char *addr_) = 0;
+        virtual void on_event_unknown(int event) = 0;
+    };
+
     class socket_t
     {
     public:
 
         inline socket_t (context_t &context_, int type_)
         {
+            ctxptr = context_.ptr;
             ptr = zmq_socket (context_.ptr, type_);
             if (ptr == NULL)
                 throw error_t ();
@@ -343,6 +360,14 @@ namespace zmq
             if (rc != 0)
                 throw error_t ();
         }
+        
+        inline void init_monitor(const char *addr_, int events)
+        {
+            int rc = zmq_socket_monitor(ptr, addr_, events);
+            if (rc != 0)
+                throw error_t ();
+            monaddr = std::string(addr_);
+        }
 
         inline void bind (const char *addr_)
         {
@@ -368,6 +393,66 @@ namespace zmq
         inline bool connected()
         {
             return(ptr != NULL);
+        }
+		
+        inline void monitor (monitor_t* mon)
+        {
+            zmq_event_t event;
+            int rc;
+
+            assert(mon);
+
+            void *s = zmq_socket (ctxptr, ZMQ_PAIR);
+            assert (s);
+
+            rc = zmq_connect (s, monaddr.c_str());
+            assert (rc == 0);
+            while (true) {
+                    zmq_msg_t msg;
+                    zmq_msg_init (&msg);
+                    rc = zmq_recvmsg (s, &msg, 0);
+                    if (rc == -1 && zmq_errno() == ETERM) break;
+                    assert (rc != -1);
+                    memcpy (&event, zmq_msg_data (&msg), sizeof (event));
+
+                    switch (event.event) {
+                    case ZMQ_EVENT_CONNECTED:
+                            mon->on_event_connected(event.data.connected.addr);
+                            break;
+                    case ZMQ_EVENT_CONNECT_DELAYED:
+                            mon->on_event_connect_delayed(event.data.connect_delayed.addr);
+                            break;
+                    case ZMQ_EVENT_CONNECT_RETRIED:
+                            mon->on_event_connect_retried(event.data.connect_retried.addr);
+                            break;
+                    case ZMQ_EVENT_LISTENING:
+                            mon->on_event_listening(event.data.listening.addr);
+                            break;
+                    case ZMQ_EVENT_BIND_FAILED:
+                            mon->on_event_bind_failed(event.data.bind_failed.addr);
+                            break;
+                    case ZMQ_EVENT_ACCEPTED:
+                            mon->on_event_accepted(event.data.accepted.addr);
+                            break;
+                    case ZMQ_EVENT_ACCEPT_FAILED:
+                            mon->on_event_accept_failed(event.data.accept_failed.addr);
+                            break;
+                    case ZMQ_EVENT_CLOSED:
+                        mon->on_event_closed(event.data.closed.addr);
+                            break;
+                    case ZMQ_EVENT_CLOSE_FAILED:
+                            mon->on_event_close_failed(event.data.close_failed.addr);
+                            break;
+                    case ZMQ_EVENT_DISCONNECTED:
+                            mon->on_event_disconnected(event.data.disconnected.addr);
+                            break;
+                    default:
+                            mon->on_event_unknown(event.event);
+                            break;
+                    }
+                    zmq_msg_close (&msg);
+            }
+            zmq_close (s);
         }
 
         inline size_t send (const void *buf_, size_t len_, int flags_ = 0)
@@ -409,10 +494,11 @@ namespace zmq
                 return false;
             throw error_t ();
         }
-
+        
     private:
-
+        std::string monaddr;
         void *ptr;
+        void *ctxptr;
 
         socket_t (const socket_t&) ZMQ_DELETED_FUNCTION;
         void operator = (const socket_t&) ZMQ_DELETED_FUNCTION;
