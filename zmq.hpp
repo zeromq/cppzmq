@@ -376,6 +376,13 @@ namespace zmq
                 throw error_t ();
         }
 
+        inline void unbind (const char *addr_)
+        {
+            int rc = zmq_unbind (ptr, addr_);
+            if (rc != 0)
+                throw error_t ();
+        }
+
         inline void connect (const char *addr_)
         {
             int rc = zmq_connect (ptr, addr_);
