@@ -432,7 +432,7 @@ namespace zmq
 	public:
 		virtual ~monitor_t() {}
 
-		void monitor(socket_t& socket, const char *addr_, int events = ZMQ_EVENT_ALL)
+		void monitor(socket_t &socket, const char *addr_, int events = ZMQ_EVENT_ALL)
 		{
 			int rc = zmq_socket_monitor(socket.ptr, addr_, events);
 			if (rc != 0)
@@ -455,37 +455,37 @@ namespace zmq
 
 				switch (event->event) {
 				case ZMQ_EVENT_CONNECTED:
-					on_event_connected(event->data.connected.addr);
+					on_event_connected(*event);
 					break;
 				case ZMQ_EVENT_CONNECT_DELAYED:
-					on_event_connect_delayed(event->data.connect_delayed.addr);
+					on_event_connect_delayed(*event);
 					break;
 				case ZMQ_EVENT_CONNECT_RETRIED:
-					on_event_connect_retried(event->data.connect_retried.addr);
+					on_event_connect_retried(*event);
 					break;
 				case ZMQ_EVENT_LISTENING:
-					on_event_listening(event->data.listening.addr);
+					on_event_listening(*event);
 					break;
 				case ZMQ_EVENT_BIND_FAILED:
-					on_event_bind_failed(event->data.bind_failed.addr);
+					on_event_bind_failed(*event);
 					break;
 				case ZMQ_EVENT_ACCEPTED:
-					on_event_accepted(event->data.accepted.addr);
+					on_event_accepted(*event);
 					break;
 				case ZMQ_EVENT_ACCEPT_FAILED:
-					on_event_accept_failed(event->data.accept_failed.addr);
+					on_event_accept_failed(*event);
 					break;
 				case ZMQ_EVENT_CLOSED:
-					on_event_closed(event->data.closed.addr);
+					on_event_closed(*event);
 					break;
 				case ZMQ_EVENT_CLOSE_FAILED:
-					on_event_close_failed(event->data.close_failed.addr);
+					on_event_close_failed(*event);
 					break;
 				case ZMQ_EVENT_DISCONNECTED:
-					on_event_disconnected(event->data.disconnected.addr);
+					on_event_disconnected(*event);
 					break;
 				default:
-					on_event_unknown(event->event);
+					on_event_unknown(*event);
 					break;
 				}
 				zmq_msg_close (&msg);
@@ -493,17 +493,17 @@ namespace zmq
 			zmq_close (s);
 		}
 
-		virtual void on_event_connected(const char *addr_) {}
-		virtual void on_event_connect_delayed(const char *addr_) {}
-		virtual void on_event_connect_retried(const char *addr_) {}
-		virtual void on_event_listening(const char *addr_) {}
-		virtual void on_event_bind_failed(const char *addr_) {}
-		virtual void on_event_accepted(const char *addr_) {}
-		virtual void on_event_accept_failed(const char *addr_) {}
-		virtual void on_event_closed(const char *addr_) {}
-		virtual void on_event_close_failed(const char *addr_) {}
-		virtual void on_event_disconnected(const char *addr_) {}
-		virtual void on_event_unknown(int event) {}
+		virtual void on_event_connected(const zmq_event_t &event_) {}
+		virtual void on_event_connect_delayed(const zmq_event_t &event_) {}
+		virtual void on_event_connect_retried(const zmq_event_t &event_) {}
+		virtual void on_event_listening(const zmq_event_t &event_) {}
+		virtual void on_event_bind_failed(const zmq_event_t &event_) {}
+		virtual void on_event_accepted(const zmq_event_t &event_) {}
+		virtual void on_event_accept_failed(const zmq_event_t &event_) {}
+		virtual void on_event_closed(const zmq_event_t &event_) {}
+		virtual void on_event_close_failed(const zmq_event_t &event_) {}
+		virtual void on_event_disconnected(const zmq_event_t &event_) {}
+		virtual void on_event_unknown(const zmq_event_t &event_) {}
 	};
 }
 
