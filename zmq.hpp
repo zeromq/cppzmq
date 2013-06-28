@@ -448,6 +448,9 @@ namespace zmq
 
 			rc = zmq_connect (s, addr_);
 			assert (rc == 0);
+			
+			on_monitor_started();
+			
 			while (true) {
 				zmq_msg_t eventMsg;
 				zmq_msg_init (&eventMsg);
@@ -511,6 +514,7 @@ namespace zmq
 			zmq_close (s);
 		}
 
+		virtual void on_monitor_started() {}
 		virtual void on_event_connected(const zmq_event_t &event_, const char* addr_) {}
 		virtual void on_event_connect_delayed(const zmq_event_t &event_, const char* addr_) {}
 		virtual void on_event_connect_retried(const zmq_event_t &event_, const char* addr_) {}
