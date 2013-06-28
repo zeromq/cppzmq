@@ -438,7 +438,6 @@ namespace zmq
 			if (rc != 0)
 				throw error_t ();
 
-			zmq_event_t event;
 			void *s = zmq_socket (socket.ctxptr, ZMQ_PAIR);
 			assert (s);
 
@@ -448,43 +447,45 @@ namespace zmq
 				zmq_msg_t msg;
 				zmq_msg_init (&msg);
 				rc = zmq_recvmsg (s, &msg, 0);
-				if (rc == -1 && zmq_errno() == ETERM) break;
+				if (rc == -1 && zmq_errno() == ETERM)
+					break;
 				assert (rc != -1);
-				memcpy (&event, zmq_msg_data (&msg), sizeof (event));
+				
+				zmq_event_t* event = static_cast<zmq_event_t*>(zmq_msg_data (&msg));
 
-				switch (event.event) {
+				switch (event->event) {
 				case ZMQ_EVENT_CONNECTED:
-					on_event_connected(event.data.connected.addr);
+					on_event_connected(event->data.connected.addr);
 					break;
 				case ZMQ_EVENT_CONNECT_DELAYED:
-					on_event_connect_delayed(event.data.connect_delayed.addr);
+					on_event_connect_delayed(event->data.connect_delayed.addr);
 					break;
 				case ZMQ_EVENT_CONNECT_RETRIED:
-					on_event_connect_retried(event.data.connect_retried.addr);
+					on_event_connect_retried(event->data.connect_retried.addr);
 					break;
 				case ZMQ_EVENT_LISTENING:
-					on_event_listening(event.data.listening.addr);
+					on_event_listening(event->data.listening.addr);
 					break;
 				case ZMQ_EVENT_BIND_FAILED:
-					on_event_bind_failed(event.data.bind_failed.addr);
+					on_event_bind_failed(event->data.bind_failed.addr);
 					break;
 				case ZMQ_EVENT_ACCEPTED:
-					on_event_accepted(event.data.accepted.addr);
+					on_event_accepted(event->data.accepted.addr);
 					break;
 				case ZMQ_EVENT_ACCEPT_FAILED:
-					on_event_accept_failed(event.data.accept_failed.addr);
+					on_event_accept_failed(event->data.accept_failed.addr);
 					break;
 				case ZMQ_EVENT_CLOSED:
-					on_event_closed(event.data.closed.addr);
+					on_event_closed(event->data.closed.addr);
 					break;
 				case ZMQ_EVENT_CLOSE_FAILED:
-					on_event_close_failed(event.data.close_failed.addr);
+					on_event_close_failed(event->data.close_failed.addr);
 					break;
 				case ZMQ_EVENT_DISCONNECTED:
-					on_event_disconnected(event.data.disconnected.addr);
+					on_event_disconnected(event->data.disconnected.addr);
 					break;
 				default:
-					on_event_unknown(event.event);
+					on_event_unknown(event->event);
 					break;
 				}
 				zmq_msg_close (&msg);
