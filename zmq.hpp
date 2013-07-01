@@ -435,6 +435,7 @@ namespace zmq
 	class monitor_t
 	{
 	public:
+		monitor_t() : socketPtr(NULL) {}
 		virtual ~monitor_t() {}
 
 		void monitor(socket_t &socket, const char *addr_, int events = ZMQ_EVENT_ALL)
@@ -443,6 +444,7 @@ namespace zmq
 			if (rc != 0)
 				throw error_t ();
 
+			socketPtr = socket.ptr;
 			void *s = zmq_socket (socket.ctxptr, ZMQ_PAIR);
 			assert (s);
 
@@ -474,6 +476,12 @@ namespace zmq
 				// Bit of a hack, but all events in the zmq_event_t union have the same layout so this will work for all event types.
 				std::string address = event->data.connected.addr;
 #endif
+
+#ifdef ZMQ_EVENT_MONITOR_STOPPED
+				if (event->event == ZMQ_EVENT_MONITOR_STOPPED)
+					break;
+#endif
+
 				switch (event->event) {
 				case ZMQ_EVENT_CONNECTED:
 					on_event_connected(*event, address.c_str());
@@ -512,8 +520,16 @@ namespace zmq
 				zmq_msg_close (&eventMsg);
 			}
 			zmq_close (s);
+			socketPtr = NULL;
 		}
 
+#ifdef ZMQ_EVENT_MONITOR_STOPPED
+		void abort()
+		{
+			if (socketPtr)
+				zmq_socket_monitor(socketPtr, NULL, 0);
+		}
+#endif
 		virtual void on_monitor_started() {}
 		virtual void on_event_connected(const zmq_event_t &event_, const char* addr_) {}
 		virtual void on_event_connect_delayed(const zmq_event_t &event_, const char* addr_) {}
@@ -526,6 +542,8 @@ namespace zmq
 		virtual void on_event_close_failed(const zmq_event_t &event_, const char* addr_) {}
 		virtual void on_event_disconnected(const zmq_event_t &event_, const char* addr_) {}
 		virtual void on_event_unknown(const zmq_event_t &event_, const char* addr_) {}
+	private:
+		void* socketPtr;
 	};
 }
 
