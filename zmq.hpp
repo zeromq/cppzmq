@@ -204,6 +204,12 @@ namespace zmq
                 throw error_t ();
         }
 
+        inline bool more ()
+        {
+            int rc = zmq_msg_more(&msg);
+            return static_cast<bool>(rc);
+        }
+
         inline void *data ()
         {
             return zmq_msg_data (&msg);
