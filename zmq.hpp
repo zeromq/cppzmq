@@ -207,7 +207,7 @@ namespace zmq
         inline bool more ()
         {
             int rc = zmq_msg_more(&msg);
-            return static_cast<bool>(rc);
+            return rc != 0;
         }
 
         inline void *data ()
