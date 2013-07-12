@@ -206,7 +206,7 @@ namespace zmq
 
         inline bool more ()
         {
-            int rc = zmq_msg_more(&msg);
+            int rc = zmq_msg_more (&msg);
             return rc != 0;
         }
 
