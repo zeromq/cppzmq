@@ -241,12 +241,22 @@ namespace zmq
         friend class socket_t;
 
     public:
+        inline context_t ()
+        {
+            ptr = zmq_ctx_new ();
+            if (ptr == NULL)
+                throw error_t ();
+        }
+
 
         inline explicit context_t (int io_threads_)
         {
-            ptr = zmq_init (io_threads_);
+            ptr = zmq_ctx_new ();
             if (ptr == NULL)
                 throw error_t ();
+
+            int rc = zmq_ctx_set (ptr, ZMQ_IO_THREADS, io_threads_);
+            ZMQ_ASSERT (rc == 0);
         }
 
 #ifdef ZMQ_HAS_RVALUE_REFS
@@ -270,7 +280,7 @@ namespace zmq
         {
             if (ptr == NULL)
                 return;
-            int rc = zmq_term (ptr);
+            int rc = zmq_ctx_destroy (ptr);
             ZMQ_ASSERT (rc == 0);
             ptr = NULL;
         }
