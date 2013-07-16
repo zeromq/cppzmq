@@ -304,18 +304,60 @@ namespace zmq
 
     class monitor_t
     {
-        public:
-        virtual void on_event_connected(const char *addr_) = 0;
-        virtual void on_event_connect_delayed(const char *addr_) = 0;
-        virtual void on_event_connect_retried(const char *addr_) = 0;
-        virtual void on_event_listening(const char *addr_) = 0;
-        virtual void on_event_bind_failed(const char *addr_) = 0;
-        virtual void on_event_accepted(const char *addr_) = 0;
-        virtual void on_event_accept_failed(const char *addr_) = 0;
-        virtual void on_event_closed(const char *addr_) = 0;
-        virtual void on_event_close_failed(const char *addr_) = 0;
-        virtual void on_event_disconnected(const char *addr_) = 0;
-        virtual void on_event_unknown(int event) = 0;
+    public:
+
+        inline monitor_t()
+        {
+        }
+
+        virtual ~monitor_t()
+        {
+        }
+
+        // Override on_event_* methods as needed.
+        virtual void on_event_connected(int32_t)
+        {
+        }
+
+        virtual void on_event_connect_delayed(int32_t)
+        {
+        }
+
+        virtual void on_event_connect_retried(int32_t)
+        {
+        }
+
+        virtual void on_event_listening(int32_t)
+        {
+        }
+
+        virtual void on_event_bind_failed(int32_t)
+        {
+        }
+
+        virtual void on_event_accepted(int32_t)
+        {
+        }
+
+        virtual void on_event_accept_failed(int32_t)
+        {
+        }
+
+        virtual void on_event_closed(int32_t)
+        {
+        }
+
+        virtual void on_event_close_failed(int32_t)
+        {
+        }
+
+        virtual void on_event_disconnected(int32_t)
+        {
+        }
+
+        virtual void on_event_unknown(uint16_t)
+        {
+        }
     };
 
     class socket_t
@@ -441,34 +483,34 @@ namespace zmq
 
                     switch (event.event) {
                     case ZMQ_EVENT_CONNECTED:
-                            mon->on_event_connected(event.data.connected.addr);
+                            mon->on_event_connected(event.value);
                             break;
                     case ZMQ_EVENT_CONNECT_DELAYED:
-                            mon->on_event_connect_delayed(event.data.connect_delayed.addr);
+                            mon->on_event_connect_delayed(event.value);
                             break;
                     case ZMQ_EVENT_CONNECT_RETRIED:
-                            mon->on_event_connect_retried(event.data.connect_retried.addr);
+                            mon->on_event_connect_retried(event.value);
                             break;
                     case ZMQ_EVENT_LISTENING:
-                            mon->on_event_listening(event.data.listening.addr);
+                            mon->on_event_listening(event.value);
                             break;
                     case ZMQ_EVENT_BIND_FAILED:
-                            mon->on_event_bind_failed(event.data.bind_failed.addr);
+                            mon->on_event_bind_failed(event.value);
                             break;
                     case ZMQ_EVENT_ACCEPTED:
-                            mon->on_event_accepted(event.data.accepted.addr);
+                            mon->on_event_accepted(event.value);
                             break;
                     case ZMQ_EVENT_ACCEPT_FAILED:
-                            mon->on_event_accept_failed(event.data.accept_failed.addr);
+                            mon->on_event_accept_failed(event.value);
                             break;
                     case ZMQ_EVENT_CLOSED:
-                        mon->on_event_closed(event.data.closed.addr);
+                        mon->on_event_closed(event.value);
                             break;
                     case ZMQ_EVENT_CLOSE_FAILED:
-                            mon->on_event_close_failed(event.data.close_failed.addr);
+                            mon->on_event_close_failed(event.value);
                             break;
                     case ZMQ_EVENT_DISCONNECTED:
-                            mon->on_event_disconnected(event.data.disconnected.addr);
+                            mon->on_event_disconnected(event.value);
                             break;
                     default:
                             mon->on_event_unknown(event.event);
