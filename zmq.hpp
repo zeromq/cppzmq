@@ -32,7 +32,6 @@
 #include <cstring>
 #include <string>
 #include <exception>
-#include <string>
 
 //  Detect whether the compiler supports C++11 rvalue references.
 #if (defined(__GNUC__) && (__GNUC__ > 4 || \
