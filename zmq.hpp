@@ -254,13 +254,16 @@ namespace zmq
         }
 
 
-        inline explicit context_t (int io_threads_)
+        inline explicit context_t (int io_threads_, int max_sockets_ = 1024)
         {
             ptr = zmq_ctx_new ();
             if (ptr == NULL)
                 throw error_t ();
 
             int rc = zmq_ctx_set (ptr, ZMQ_IO_THREADS, io_threads_);
+            ZMQ_ASSERT (rc == 0);
+
+            rc = zmq_ctx_set (ptr, ZMQ_MAX_SOCKETS, max_sockets_);
             ZMQ_ASSERT (rc == 0);
         }
 
