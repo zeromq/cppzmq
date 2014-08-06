@@ -492,7 +492,11 @@ namespace zmq
                 if (rc == -1 && zmq_errno() == ETERM)
                     break;
                 assert (rc != -1);
-                zmq_event_t* event = static_cast<zmq_event_t*>(zmq_msg_data (&eventMsg));
+                const char* data = static_cast<const char*>(zmq_msg_data(&eventMsg));
+                zmq_event_t msgEvent;
+                msgEvent.event = *(uint16_t*)data; data += sizeof(uint16_t);
+                msgEvent.value = *(int32_t*)data;
+                zmq_event_t* event = &msgEvent;
                 
 #ifdef ZMQ_NEW_MONITOR_EVENT_LAYOUT
                 zmq_msg_t addrMsg;
