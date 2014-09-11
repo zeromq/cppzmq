@@ -62,6 +62,11 @@
 
 #if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 1, 0)
 #define ZMQ_HAS_PROXY_STEERABLE
+/*  Socket event data  */
+typedef struct {
+    uint16_t event;  // id of the event as bitfield
+    int32_t  value ; // value is either error code, fd or reconnect interval
+} zmq_event_t;
 #endif
 
 // In order to prevent unused variable warnings when building in non-debug
