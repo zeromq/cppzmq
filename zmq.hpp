@@ -500,8 +500,8 @@ namespace zmq
 #if ZMQ_VERSION_MAJOR >= 4
                 const char* data = static_cast<const char*>(zmq_msg_data(&eventMsg));
                 zmq_event_t msgEvent;
-                msgEvent.event = *(uint16_t*)data; data += sizeof(uint16_t);
-                msgEvent.value = *(int32_t*)data;
+                memcpy(&msgEvent.event, data, sizeof(uint16_t)); data += sizeof(uint16_t);
+                memcpy(&msgEvent.value, data, sizeof(int32_t));
                 zmq_event_t* event = &msgEvent;
 #else
                 zmq_event_t* event = static_cast<zmq_event_t*>(zmq_msg_data(&eventMsg));
