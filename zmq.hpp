@@ -441,6 +441,13 @@ namespace zmq
             throw error_t ();
         }
 
+#ifdef ZMQ_HAS_RVALUE_REFS
+        inline bool send (message_t &&msg_, int flags_ = 0)
+        {
+            return send(msg_, flags_);
+        }
+#endif
+
         inline size_t recv (void *buf_, size_t len_, int flags_ = 0)
         {
             int nbytes = zmq_recv (ptr, buf_, len_, flags_);
