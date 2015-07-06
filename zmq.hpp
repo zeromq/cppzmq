@@ -25,6 +25,16 @@
 #ifndef __ZMQ_HPP_INCLUDED__
 #define __ZMQ_HPP_INCLUDED__
 
+#if __cplusplus >= 201103L
+#define ZMQ_CPP11
+#define ZMQ_NOTHROW noexcept
+#define ZMQ_EXPLICIT explicit
+#else
+    #define ZMQ_CPP03
+    #define ZMQ_NOTHROW
+    #define ZMQ_EXPLICIT
+#endif
+
 #include <zmq.h>
 
 #include <algorithm>
@@ -32,6 +42,13 @@
 #include <cstring>
 #include <string>
 #include <exception>
+#include <vector>
+#include <iterator>
+
+#ifdef ZMQ_CPP11
+#include <chrono>
+#include <tuple>
+#endif
 
 //  Detect whether the compiler supports C++11 rvalue references.
 #if (defined(__GNUC__) && (__GNUC__ > 4 || \
@@ -104,13 +121,37 @@ namespace zmq
         int errnum;
     };
 
-    inline int poll (zmq_pollitem_t *items_, int nitems_, long timeout_ = -1)
+    inline int poll (zmq_pollitem_t const* items_, int nitems_, long timeout_ = -1)
     {
-        int rc = zmq_poll (items_, nitems_, timeout_);
+        int rc = zmq_poll (const_cast<zmq_pollitem_t*>(items_), nitems_, timeout_);
         if (rc < 0)
             throw error_t ();
         return rc;
     }
+
+    inline int poll(zmq_pollitem_t const* items, size_t nitems)
+    {
+        return poll(items, nitems, -1 );
+    }
+
+    #ifdef ZMQ_CPP11
+    inline int poll(zmq_pollitem_t const* items, size_t nitems, std::chrono::milliseconds timeout)
+    {
+        return poll(items, nitems, timeout.count() );
+    }
+
+    inline int poll(std::vector<zmq_pollitem_t> const& items, std::chrono::milliseconds timeout)
+    {
+        return poll(items.data(), items.size(), timeout.count() );
+    }
+    #endif
+
+    inline int poll(std::vector<zmq_pollitem_t> const& items, long timeout_ = -1)
+    {
+        return poll(items.data(), items.size(), timeout_);
+    }
+
+
 
     inline void proxy (void *frontend, void *backend, void *capture)
     {
@@ -133,6 +174,15 @@ namespace zmq
         zmq_version (major_, minor_, patch_);
     }
 
+    #ifdef ZMQ_CPP11
+    inline std::tuple<int, int, int> version()
+    {
+        std::tuple<int, int, int> v;
+        zmq_version(&std::get<0>(v), &std::get<1>(v), &std::get<2>(v) );
+        return v;
+    }
+    #endif
+
     class message_t
     {
         friend class socket_t;
@@ -153,6 +203,19 @@ namespace zmq
                 throw error_t ();
         }
 
+        template<typename I> message_t(I first, I last):
+            msg()
+        {
+            typedef typename std::iterator_traits<I>::difference_type size_type;
+            typedef typename std::iterator_traits<I>::pointer pointer_t;
+
+            size_type const size_ = std::distance(first, last);
+            int const rc = zmq_msg_init_size (&msg, size_);
+            if (rc != 0)
+                throw error_t ();
+            std::copy(first, last, static_cast<pointer_t>(zmq_msg_data (&msg)) );
+        }
+
         inline message_t (void *data_, size_t size_, free_fn *ffn_,
             void *hint_ = NULL)
         {
@@ -162,21 +225,21 @@ namespace zmq
         }
 
 #ifdef ZMQ_HAS_RVALUE_REFS
-        inline message_t (message_t &&rhs) : msg (rhs.msg)
+        inline message_t (message_t &&rhs): msg (rhs.msg)
         {
             int rc = zmq_msg_init (&rhs.msg);
             if (rc != 0)
                 throw error_t ();
         }
 
-        inline message_t &operator = (message_t &&rhs)
+        inline message_t &operator = (message_t &&rhs) ZMQ_NOTHROW
         {
             std::swap (msg, rhs.msg);
             return *this;
         }
 #endif
 
-        inline ~message_t ()
+        inline ~message_t () ZMQ_NOTHROW
         {
             int rc = zmq_msg_close (&msg);
             ZMQ_ASSERT (rc == 0);
@@ -213,50 +276,60 @@ namespace zmq
                 throw error_t ();
         }
 
-        inline void move (message_t *msg_)
+        inline void move (message_t const *msg_)
         {
-            int rc = zmq_msg_move (&msg, &(msg_->msg));
+            int rc = zmq_msg_move (&msg, const_cast<zmq_msg_t*>(&(msg_->msg)));
             if (rc != 0)
                 throw error_t ();
         }
 
-        inline void copy (message_t *msg_)
+        inline void copy (message_t const *msg_)
         {
-            int rc = zmq_msg_copy (&msg, &(msg_->msg));
+            int rc = zmq_msg_copy (&msg, const_cast<zmq_msg_t*>(&(msg_->msg)));
             if (rc != 0)
                 throw error_t ();
         }
 
-        inline bool more ()
+        inline bool more () const ZMQ_NOTHROW
         {
-            int rc = zmq_msg_more (&msg);
+            int rc = zmq_msg_more (const_cast<zmq_msg_t*>(&msg) );
             return rc != 0;
         }
 
-        inline void *data ()
+        inline void *data () ZMQ_NOTHROW
         {
             return zmq_msg_data (&msg);
         }
 
-        inline const void* data () const
+        inline const void* data () const ZMQ_NOTHROW
         {
             return zmq_msg_data (const_cast<zmq_msg_t*>(&msg));
         }
 
-        inline size_t size () const
+        inline size_t size () const ZMQ_NOTHROW
         {
             return zmq_msg_size (const_cast<zmq_msg_t*>(&msg));
         }
 
-    private:
+        template<typename T> T* data() ZMQ_NOTHROW
+        {
+            return static_cast<T*>( data() );
+        }
 
+        template<typename T> T const* data() const ZMQ_NOTHROW
+        {
+            return static_cast<T const*>( data() );
+        }
+
+
+    private:
         //  The underlying message
         zmq_msg_t msg;
 
         //  Disable implicit message copying, so that users won't use shared
         //  messages (less efficient) without being aware of the fact.
-        message_t (const message_t&);
-        void operator = (const message_t&);
+        message_t (const message_t&) ZMQ_DELETED_FUNCTION;
+        void operator = (const message_t&) ZMQ_DELETED_FUNCTION;
     };
 
     class context_t
@@ -286,23 +359,23 @@ namespace zmq
         }
 
 #ifdef ZMQ_HAS_RVALUE_REFS
-        inline context_t (context_t &&rhs) : ptr (rhs.ptr)
+        inline context_t (context_t &&rhs) ZMQ_NOTHROW : ptr (rhs.ptr)
         {
             rhs.ptr = NULL;
         }
-        inline context_t &operator = (context_t &&rhs)
+        inline context_t &operator = (context_t &&rhs) ZMQ_NOTHROW
         {
             std::swap (ptr, rhs.ptr);
             return *this;
         }
 #endif
 
-        inline ~context_t ()
+        inline ~context_t () ZMQ_NOTHROW
         {
             close();
         }
 
-        inline void close()
+        inline void close() ZMQ_NOTHROW
         {
             if (ptr == NULL)
                 return;
@@ -314,55 +387,85 @@ namespace zmq
         //  Be careful with this, it's probably only useful for
         //  using the C api together with an existing C++ api.
         //  Normally you should never need to use this.
-        inline operator void* ()
+        inline ZMQ_EXPLICIT operator void* () ZMQ_NOTHROW
         {
             return ptr;
         }
 
+        inline ZMQ_EXPLICIT operator void const* () const ZMQ_NOTHROW
+        {
+            return ptr;
+        }
     private:
 
         void *ptr;
 
-        context_t (const context_t&);
-        void operator = (const context_t&);
+        context_t (const context_t&) ZMQ_DELETED_FUNCTION;
+        void operator = (const context_t&) ZMQ_DELETED_FUNCTION;
     };
+
+    #ifdef ZMQ_CPP11
+    enum class socket_type: int
+    {
+        req = ZMQ_REQ,
+        rep = ZMQ_REP,
+        dealer = ZMQ_DEALER,
+        router = ZMQ_ROUTER,
+        pub = ZMQ_PUB,
+        sub = ZMQ_SUB,
+        xpub = ZMQ_XPUB,
+        xsub = ZMQ_XSUB,
+        push = ZMQ_PUSH,
+        pull = ZMQ_PULL,
+        pair = ZMQ_PAIR,
+        stream = ZMQ_STREAM
+    };
+    #endif
 
     class socket_t
     {
         friend class monitor_t;
     public:
-
-        inline socket_t (context_t &context_, int type_)
+        inline socket_t(context_t& context_, int type_)
         {
-            ctxptr = context_.ptr;
-            ptr = zmq_socket (context_.ptr, type_);
-            if (ptr == NULL)
-                throw error_t ();
+            init(context_, type_);
         }
 
+        #ifdef ZMQ_CPP11
+        inline socket_t(context_t& context_, socket_type type_)
+        {
+            init(context_, static_cast<int>(type_));
+        }
+        #endif
+
 #ifdef ZMQ_HAS_RVALUE_REFS
-        inline socket_t(socket_t&& rhs) : ptr(rhs.ptr)
+        inline socket_t(socket_t&& rhs) ZMQ_NOTHROW : ptr(rhs.ptr)
         {
             rhs.ptr = NULL;
         }
-        inline socket_t& operator=(socket_t&& rhs)
+        inline socket_t& operator=(socket_t&& rhs) ZMQ_NOTHROW
         {
             std::swap(ptr, rhs.ptr);
             return *this;
         }
 #endif
 
-        inline ~socket_t ()
+        inline ~socket_t () ZMQ_NOTHROW
         {
             close();
         }
 
-        inline operator void* ()
+        inline ZMQ_EXPLICIT operator void* () ZMQ_NOTHROW
         {
             return ptr;
         }
 
-        inline void close()
+        inline ZMQ_EXPLICIT operator void const* () const ZMQ_NOTHROW
+        {
+            return ptr;
+        }
+
+        inline void close() ZMQ_NOTHROW
         {
             if(ptr == NULL)
                 // already closed
@@ -370,6 +473,11 @@ namespace zmq
             int rc = zmq_close (ptr);
             ZMQ_ASSERT (rc == 0);
             ptr = 0 ;
+        }
+
+        template<typename T> void setsockopt(int option_, T const& optval)
+        {
+            setsockopt(option_, &optval, sizeof(T) );
         }
 
         inline void setsockopt (int option_, const void *optval_,
@@ -387,12 +495,30 @@ namespace zmq
             if (rc != 0)
                 throw error_t ();
         }
-        
+
+        template<typename T> T getsockopt(int option_)
+        {
+            T optval;
+            size_t optlen = sizeof(T);
+            getsockopt(option_, &optval, &optlen );
+            return optval;
+        }
+
+        inline void bind(std::string const& addr)
+        {
+            bind(addr.c_str());
+        }
+
         inline void bind (const char *addr_)
         {
             int rc = zmq_bind (ptr, addr_);
             if (rc != 0)
                 throw error_t ();
+        }
+
+        inline void unbind(std::string const& addr)
+        {
+            unbind(addr.c_str());
         }
 
         inline void unbind (const char *addr_)
@@ -402,11 +528,21 @@ namespace zmq
                 throw error_t ();
         }
 
+        inline void connect(std::string const& addr)
+        {
+            connect(addr.c_str());
+        }
+
         inline void connect (const char *addr_)
         {
             int rc = zmq_connect (ptr, addr_);
             if (rc != 0)
                 throw error_t ();
+        }
+
+        inline void disconnect(std::string const& addr)
+        {
+            disconnect(addr.c_str());
         }
 
         inline void disconnect (const char *addr_)
@@ -416,7 +552,7 @@ namespace zmq
                 throw error_t ();
         }
 
-        inline bool connected()
+        inline bool connected() const ZMQ_NOTHROW
         {
             return(ptr != NULL);
         }
@@ -439,6 +575,12 @@ namespace zmq
             if (zmq_errno () == EAGAIN)
                 return false;
             throw error_t ();
+        }
+
+        template<typename I> bool send(I first, I last, int flags_=0)
+        {
+            zmq::message_t msg(first, last);
+            return send(msg, flags_);
         }
 
 #ifdef ZMQ_HAS_RVALUE_REFS
@@ -469,6 +611,14 @@ namespace zmq
         }
         
     private:
+        inline void init(context_t& context_, int type_)
+        {
+            ctxptr = context_.ptr;
+            ptr = zmq_socket (context_.ptr, type_ );
+            if (ptr == NULL)
+                throw error_t ();
+        }
+
         void *ptr;
         void *ctxptr;
 
@@ -481,6 +631,11 @@ namespace zmq
     public:
         monitor_t() : socketPtr(NULL) {}
         virtual ~monitor_t() {}
+
+        void monitor(socket_t &socket, std::string const& addr, int events = ZMQ_EVENT_ALL)
+        {
+            monitor(socket, addr.c_str(), events);
+        }
 
         void monitor(socket_t &socket, const char *addr_, int events = ZMQ_EVENT_ALL)
         {
