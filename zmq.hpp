@@ -417,8 +417,12 @@ namespace zmq
         xsub = ZMQ_XSUB,
         push = ZMQ_PUSH,
         pull = ZMQ_PULL,
+#if ZMQ_VERSION_MAJOR < 4
+        pair = ZMQ_PAIR
+#else
         pair = ZMQ_PAIR,
         stream = ZMQ_STREAM
+#endif
     };
     #endif
 
