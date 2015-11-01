@@ -144,12 +144,12 @@ namespace zmq
     {
         return poll(items.data(), items.size(), timeout.count() );
     }
-    #endif
 
     inline int poll(std::vector<zmq_pollitem_t> const& items, long timeout_ = -1)
     {
         return poll(items.data(), items.size(), timeout_);
     }
+    #endif
 
 
 
