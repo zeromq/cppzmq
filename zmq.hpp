@@ -131,7 +131,7 @@ namespace zmq
 
     inline int poll(zmq_pollitem_t const* items, size_t nitems)
     {
-        return poll(items, nitems, -1 );
+        return poll(items, static_cast<int>(nitems), -1);
     }
 
     #ifdef ZMQ_CPP11
@@ -147,7 +147,7 @@ namespace zmq
 
     inline int poll(std::vector<zmq_pollitem_t> const& items, long timeout_ = -1)
     {
-        return poll(items.data(), items.size(), timeout_);
+        return poll(items.data(), static_cast<int>(items.size()), timeout_);
     }
     #endif
 
