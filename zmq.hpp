@@ -372,16 +372,14 @@ namespace zmq
 
         inline ~context_t () ZMQ_NOTHROW
         {
-            close();
+            int rc = zmq_ctx_destroy (ptr);
+            ZMQ_ASSERT (rc == 0);
         }
 
         inline void close() ZMQ_NOTHROW
         {
-            if (ptr == NULL)
-                return;
-            int rc = zmq_ctx_destroy (ptr);
+            int rc = zmq_ctx_shutdown (ptr);
             ZMQ_ASSERT (rc == 0);
-            ptr = NULL;
         }
 
         //  Be careful with this, it's probably only useful for
