@@ -86,6 +86,12 @@ typedef struct {
 } zmq_event_t;
 #endif
 
+// Avoid using deprecated message receive function when possible
+#if ZMQ_VERSION < ZMQ_MAKE_VERSION(3, 2, 0)
+#  define zmq_msg_recv zmq_recvmsg
+#endif
+
+
 // In order to prevent unused variable warnings when building in non-debug
 // mode use this macro to make assertions.
 #ifndef NDEBUG
@@ -657,7 +663,7 @@ namespace zmq
             while (true) {
                 zmq_msg_t eventMsg;
                 zmq_msg_init (&eventMsg);
-                rc = zmq_recvmsg (s, &eventMsg, 0);
+                rc = zmq_msg_recv (s, &eventMsg, 0);
                 if (rc == -1 && zmq_errno() == ETERM)
                     break;
                 assert (rc != -1);
@@ -674,7 +680,7 @@ namespace zmq
 #ifdef ZMQ_NEW_MONITOR_EVENT_LAYOUT
                 zmq_msg_t addrMsg;
                 zmq_msg_init (&addrMsg);
-                rc = zmq_recvmsg (s, &addrMsg, 0);
+                rc = zmq_msg_recv (s, &addrMsg, 0);
                 if (rc == -1 && zmq_errno() == ETERM)
                     break;
                 assert (rc != -1);
