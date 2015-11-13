@@ -663,7 +663,7 @@ namespace zmq
             while (true) {
                 zmq_msg_t eventMsg;
                 zmq_msg_init (&eventMsg);
-                rc = zmq_msg_recv (s, &eventMsg, 0);
+                rc = zmq_msg_recv (&eventMsg, s, 0);
                 if (rc == -1 && zmq_errno() == ETERM)
                     break;
                 assert (rc != -1);
@@ -680,7 +680,7 @@ namespace zmq
 #ifdef ZMQ_NEW_MONITOR_EVENT_LAYOUT
                 zmq_msg_t addrMsg;
                 zmq_msg_init (&addrMsg);
-                rc = zmq_msg_recv (s, &addrMsg, 0);
+                rc = zmq_msg_recv (&addrMsg, s, 0);
                 if (rc == -1 && zmq_errno() == ETERM)
                     break;
                 assert (rc != -1);
