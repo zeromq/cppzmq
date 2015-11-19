@@ -497,14 +497,14 @@ namespace zmq
         }
 
         inline void getsockopt (int option_, void *optval_,
-            size_t *optvallen_)
+            size_t *optvallen_) const
         {
             int rc = zmq_getsockopt (ptr, option_, optval_, optvallen_);
             if (rc != 0)
                 throw error_t ();
         }
 
-        template<typename T> T getsockopt(int option_)
+        template<typename T> T getsockopt(int option_) const
         {
             T optval;
             size_t optlen = sizeof(T);
