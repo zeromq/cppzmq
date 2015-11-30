@@ -127,9 +127,9 @@ namespace zmq
         int errnum;
     };
 
-    inline int poll (zmq_pollitem_t const* items_, int nitems_, long timeout_ = -1)
+    inline int poll (zmq_pollitem_t const* items_, size_t nitems_, long timeout_ = -1)
     {
-        int rc = zmq_poll (const_cast<zmq_pollitem_t*>(items_), nitems_, timeout_);
+        int rc = zmq_poll (const_cast<zmq_pollitem_t*>(items_), static_cast<int>(nitems_), timeout_);
         if (rc < 0)
             throw error_t ();
         return rc;
@@ -137,7 +137,7 @@ namespace zmq
 
     inline int poll(zmq_pollitem_t const* items, size_t nitems)
     {
-        return poll(items, static_cast<int>(nitems), -1);
+        return poll(items, nitems, -1);
     }
 
     #ifdef ZMQ_CPP11
@@ -153,7 +153,7 @@ namespace zmq
 
     inline int poll(std::vector<zmq_pollitem_t> const& items, long timeout_ = -1)
     {
-        return poll(items.data(), static_cast<int>(items.size()), timeout_);
+        return poll(items.data(), items.size(), timeout_);
     }
     #endif
 
