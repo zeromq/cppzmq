@@ -213,13 +213,13 @@ namespace zmq
             msg()
         {
             typedef typename std::iterator_traits<I>::difference_type size_type;
-            typedef typename std::iterator_traits<I>::pointer pointer_t;
+            typedef typename std::iterator_traits<I>::value_type value_t;
 
-            size_type const size_ = std::distance(first, last);
+            size_type const size_ = std::distance(first, last)*sizeof(value_t);
             int const rc = zmq_msg_init_size (&msg, size_);
             if (rc != 0)
                 throw error_t ();
-            std::copy(first, last, static_cast<pointer_t>(zmq_msg_data (&msg)) );
+            std::copy(first, last, static_cast<value_t*>(zmq_msg_data (&msg)) );
         }
 
         inline message_t (void *data_, size_t size_, free_fn *ffn_,
