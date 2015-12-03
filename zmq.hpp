@@ -219,7 +219,12 @@ namespace zmq
             int const rc = zmq_msg_init_size (&msg, size_);
             if (rc != 0)
                 throw error_t ();
-            std::copy(first, last, static_cast<value_t*>(zmq_msg_data (&msg)) );
+            value_t* dest = data<value_t>();
+            while (first != last)
+            {
+                *dest = *first;
+                ++dest; ++first;
+            }
         }
 
         inline message_t (void *data_, size_t size_, free_fn *ffn_,
