@@ -227,6 +227,14 @@ namespace zmq
             }
         }
 
+        inline message_t (const void *data_, size_t size_)
+        {
+            int rc = zmq_msg_init_size (&msg, size_);
+            if (rc != 0)
+                throw error_t ();
+            memcpy(data(), data_, size_);
+        }
+
         inline message_t (void *data_, size_t size_, free_fn *ffn_,
             void *hint_ = NULL)
         {
@@ -274,6 +282,17 @@ namespace zmq
             rc = zmq_msg_init_size (&msg, size_);
             if (rc != 0)
                 throw error_t ();
+        }
+
+        inline void rebuild (const void *data_, size_t size_)
+        {
+            int rc = zmq_msg_close (&msg);
+            if (rc != 0)
+                throw error_t ();
+            rc = zmq_msg_init_size (&msg, size_);
+            if (rc != 0)
+                throw error_t ();
+            memcpy(data(), data_, size_);
         }
 
         inline void rebuild (void *data_, size_t size_, free_fn *ffn_,
