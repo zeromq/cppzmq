@@ -408,7 +408,7 @@ namespace zmq
 
         inline void close() ZMQ_NOTHROW
         {
-            int rc = zmq_ctx_shutdown (ptr);
+            int rc = zmq_ctx_destroy (ptr);
             ZMQ_ASSERT (rc == 0);
         }
 
