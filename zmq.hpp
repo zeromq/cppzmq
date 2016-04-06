@@ -351,6 +351,14 @@ namespace zmq
             return static_cast<T const*>( data() );
         }
 
+        inline bool equal(const message_t* other) const ZMQ_NOTHROW
+        {
+            if (size() != other->size())
+                return false;
+            std::string a(data<char>(), size());
+            std::string b(other->data<char>(), other->size());
+            return a == b;
+        }
 
     private:
         //  The underlying message
