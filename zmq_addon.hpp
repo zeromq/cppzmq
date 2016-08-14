@@ -99,14 +99,14 @@ public:
         return m_parts.empty();
     }
 
-    bool recv(socket_t& socket)
+    bool recv(socket_t& socket, int flags = 0)
     {
         clear();
         bool more = true;
         while (more)
         {
             message_t message;
-            if (!socket.recv(&message))
+            if (!socket.recv(&message, flags))
                 return false;
             more = message.more();
             add(std::move(message));
@@ -114,14 +114,15 @@ public:
         return true;
     }
 
-    bool send(socket_t& socket)
+    bool send(socket_t& socket, int flags = 0)
     {
+        flags &= ~(ZMQ_SNDMORE);
         bool more = size() > 0;
         while (more)
         {
             message_t message = pop();
             more = size() > 0;
-            if (!socket.send(message, more ? ZMQ_SNDMORE : 0))
+            if (!socket.send(message, (more ? ZMQ_SNDMORE : 0) | flags))
                 return false;
         }
         clear();
