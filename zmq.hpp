@@ -25,10 +25,14 @@
 #ifndef __ZMQ_HPP_INCLUDED__
 #define __ZMQ_HPP_INCLUDED__
 
-#if __cplusplus >= 201103L
-#define ZMQ_CPP11
-#define ZMQ_NOTHROW noexcept
-#define ZMQ_EXPLICIT explicit
+#if (__cplusplus >= 201103L)
+   #define ZMQ_CPP11
+   #define ZMQ_NOTHROW noexcept
+   #define ZMQ_EXPLICIT explicit
+#elif  (defined(_MSC_VER) && (_MSC_VER >= 1900))
+   #define ZMQ_CPP11
+   #define ZMQ_NOTHROW noexcept
+   #define ZMQ_EXPLICIT explicit
 #else
     #define ZMQ_CPP03
     #define ZMQ_NOTHROW
@@ -66,6 +70,9 @@
     #else
         #define ZMQ_DELETED_FUNCTION
     #endif
+#elif defined(_MSC_VER) && (_MSC_VER >= 1900)
+	#define ZMQ_HAS_RVALUE_REFS
+	#define ZMQ_DELETED_FUNCTION = delete
 #elif defined(_MSC_VER) && (_MSC_VER >= 1600)
     #define ZMQ_HAS_RVALUE_REFS
     #define ZMQ_DELETED_FUNCTION
@@ -111,12 +118,17 @@ namespace zmq
     public:
 
         error_t () : errnum (zmq_errno ()) {}
-
-        virtual const char *what () const throw ()
+#ifdef ZMQ_CPP11
+        virtual const char *what () noexcept
         {
             return zmq_strerror (errnum);
         }
-
+#else
+		virtual const char *what() const throw ()
+		{
+			return zmq_strerror(errnum);
+		}
+#endif
         int num () const
         {
             return errnum;
