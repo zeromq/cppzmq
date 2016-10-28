@@ -222,7 +222,7 @@ public:
     {
         static_assert(!std::is_same<T, std::string>::value, "Use popstr() instead of poptyp<std::string>()");
         if (sizeof(T) != m_parts.front().size())
-            throw std::exception("Invalid type, size does not match the message size");
+            throw std::runtime_error("Invalid type, size does not match the message size");
         T type = *m_parts.front().data<T>();
         m_parts.pop_front();
         return type;
