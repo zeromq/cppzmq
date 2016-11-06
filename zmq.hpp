@@ -119,7 +119,7 @@ namespace zmq
 
         error_t () : errnum (zmq_errno ()) {}
 #ifdef ZMQ_CPP11
-        virtual const char *what () noexcept
+        virtual const char *what () const noexcept
         {
             return zmq_strerror (errnum);
         }
