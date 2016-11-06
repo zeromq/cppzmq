@@ -45,60 +45,72 @@ private:
     std::deque<message_t> m_parts;
 
 public:
+    // Default constructor
     multipart_t()
     {}
 
+    // Construct from socket receive
     multipart_t(socket_t& socket)
     {
         recv(socket);
     }
 
+    // Construct from memory block
     multipart_t(const void *src, size_t size)
     {
         addmem(src, size);
     }
 
+    // Construct from string
     multipart_t(const std::string& string)
     {
         addstr(string);
     }
 
+    // Construct from message part
     multipart_t(message_t&& message)
     {
         add(std::move(message));
     }
 
+    // Move constructor
     multipart_t(multipart_t&& other)
     {
-        std::swap(m_parts, other.m_parts);
+        m_parts = std::move(other.m_parts);
     }
 
+    // Move assignment operator
     multipart_t& operator=(multipart_t&& other)
     {
-        std::swap(m_parts, other.m_parts);
+        m_parts = std::move(other.m_parts);
         return *this;
     }
 
+    // Destructor
     virtual ~multipart_t()
     {
         clear();
     }
 
+    // Delete all parts
     void clear()
     {
         m_parts.clear();
     }
 
+    // Get number of parts
     size_t size() const
     {
         return m_parts.size();
     }
 
+    // Check if number of parts is zero
     bool empty() const
     {
         return m_parts.empty();
     }
 
+    // Receive multipart message from socket
     bool recv(socket_t& socket, int flags = 0)
     {
         clear();
@@ -114,6 +126,7 @@ public:
         return true;
     }
 
+    // Send multipart message to socket
     bool send(socket_t& socket, int flags = 0)
     {
         flags &= ~(ZMQ_SNDMORE);
@@ -129,104 +142,115 @@ public:
         return true;
     }
 
+    // Concatenate other multipart to front
     void prepend(multipart_t&& other)
     {
         while (!other.empty())
             push(other.remove());
     }
 
+    // Concatenate other multipart to back
     void append(multipart_t&& other)
     {
         while (!other.empty())
             add(other.pop());
     }
 
+    // Push memory block to front
     void pushmem(const void *src, size_t size)
     {
         m_parts.push_front(message_t(src, size));
     }
 
+    // Push memory block to back
     void addmem(const void *src, size_t size)
     {
         m_parts.push_back(message_t(src, size));
     }
 
+    // Push string to front
     void pushstr(const std::string& string)
     {
         m_parts.push_front(message_t(string.data(), string.size()));
     }
 
+    // Push string to back
     void addstr(const std::string& string)
     {
         m_parts.push_back(message_t(string.data(), string.size()));
     }
 
+    // Push type (fixed-size) to front
     template<typename T>
     void pushtyp(const T& type)
     {
+        static_assert(!std::is_same<T, std::string>::value, "Use pushstr() instead of pushtyp<std::string>()");
         m_parts.push_front(message_t(&type, sizeof(type)));
     }
 
+    // Push type (fixed-size) to back
     template<typename T>
     void addtyp(const T& type)
     {
+        static_assert(!std::is_same<T, std::string>::value, "Use addstr() instead of addtyp<std::string>()");
         m_parts.push_back(message_t(&type, sizeof(type)));
     }
 
+    // Push message part to front
     void push(message_t&& message)
     {
         m_parts.push_front(std::move(message));
     }
 
+    // Push message part to back
     void add(message_t&& message)
     {
         m_parts.push_back(std::move(message));
     }
 
+    // Pop string from front
     std::string popstr()
     {
-        if (m_parts.empty())
-            return "";
         std::string string(m_parts.front().data<char>(), m_parts.front().size());
         m_parts.pop_front();
         return string;
     }
 
+    // Pop type (fixed-size) from front
     template<typename T>
     T poptyp()
     {
-        if (m_parts.empty())
-            return T();
+        static_assert(!std::is_same<T, std::string>::value, "Use popstr() instead of poptyp<std::string>()");
+        if (sizeof(T) != m_parts.front().size())
+            throw std::runtime_error("Invalid type, size does not match the message size");
         T type = *m_parts.front().data<T>();
         m_parts.pop_front();
         return type;
     }
 
+    // Pop message part from front
     message_t pop()
     {
-        if (m_parts.empty())
-            return message_t(0);
         message_t message = std::move(m_parts.front());
         m_parts.pop_front();
         return message;
     }
 
+    // Pop message part from back
     message_t remove()
     {
-        if (m_parts.empty())
-            return message_t(0);
         message_t message = std::move(m_parts.back());
         m_parts.pop_back();
         return message;
     }
 
+    // Get pointer to a specific message part
     const message_t* peek(size_t index) const
     {
-        if (index >= size())
-            return nullptr;
         return &m_parts[index];
     }
 
+    // Create multipart from type (fixed-size)
     template<typename T>
     static multipart_t create(const T& type)
     {
@@ -235,6 +259,7 @@ public:
         return multipart;
     }
 
+    // Copy multipart
     multipart_t clone() const
     {
         multipart_t multipart;
@@ -243,6 +268,7 @@ public:
         return multipart;
     }
 
+    // Dump content to string
     std::string str() const
     {
         std::stringstream ss;
@@ -278,6 +304,7 @@ public:
         return ss.str();
     }
 
+    // Check if equal to other multipart
     bool equal(const multipart_t* other) const
     {
         if (size() != other->size())
@@ -288,6 +315,7 @@ public:
         return true;
     }
 
+    // Self test
     static int test()
     {
         bool ok = true;
