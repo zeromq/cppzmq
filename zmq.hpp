@@ -372,9 +372,9 @@ namespace zmq
             return a == b;
         }
 
-        inline const char* gets(const char *property_) const
+        inline const char* gets(const char *property_)
         {
-            const char* value = zmq_msg_gets (&msg, property);
+            const char* value = zmq_msg_gets (&msg, property_);
             if (value == NULL)
                 throw error_t ();
             return value;
