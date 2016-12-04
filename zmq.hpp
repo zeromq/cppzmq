@@ -625,7 +625,8 @@ namespace zmq
             int nbytes = zmq_send (ptr, buf_, len_, flags_);
             if (nbytes >= 0)
                 return (size_t) nbytes;
-            if (zmq_errno () == EAGAIN)
+            int zmqErr = zmq_errno ();
+            if (zmqErr == EAGAIN || zmqErr == EHOSTUNREACH)
                 return 0;
             throw error_t ();
         }
@@ -635,7 +636,8 @@ namespace zmq
             int nbytes = zmq_msg_send (&(msg_.msg), ptr, flags_);
             if (nbytes >= 0)
                 return true;
-            if (zmq_errno () == EAGAIN)
+            int zmqErr = zmq_errno ();
+            if (zmqErr == EAGAIN || zmqErr == EHOSTUNREACH)
                 return false;
             throw error_t ();
         }
