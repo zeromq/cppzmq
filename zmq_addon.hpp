@@ -46,6 +46,13 @@ private:
     std::deque<message_t> m_parts;
 
 public:
+
+    typedef std::deque<message_t>::iterator iterator;
+    typedef std::deque<message_t>::const_iterator const_iterator;
+
+    typedef std::deque<message_t>::reverse_iterator reverse_iterator;
+    typedef std::deque<message_t>::const_reverse_iterator const_reverse_iterator;
+
     // Default constructor
     multipart_t()
     {}
@@ -111,6 +118,56 @@ public:
     const message_t& at (size_t n) const
     {
         return m_parts.at(n);
+    }
+
+    iterator begin()
+    {
+        return m_parts.begin();
+    }
+
+    const_iterator begin() const
+    {
+        return m_parts.begin();
+    }
+
+    const_iterator cbegin() const
+    {
+        return m_parts.cbegin();
+    }
+
+    reverse_iterator rbegin()
+    {
+        return m_parts.rbegin();
+    }
+
+    const_reverse_iterator rbegin() const
+    {
+        return m_parts.rbegin();
+    }
+
+    iterator end()
+    {
+        return m_parts.end();
+    }
+
+    const_iterator end() const
+    {
+        return m_parts.end();
+    }
+
+    const_iterator cend() const
+    {
+        return m_parts.cend();
+    }
+
+    reverse_iterator rend()
+    {
+        return m_parts.rend();
+    }
+
+    const_reverse_iterator rend() const
+    {
+        return m_parts.rend();
     }
 
     // Delete all parts
