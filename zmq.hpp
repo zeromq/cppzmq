@@ -622,7 +622,7 @@ namespace zmq
 
         inline size_t send (const void *buf_, size_t len_, int flags_ = 0)
         {
-            int nbytes = zmq_send (ptr, buf_, len_, flags_);
+            int nbytes = zmq_send_const (ptr, buf_, len_, flags_);
             if (nbytes >= 0)
                 return (size_t) nbytes;
             if (zmq_errno () == EAGAIN)
