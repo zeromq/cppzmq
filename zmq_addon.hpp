@@ -93,6 +93,26 @@ public:
         clear();
     }
 
+    message_t& operator[] (size_t n)
+    {
+        return m_parts[n];
+    }
+
+    const message_t& operator[] (size_t n) const
+    {
+        return m_parts[n];
+    }
+
+    message_t& at (size_t n)
+    {
+        return m_parts.at(n);
+    }
+
+    const message_t& at (size_t n) const
+    {
+        return m_parts.at(n);
+    }
+
     // Delete all parts
     void clear()
     {
