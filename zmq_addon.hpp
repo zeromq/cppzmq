@@ -27,6 +27,7 @@
 #include <deque>
 #include <iomanip>
 #include <sstream>
+#include <stdexcept>
 
 namespace zmq {
 
