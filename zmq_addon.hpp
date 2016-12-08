@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2016 VOCA AS / Harald Nøkland
+    Copyright (c) 2016 VOCA AS / Harald NÃ¸kland
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
@@ -36,7 +36,7 @@ namespace zmq {
 /*
     This class handles multipart messaging. It is the C++ equivalent of zmsg.h,
     which is part of CZMQ (the high-level C binding). Furthermore, it is a major
-    improvement compared to zmsg.hpp, which is part of the examples in the ØMQ
+    improvement compared to zmsg.hpp, which is part of the examples in the Ã˜MQ
     Guide. Unnecessary copying is avoided by using move semantics to efficiently
     add/remove parts.
 */
@@ -69,10 +69,16 @@ public:
         addmem(src, size);
     }
 
-    // Construct from string
-    multipart_t(const std::string& string)
+    // Construct from memory block
+    multipart_t(const void *src, size_t size, free_fn *ffn)
     {
-        addstr(string);
+        addmem(src, size, ffn);
+    }
+
+    // Construct from string
+    multipart_t(const std::string& string, bool nocopy = true)
+    {
+        addstr(string, nocopy);
     }
 
     // Construct from message part
@@ -240,22 +246,40 @@ public:
         m_parts.push_front(message_t(src, size));
     }
 
+    // Push memory block to front
+    void pushmem(const void *src, size_t size, free_fn *ffn)
+    {
+        m_parts.push_front(message_t(src, size, ffn));
+    }
+    
     // Push memory block to back
     void addmem(const void *src, size_t size)
     {
         m_parts.push_back(message_t(src, size));
     }
 
-    // Push string to front
-    void pushstr(const std::string& string)
+    // Push memory block to back
+    void addmem(const void *src, size_t size, free_fn *ffn)
     {
-        m_parts.push_front(message_t(string.data(), string.size()));
+        m_parts.push_back(message_t(src, size, ffn));
+    }
+    
+    // Push string to front
+    void pushstr(const std::string& string, bool nocopy = true)
+    {
+        if(nocopy)
+            m_parts.push_front(message_t(string.data(), string().size(), NULL);
+        else    
+            m_parts.push_front(message_t(string.data(), string.size()));
     }
 
     // Push string to back
-    void addstr(const std::string& string)
+    void addstr(const std::string& string, bool nocopy = true)
     {
-        m_parts.push_back(message_t(string.data(), string.size()));
+        if(nocopy)
+            m_parts.push_back(message_t(string.data(), string().size(), NULL);
+        else    
+            m_parts.push_back(message_t(string.data(), string.size()));
     }
 
     // Push type (fixed-size) to front
