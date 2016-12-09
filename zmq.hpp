@@ -155,12 +155,12 @@ namespace zmq
     #ifdef ZMQ_CPP11
     inline int poll(zmq_pollitem_t const* items, size_t nitems, std::chrono::milliseconds timeout)
     {
-        return poll(items, nitems, timeout.count() );
+        return poll(items, nitems, static_cast<long>(timeout.count()));
     }
 
     inline int poll(std::vector<zmq_pollitem_t> const& items, std::chrono::milliseconds timeout)
     {
-        return poll(items.data(), items.size(), timeout.count() );
+        return poll(items.data(), items.size(), static_cast<long>(timeout.count()));
     }
 
     inline int poll(std::vector<zmq_pollitem_t> const& items, long timeout_ = -1)
