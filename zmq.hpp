@@ -624,11 +624,7 @@ namespace zmq
 
         inline size_t send (const void *buf_, size_t len_, int flags_ = 0)
         {
-#if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 0, 8)
-            int nbytes = zmq_send_const (ptr, buf_, len_, flags_);
-#else
             int nbytes = zmq_send (ptr, buf_, len_, flags_);
-#endif
             if (nbytes >= 0)
                 return (size_t) nbytes;
             if (zmq_errno () == EAGAIN)
