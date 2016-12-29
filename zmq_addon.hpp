@@ -396,8 +396,8 @@ public:
     // Self test
     static int test()
     {
-        bool ok = true;
-        float num = 0;
+        bool ok = true; (void) ok;
+        float num = 0; (void) num;
         std::string str = "";
         message_t msg;
 
