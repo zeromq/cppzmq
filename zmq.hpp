@@ -785,6 +785,14 @@ namespace zmq
                 case ZMQ_EVENT_DISCONNECTED:
                     on_event_disconnected(*event, address.c_str());
                     break;
+#ifdef ZMQ_BUILD_DRAFT_API
+                case ZMQ_EVENT_HANDSHAKE_FAILED:
+                    on_event_handshake_failed(*event, address.c_str());
+                    break;
+                case ZMQ_EVENT_HANDSHAKE_SUCCEED:
+                    on_event_handshake_succeed(*event, address.c_str());
+                    break;
+#endif
                 default:
                     on_event_unknown(*event, address.c_str());
                     break;
@@ -813,6 +821,8 @@ namespace zmq
         virtual void on_event_closed(const zmq_event_t &event_, const char* addr_) { (void)event_; (void)addr_; }
         virtual void on_event_close_failed(const zmq_event_t &event_, const char* addr_) { (void)event_; (void)addr_; }
         virtual void on_event_disconnected(const zmq_event_t &event_, const char* addr_) { (void)event_; (void)addr_; }
+        virtual void on_event_handshake_failed(const zmq_event_t &event_, const char* addr_) { (void) event_; (void) addr_; }
+        virtual void on_event_handshake_succeed(const zmq_event_t &event_, const char* addr_) { (void) event_; (void) addr_; }
         virtual void on_event_unknown(const zmq_event_t &event_, const char* addr_) { (void)event_; (void)addr_; }
     private:
         void* socketPtr;
