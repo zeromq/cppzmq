@@ -107,6 +107,10 @@ typedef struct {
 #   define ZMQ_ASSERT(expression) (void)(expression)
 #endif
 
+#define CPPZMQ_VERSION_MAJOR 1
+#define CPPZMQ_VERSION_MINOR 0
+#define CPPZMQ_VERSION_PATCH 0
+
 namespace zmq
 {
 
