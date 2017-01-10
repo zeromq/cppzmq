@@ -3,15 +3,7 @@ project(cppzmq)
 
 find_package(ZeroMQ REQUIRED)
 
-file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/zmq.hpp" cppzmq_version_defines
-    REGEX "#define CPPZMQ_VERSION_(MAJOR|MINOR|PATCH)")
-foreach(ver ${cppzmq_version_defines})
-    if(ver MATCHES "#define CPPZMQ_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$")
-        set(CPPZMQ_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
-    endif()
-endforeach()
-set(${PROJECT_NAME}_VERSION 
-    ${CPPZMQ_VERSION_MAJOR}.${CPPZMQ_VERSION_MINOR}.${CPPZMQ_VERSION_PATCH})
+set (${PROJECT_NAME}_VERSION ${ZeroMQ_VERSION})
 message(STATUS "cppzmq v${${PROJECT_NAME}_VERSION}")
 
 set(CPPZMQ_HEADERS
