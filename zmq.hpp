@@ -202,27 +202,27 @@ namespace zmq
     }
     #endif
 
-    class message_t
+    class frame_t
     {
         friend class socket_t;
 
     public:
 
-        inline message_t ()
+        inline frame_t ()
         {
             int rc = zmq_msg_init (&msg);
             if (rc != 0)
                 throw error_t ();
         }
 
-        inline explicit message_t (size_t size_)
+        inline explicit frame_t (size_t size_)
         {
             int rc = zmq_msg_init_size (&msg, size_);
             if (rc != 0)
                 throw error_t ();
         }
 
-        template<typename I> message_t(I first, I last):
+        template<typename I> frame_t(I first, I last):
             msg()
         {
             typedef typename std::iterator_traits<I>::difference_type size_type;
@@ -240,7 +240,7 @@ namespace zmq
             }
         }
 
-        inline message_t (const void *data_, size_t size_)
+        inline frame_t (const void *data_, size_t size_)
         {
             int rc = zmq_msg_init_size (&msg, size_);
             if (rc != 0)
@@ -248,7 +248,7 @@ namespace zmq
             memcpy(data(), data_, size_);
         }
 
-        inline message_t (void *data_, size_t size_, free_fn *ffn_,
+        inline frame_t (void *data_, size_t size_, free_fn *ffn_,
             void *hint_ = NULL)
         {
             int rc = zmq_msg_init_data (&msg, data_, size_, ffn_, hint_);
@@ -257,21 +257,21 @@ namespace zmq
         }
 
 #ifdef ZMQ_HAS_RVALUE_REFS
-        inline message_t (message_t &&rhs): msg (rhs.msg)
+        inline frame_t (frame_t &&rhs): msg (rhs.msg)
         {
             int rc = zmq_msg_init (&rhs.msg);
             if (rc != 0)
                 throw error_t ();
         }
 
-        inline message_t &operator = (message_t &&rhs) ZMQ_NOTHROW
+        inline frame_t &operator = (frame_t &&rhs) ZMQ_NOTHROW
         {
             std::swap (msg, rhs.msg);
             return *this;
         }
 #endif
 
-        inline ~message_t () ZMQ_NOTHROW
+        inline ~frame_t () ZMQ_NOTHROW
         {
             int rc = zmq_msg_close (&msg);
             ZMQ_ASSERT (rc == 0);
@@ -319,16 +319,16 @@ namespace zmq
                 throw error_t ();
         }
 
-        inline void move (message_t const *msg_)
+        inline void move (frame_t const *frame_)
         {
-            int rc = zmq_msg_move (&msg, const_cast<zmq_msg_t*>(&(msg_->msg)));
+            int rc = zmq_msg_move (&msg, const_cast<zmq_msg_t*>(&(frame_->msg)));
             if (rc != 0)
                 throw error_t ();
         }
 
-        inline void copy (message_t const *msg_)
+        inline void copy (frame_t const *frame_)
         {
-            int rc = zmq_msg_copy (&msg, const_cast<zmq_msg_t*>(&(msg_->msg)));
+            int rc = zmq_msg_copy (&msg, const_cast<zmq_msg_t*>(&(frame_->msg)));
             if (rc != 0)
                 throw error_t ();
         }
@@ -389,8 +389,8 @@ namespace zmq
 
         //  Disable implicit message copying, so that users won't use shared
         //  messages (less efficient) without being aware of the fact.
-        message_t (const message_t&) ZMQ_DELETED_FUNCTION;
-        void operator = (const message_t&) ZMQ_DELETED_FUNCTION;
+        frame_t (const frame_t&) ZMQ_DELETED_FUNCTION;
+        void operator = (const frame_t&) ZMQ_DELETED_FUNCTION;
     };
 
     class context_t
@@ -634,9 +634,9 @@ namespace zmq
             throw error_t ();
         }
 
-        inline bool send (message_t &msg_, int flags_ = 0)
+        inline bool send (frame_t &frame_, int flags_ = 0)
         {
-            int nbytes = zmq_msg_send (&(msg_.msg), ptr, flags_);
+            int nbytes = zmq_msg_send (&(frame_.msg), ptr, flags_);
             if (nbytes >= 0)
                 return true;
             if (zmq_errno () == EAGAIN)
@@ -646,14 +646,14 @@ namespace zmq
 
         template<typename I> bool send(I first, I last, int flags_=0)
         {
-            zmq::message_t msg(first, last);
-            return send(msg, flags_);
+            zmq::frame_t frame(first, last);
+            return send(frame, flags_);
         }
 
 #ifdef ZMQ_HAS_RVALUE_REFS
-        inline bool send (message_t &&msg_, int flags_ = 0)
+        inline bool send (frame_t &&frame_, int flags_ = 0)
         {
-            return send(msg_, flags_);
+            return send(frame_, flags_);
         }
 #endif
 
@@ -667,9 +667,9 @@ namespace zmq
             throw error_t ();
         }
 
-        inline bool recv (message_t *msg_, int flags_ = 0)
+        inline bool recv (frame_t *frame_, int flags_ = 0)
         {
-            int nbytes = zmq_msg_recv (&(msg_->msg), ptr, flags_);
+            int nbytes = zmq_msg_recv (&(frame_->msg), ptr, flags_);
             if (nbytes >= 0)
                 return true;
             if (zmq_errno () == EAGAIN)
