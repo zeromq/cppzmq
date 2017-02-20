@@ -373,7 +373,7 @@ namespace zmq
             return a == b;
         }
 
-#if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 0, 8)
+#if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 1, 0)
         inline const char* gets(const char *property_)
         {
             const char* value = zmq_msg_gets (&msg, property_);
