@@ -1,4 +1,12 @@
 # cppzmq cmake module
+#
+# The following import targets are created
+#
+# ::
+#
+#   cppzmq-static
+#   cppzmq
+#
 # This module sets the following variables in your project::
 #
 # cppzmq_FOUND - true if cppzmq found on the system
@@ -8,8 +16,13 @@
 
 @PACKAGE_INIT@
 
-set(PN cppzmq)
-set_and_check(${PN}_INCLUDE_DIR "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_INCLUDEDIR@")
-set_and_check(${PN}_LIBRARY "@ZeroMQ_LIBRARY@")
-set_and_check(${PN}_STATIC_LIBRARY "@ZeroMQ_STATIC_LIBRARY@")
-check_required_components(${PN})
+include(CMakeFindDependencyMacro)
+find_dependency(ZeroMQ)
+
+if(NOT TARGET @PROJECT_NAME@)
+  include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+
+  get_target_property(@PROJECT_NAME@_INCLUDE_DIR cppzmq INTERFACE_INCLUDE_DIRECTORIES)
+  get_target_property(@PROJECT_NAME@_LIBRARY libzmq LOCATION)
+  get_target_property(@PROJECT_NAME@_STATIC_LIBRARY libzmq-static LOCATION)
+endif()
