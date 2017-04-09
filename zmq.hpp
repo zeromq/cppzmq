@@ -847,7 +847,7 @@ namespace zmq
 
         bool add (zmq::socket_t &socket, short events, std::function<void(void)> &handler)
         {
-            if (0 == zmq_poller_add (poller_ptr, socket.ptr, &handler, events)) {
+            if (0 == zmq_poller_add (poller_ptr, socket.ptr, handler ? &handler : NULL, events)) {
                 poller_events.emplace_back (zmq_poller_event_t ());
                 return true;
             }
@@ -868,7 +868,7 @@ namespace zmq
             int rc = zmq_poller_wait_all (poller_ptr, poller_events.data (), poller_events.size (), static_cast<long>(timeout.count ()));
             if (rc >= 0) {
                 std::for_each (poller_events.begin (), poller_events.begin () + rc, [](zmq_poller_event_t& event) {
-                    (*reinterpret_cast<std::function<void(void)>*> (event.user_data)) ();
+                    if (event.user_data != NULL) (*reinterpret_cast<std::function<void(void)>*> (event.user_data)) ();
                 });
                 return true;
             }
