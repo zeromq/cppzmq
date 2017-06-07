@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2016 VOCA AS / Harald Nøkland
+    Copyright (c) 2016 VOCA AS / Harald NÃ¸kland
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
@@ -36,7 +36,7 @@ namespace zmq {
 /*
     This class handles multipart messaging. It is the C++ equivalent of zmsg.h,
     which is part of CZMQ (the high-level C binding). Furthermore, it is a major
-    improvement compared to zmsg.hpp, which is part of the examples in the ØMQ
+    improvement compared to zmsg.hpp, which is part of the examples in the Ã˜MQ
     Guide. Unnecessary copying is avoided by using move semantics to efficiently
     add/remove parts.
 */
@@ -326,6 +326,23 @@ public:
     const message_t* peek(size_t index) const
     {
         return &m_parts[index];
+    }
+    
+    // Get a string copy of a specific message part
+    std::string peekstr(size_t index) const
+    {
+        std::string string(m_parts[index].data<char>(), m_parts[index].size());
+        return string;
+    }
+
+    // Peek type (fixed-size) from front
+    template<typename T>
+    T peektyp(size_t index)
+    {
+        static_assert(!std::is_same<T, std::string>::value, "Use peekstr() instead of peektyp<std::string>()");
+        if(sizeof(T) != m_parts.front().size())
+            throw std::runtime_error("Invalid type, size does not match the message size");
+        T type = *m_parts[index].data<T>();
     }
 
     // Create multipart from type (fixed-size)
