@@ -19,7 +19,7 @@ Build steps:
 
 Using this:
 
-A cmake fine package scripts is provided for you to easily include this library.
+A cmake find package scripts is provided for you to easily include this library.
 Add these lines in your CMakeLists.txt to include the headers and library files of
 cpp zmq (which will also include libzmq for you).
 
