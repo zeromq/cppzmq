@@ -506,9 +506,12 @@ namespace zmq
         #endif
 
 #ifdef ZMQ_HAS_RVALUE_REFS
-        inline socket_t(socket_t&& rhs) ZMQ_NOTHROW : ptr(rhs.ptr)
+        inline socket_t(socket_t&& rhs) ZMQ_NOTHROW :
+            ptr(rhs.ptr),
+            ctxptr(rhs.ctxptr)
         {
-            rhs.ptr = NULL;
+            rhs.ptr    = NULL;
+            rhs.ctxptr = NULL;
         }
         inline socket_t& operator=(socket_t&& rhs) ZMQ_NOTHROW
         {
