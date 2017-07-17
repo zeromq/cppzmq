@@ -703,7 +703,7 @@ namespace zmq
     class monitor_t
     {
     public:
-        monitor_t() : socketPtr(NULL), monitor_socket{NULL} {}
+        monitor_t() : socketPtr(NULL), monitor_socket(NULL) {}
 
         virtual ~monitor_t()
         {
