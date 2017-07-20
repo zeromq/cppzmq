@@ -1,7 +1,16 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.0.0)
 project(cppzmq)
 
-find_package(ZeroMQ REQUIRED)
+find_package(ZeroMQ)
+
+# libzmq autotools install: fallback to pkg-config
+if(NOT ZeroMQ_FOUND)
+    include(${CMAKE_CURRENT_LIST_DIR}/libzmqPkgConfigFallback.cmake)
+endif()
+
+if(NOT ZeroMQ_FOUND)
+    message(FATAL_ERROR "ZeroMQ was NOT found!")
+endif()
 
 if (ZeroMQ_FOUND AND (NOT TARGET libzmq OR NOT TARGET libzmq-static))
   message(FATAL_ERROR "ZeroMQ version not supported!")
@@ -51,4 +60,5 @@ install(EXPORT ${PROJECT_NAME}-targets
         DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
               ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+              ${CMAKE_SOURCE_DIR}/libzmqPkgConfigFallback.cmake
               DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR})

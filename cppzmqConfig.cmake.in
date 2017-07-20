@@ -17,7 +17,16 @@
 @PACKAGE_INIT@
 
 include(CMakeFindDependencyMacro)
-find_dependency(ZeroMQ)
+find_package(ZeroMQ)
+
+# libzmq autotools install: fallback to pkg-config
+if(NOT ZeroMQ_FOUND)
+    include(${CMAKE_CURRENT_LIST_DIR}/libzmqPkgConfigFallback.cmake)
+endif()
+
+if(NOT ZeroMQ_FOUND)
+    message(FATAL_ERROR "ZeroMQ was NOT found!")
+endif()
 
 if(NOT TARGET @PROJECT_NAME@)
   include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
