@@ -1,4 +1,5 @@
 /*
+    Copyright (c) 2016-2017 ZeroMQ community
     Copyright (c) 2009-2011 250bpm s.r.o.
     Copyright (c) 2011 Botond Ballo
     Copyright (c) 2007-2009 iMatix Corporation
