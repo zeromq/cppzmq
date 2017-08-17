@@ -338,7 +338,7 @@ public:
 
     // Peek type (fixed-size) from front
     template<typename T>
-    T peektyp(size_t index)
+    T peektyp(size_t index) const
     {
         static_assert(!std::is_same<T, std::string>::value, "Use peekstr() instead of peektyp<std::string>()");
         if(sizeof(T) != m_parts[index].size())
