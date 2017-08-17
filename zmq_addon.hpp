@@ -341,9 +341,10 @@ public:
     T peektyp(size_t index)
     {
         static_assert(!std::is_same<T, std::string>::value, "Use peekstr() instead of peektyp<std::string>()");
-        if(sizeof(T) != m_parts.front().size())
+        if(sizeof(T) != m_parts[index].size())
             throw std::runtime_error("Invalid type, size does not match the message size");
         T type = *m_parts[index].data<T>();
+        return type;
     }
 
     // Create multipart from type (fixed-size)
