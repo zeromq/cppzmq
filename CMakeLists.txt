@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(cppzmq)
 
-find_package(ZeroMQ)
+find_package(ZeroMQ QUIET)
 
 # libzmq autotools install: fallback to pkg-config
 if(NOT ZeroMQ_FOUND)
