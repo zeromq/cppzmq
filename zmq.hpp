@@ -635,8 +635,6 @@ namespace zmq
                 return (size_t) nbytes;
             if (zmq_errno () == EAGAIN)
                 return 0;
-            if (zmq_errno () == EHOSTUNREACH)
-                return 0;
             throw error_t ();
         }
 
@@ -646,8 +644,6 @@ namespace zmq
             if (nbytes >= 0)
                 return true;
             if (zmq_errno () == EAGAIN)
-                return false;
-            if (zmq_errno () == EHOSTUNREACH)
                 return false;
             throw error_t ();
         }
