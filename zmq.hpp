@@ -859,10 +859,16 @@ namespace zmq
                 on_event_disconnected(*event, address.c_str());
                 break;
 #ifdef ZMQ_BUILD_DRAFT_API
-            case ZMQ_EVENT_HANDSHAKE_FAILED:
+            case ZMQ_EVENT_HANDSHAKE_FAILED_NO_DETAIL:
                 on_event_handshake_failed(*event, address.c_str());
                 break;
-            case ZMQ_EVENT_HANDSHAKE_SUCCEED:
+            case ZMQ_EVENT_HANDSHAKE_FAILED_PROTOCOL:
+                on_event_handshake_failed(*event, address.c_str());
+                break;
+            case ZMQ_EVENT_HANDSHAKE_FAILED_AUTH:
+                on_event_handshake_failed(*event, address.c_str());
+                break;
+            case ZMQ_EVENT_HANDSHAKE_SUCCEEDED:
                 on_event_handshake_succeed(*event, address.c_str());
                 break;
 #endif
