@@ -868,7 +868,7 @@ namespace zmq
             case ZMQ_EVENT_HANDSHAKE_FAILED_AUTH:
                 on_event_handshake_failed(*event, address.c_str());
                 break;
-            case ZMQ_EVENT_HANDSHAKE_SUCCEED:
+            case ZMQ_EVENT_HANDSHAKE_SUCCEEDED:
                 on_event_handshake_succeed(*event, address.c_str());
                 break;
 #endif
