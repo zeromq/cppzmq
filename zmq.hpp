@@ -149,11 +149,6 @@ namespace zmq
         return rc;
     }
 
-    inline int poll(zmq_pollitem_t const* items, size_t nitems)
-    {
-        return poll(items, nitems, -1);
-    }
-
     #ifdef ZMQ_CPP11
     inline int poll(zmq_pollitem_t const* items, size_t nitems, std::chrono::milliseconds timeout)
     {
