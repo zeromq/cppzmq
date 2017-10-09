@@ -856,13 +856,13 @@ namespace zmq
 #ifdef ZMQ_BUILD_DRAFT_API
 #if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 3)
             case ZMQ_EVENT_HANDSHAKE_FAILED_NO_DETAIL:
-                on_event_handshake_failed(*event, address.c_str());
+                on_event_handshake_failed_no_detail(*event, address.c_str());
                 break;
             case ZMQ_EVENT_HANDSHAKE_FAILED_PROTOCOL:
-                on_event_handshake_failed(*event, address.c_str());
+                on_event_handshake_failed_protocol(*event, address.c_str());
                 break;
             case ZMQ_EVENT_HANDSHAKE_FAILED_AUTH:
-                on_event_handshake_failed(*event, address.c_str());
+                on_event_handshake_failed_auth(*event, address.c_str());
                 break;
             case ZMQ_EVENT_HANDSHAKE_SUCCEEDED:
                 on_event_handshake_succeeded(*event, address.c_str());
