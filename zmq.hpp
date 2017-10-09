@@ -872,7 +872,7 @@ namespace zmq
                 on_event_handshake_failed(*event, address.c_str());
                 break;
             case ZMQ_EVENT_HANDSHAKE_SUCCEED:
-                on_event_handshake_succeed(*event, address.c_str());
+                on_event_handshake_succeeded(*event, address.c_str());
                 break;
 #endif
 #endif
