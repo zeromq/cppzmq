@@ -872,7 +872,7 @@ namespace zmq
                 on_event_handshake_failed(*event, address.c_str());
                 break;
             case ZMQ_EVENT_HANDSHAKE_SUCCEED:
-                on_event_handshake_succeeded(*event, address.c_str());
+                on_event_handshake_succeed(*event, address.c_str());
                 break;
 #endif
 #endif
@@ -916,7 +916,7 @@ namespace zmq
         virtual void on_event_handshake_succeeded(const zmq_event_t &event_, const char* addr_) { (void) event_; (void) addr_; }
 #elif ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 1)
         virtual void on_event_handshake_failed(const zmq_event_t &event_, const char* addr_) { (void) event_; (void) addr_; }
-        virtual void on_event_handshake_succeeded(const zmq_event_t &event_, const char* addr_) { (void) event_; (void) addr_; }
+        virtual void on_event_handshake_succeed(const zmq_event_t &event_, const char* addr_) { (void) event_; (void) addr_; }
 #endif		
         virtual void on_event_unknown(const zmq_event_t &event_, const char* addr_) { (void)event_; (void)addr_; }
     private:
