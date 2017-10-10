@@ -3,7 +3,7 @@ This is C++ binding for 0MQ
 The contribution policy is at: http://rfc.zeromq.org/spec:22
 
 Build steps:
-1) Build libzmq via cmake. This does an out of source build and installs the build files
+1) Build [libzmq](https://github.com/zeromq/libzmq) via cmake. This does an out of source build and installs the build files
 	download and unzip the lib, cd to directory
 	mkdir build
 	cd build
