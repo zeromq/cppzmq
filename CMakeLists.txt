@@ -12,9 +12,11 @@ if(NOT ZeroMQ_FOUND)
     message(FATAL_ERROR "ZeroMQ was NOT found!")
 endif()
 
-if (ZeroMQ_FOUND AND (NOT TARGET libzmq OR NOT TARGET libzmq-static))
-  message(FATAL_ERROR "ZeroMQ version not supported!")
-endif()
+message(STATUS "ZMQ Version: ${ZeroMQ_VERSION}")
+
+#if (ZeroMQ_FOUND AND (NOT TARGET libzmq OR NOT TARGET libzmq-static))
+#  message(FATAL_ERROR "ZeroMQ version not supported!")
+#endif()
 
 set (${PROJECT_NAME}_VERSION ${ZeroMQ_VERSION})
 message(STATUS "cppzmq v${${PROJECT_NAME}_VERSION}")
