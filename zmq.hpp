@@ -963,7 +963,7 @@ namespace zmq
 
         bool wait (std::chrono::milliseconds timeout)
         {
-            int rc = zmq_poller_wait_all (poller_ptr, poller_events.data (), poller_events.size (), static_cast<long>(timeout.count ()));
+            int rc = zmq_poller_wait_all (poller_ptr, poller_events.data (), static_cast<int> (poller_events.size ()), static_cast<long>(timeout.count ()));
             if (rc >= 0) {
                 std::for_each (poller_events.begin (), poller_events.begin () + rc, [](zmq_poller_event_t& event) {
                     if (event.user_data != NULL)
