@@ -58,7 +58,6 @@ install(EXPORT ${PROJECT_NAME}-targets
         DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
               ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-              ${CMAKE_SOURCE_DIR}/libzmq-pkg-config/FindZeroMQ.cmake
               DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR})
 install(FILES ${CMAKE_SOURCE_DIR}/libzmq-pkg-config/FindZeroMQ.cmake
               DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR}/libzmq-pkg-config)
