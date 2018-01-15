@@ -21,7 +21,8 @@ find_package(ZeroMQ QUIET)
 
 # libzmq autotools install: fallback to pkg-config
 if(NOT ZeroMQ_FOUND)
-    include(${CMAKE_CURRENT_LIST_DIR}/libzmqPkgConfigFallback.cmake)
+    list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/libzmq-pkg-config)
+    find_package(ZeroMQ REQUIRED)
 endif()
 
 if(NOT ZeroMQ_FOUND)
