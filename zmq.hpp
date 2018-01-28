@@ -427,6 +427,18 @@ namespace zmq
         }
 #endif
 
+        inline int setctxopt(int option_, int optval_)
+        {
+            int rc = zmq_ctx_set (ptr, option_, optval_);
+            ZMQ_ASSERT (rc == 0);
+            return rc;
+        }
+
+        inline int getctxopt(int option_)
+        {
+            return zmq_ctx_get (ptr, option_);
+        }
+
         inline ~context_t () ZMQ_NOTHROW
         {
             close();
