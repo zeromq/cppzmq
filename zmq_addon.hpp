@@ -25,6 +25,7 @@
 #define __ZMQ_ADDON_HPP_INCLUDED__
 
 #include <zmq.hpp>
+
 #include <deque>
 #include <iomanip>
 #include <sstream>
@@ -328,7 +329,7 @@ public:
     {
         return &m_parts[index];
     }
-    
+
     // Get a string copy of a specific message part
     std::string peekstr(size_t index) const
     {
@@ -582,10 +583,15 @@ private:
     // Disable implicit copying (moving is more efficient)
     multipart_t(const multipart_t& other) ZMQ_DELETED_FUNCTION;
     void operator=(const multipart_t& other) ZMQ_DELETED_FUNCTION;
-};
+};  // class multipart_t
 
-#endif
+#endif  // ZMQ_HAS_RVALUE_REFS
 
+inline std::ostream& operator<<(std::ostream& os, const multipart_t& msg)
+{
+    return os << msg.str();
 }
 
-#endif
+}  // namespace zmq
+
+#endif  // __ZMQ_ADDON_HPP_INCLUDED__

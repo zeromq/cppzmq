@@ -27,13 +27,13 @@
 #define __ZMQ_HPP_INCLUDED__
 
 #if (__cplusplus >= 201103L)
-   #define ZMQ_CPP11
-   #define ZMQ_NOTHROW noexcept
-   #define ZMQ_EXPLICIT explicit
-#elif  (defined(_MSC_VER) && (_MSC_VER >= 1900))
-   #define ZMQ_CPP11
-   #define ZMQ_NOTHROW noexcept
-   #define ZMQ_EXPLICIT explicit
+    #define ZMQ_CPP11
+    #define ZMQ_NOTHROW noexcept
+    #define ZMQ_EXPLICIT explicit
+#elif (defined(_MSC_VER) && (_MSC_VER >= 1900))
+    #define ZMQ_CPP11
+    #define ZMQ_NOTHROW noexcept
+    #define ZMQ_EXPLICIT explicit
 #else
     #define ZMQ_CPP03
     #define ZMQ_NOTHROW
@@ -42,18 +42,22 @@
 
 #include <zmq.h>
 
-#include <algorithm>
 #include <cassert>
 #include <cstring>
-#include <string>
+
+#include <algorithm>
 #include <exception>
-#include <vector>
+#include <iomanip>
 #include <iterator>
+#include <sstream>
+#include <string>
+#include <vector>
+
 
 #ifdef ZMQ_CPP11
-#include <chrono>
-#include <tuple>
-#include <functional>
+    #include <chrono>
+    #include <tuple>
+    #include <functional>
 #endif
 
 //  Detect whether the compiler supports C++11 rvalue references.
@@ -83,11 +87,11 @@
 #endif
 
 #if ZMQ_VERSION >= ZMQ_MAKE_VERSION(3, 3, 0)
-#define ZMQ_NEW_MONITOR_EVENT_LAYOUT
+    #define ZMQ_NEW_MONITOR_EVENT_LAYOUT
 #endif
 
 #if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 1, 0)
-#define ZMQ_HAS_PROXY_STEERABLE
+    #define ZMQ_HAS_PROXY_STEERABLE
 /*  Socket event data  */
 typedef struct {
     uint16_t event;  // id of the event as bitfield
@@ -378,6 +382,42 @@ namespace zmq
             return value;
         }
 #endif
+        /** Dump content to string. Ascii chars are readable, the rest is printed as hex.
+         *  Probably ridiculously slow.
+         */
+        inline std::string str() const
+        {
+            // Partly mutuated from the same method in zmq::multipart_t
+            std::stringstream os;
+
+            const unsigned char* msg_data = this->data<unsigned char>();
+            unsigned char byte;
+            size_t size = this->size();
+            int is_ascii[2] = {0, 0};
+
+            os << "zmq::message_t [size " << std::dec << std::setw(3) << std::setfill('0') << size << "] (";
+            // Totally arbitrary
+            if (size >= 1000) {
+                os << "... too big to print)";
+            } else {
+                while (size--) {
+                    byte = *msg_data++;
+
+                    is_ascii[1] = (byte >= 33 && byte  < 127);
+                    if (is_ascii[1] != is_ascii[0])
+                        os << " ";  // Separate text/non text
+
+                    if (is_ascii[1]) {
+                        os << byte;
+                    } else {
+                        os << std::hex << std::uppercase << std::setw(2) << std::setfill('0') << static_cast<short>(byte);
+                    }
+                    is_ascii[0] = is_ascii[1];
+                }
+                os << ")";
+            }
+            return os.str();
+        }
 
     private:
         //  The underlying message
@@ -927,7 +967,7 @@ namespace zmq
 #elif ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 1)
         virtual void on_event_handshake_failed(const zmq_event_t &event_, const char* addr_) { (void) event_; (void) addr_; }
         virtual void on_event_handshake_succeed(const zmq_event_t &event_, const char* addr_) { (void) event_; (void) addr_; }
-#endif		
+#endif
         virtual void on_event_unknown(const zmq_event_t &event_, const char* addr_) { (void)event_; (void)addr_; }
     private:
 
@@ -984,9 +1024,9 @@ namespace zmq
 
 #if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 3)
             if (zmq_errno () == EAGAIN)
-#else			
+#else
             if (zmq_errno () == ETIMEDOUT)
-#endif			
+#endif
                 return false;
 
             throw error_t ();
@@ -995,9 +1035,15 @@ namespace zmq
     private:
         void *poller_ptr;
         std::vector<zmq_poller_event_t> poller_events;
-    };
+    };  // class poller_t
 #endif //  defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && defined(ZMQ_HAVE_POLLER)
 
+
+inline std::ostream& operator<<(std::ostream& os, const message_t& msg)
+{
+    return os << msg.str();
 }
 
-#endif
+}  // namespace zmq
+
+#endif  // __ZMQ_HPP_INCLUDED__
