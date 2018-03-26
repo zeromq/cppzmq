@@ -990,25 +990,45 @@ namespace zmq
 
         ~poller_t ()
         {
-            zmq_poller_destroy (&poller_ptr);
+            if (poller_ptr)
+            {
+                int rc = zmq_poller_destroy (&poller_ptr);
+                assert(rc == 0);
+            }
         }
+		
+        poller_t(const poller_t&) = delete;
+        poller_t &operator=(const poller_t&) = delete;
+        poller_t(poller_t&& src) 
+          : poller_ptr(src.poller_ptr)
+          , poller_events(std::move (src.poller_events))
+        {
+            src.poller_ptr = NULL;
+        }
+        poller_t &operator=(poller_t&& src)
+        {
+            poller_ptr = src.poller_ptr;
+            poller_events = std::move (src.poller_events);
+            src.poller_ptr = NULL;
+            return *this;
+        }		
 
-        bool add (zmq::socket_t &socket, short events, std::function<void(void)> &handler)
+        void add (zmq::socket_t &socket, short events, std::function<void(void)> &handler)
         {
             if (0 == zmq_poller_add (poller_ptr, socket.ptr, handler ? &handler : NULL, events)) {
                 poller_events.emplace_back (zmq_poller_event_t ());
-                return true;
+                return;
             }
-            return false;
+            throw error_t ();
         }
 
-        bool remove (zmq::socket_t &socket)
+        void remove (zmq::socket_t &socket)
         {
             if (0 == zmq_poller_remove (poller_ptr, socket.ptr)) {
                 poller_events.pop_back ();
-                return true;
+                return;
             }
-            return false;
+            throw error_t ();
         }
 
         bool wait (std::chrono::milliseconds timeout)
