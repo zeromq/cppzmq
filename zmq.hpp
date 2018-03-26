@@ -1013,22 +1013,22 @@ namespace zmq
             return *this;
         }		
 
-        bool add (zmq::socket_t &socket, short events, std::function<void(void)> &handler)
+        void add (zmq::socket_t &socket, short events, std::function<void(void)> &handler)
         {
             if (0 == zmq_poller_add (poller_ptr, socket.ptr, handler ? &handler : NULL, events)) {
                 poller_events.emplace_back (zmq_poller_event_t ());
-                return true;
+                return;
             }
-            return false;
+            throw error_t ();
         }
 
-        bool remove (zmq::socket_t &socket)
+        void remove (zmq::socket_t &socket)
         {
             if (0 == zmq_poller_remove (poller_ptr, socket.ptr)) {
                 poller_events.pop_back ();
-                return true;
+                return;
             }
-            return false;
+            throw error_t ();
         }
 
         bool wait (std::chrono::milliseconds timeout)
