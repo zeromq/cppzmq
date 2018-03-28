@@ -53,6 +53,13 @@
 #include <string>
 #include <vector>
 
+/*  Version macros for compile-time API version detection                     */
+#define CPPZMQ_VERSION_MAJOR 4
+#define CPPZMQ_VERSION_MINOR 3
+#define CPPZMQ_VERSION_PATCH 0
+
+#define CPPZMQ_VERSION                                                            \
+    ZMQ_MAKE_VERSION (CPPZMQ_VERSION_MAJOR, CPPZMQ_VERSION_MINOR, CPPZMQ_VERSION_PATCH)
 
 #ifdef ZMQ_CPP11
     #include <chrono>

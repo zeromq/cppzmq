@@ -30,5 +30,4 @@ sudo: required
 
 # Build and check this project according to the BUILD_TYPE
 script: 
-  - chmod +x ci_build.sh
   - ./ci_build.sh
