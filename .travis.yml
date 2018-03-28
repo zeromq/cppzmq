@@ -1,0 +1,34 @@
+# Travis CI script
+
+language: c
+
+os:
+- linux
+#- osx
+
+dist: trusty
+
+cache: ccache
+
+env:
+  matrix:
+#    - BUILD_TYPE=cmake DRAFT=enabled
+    - BUILD_TYPE=cmake
+
+matrix:
+  include:
+  # - env: BUILD_TYPE=cmake DO_CLANG_FORMAT_CHECK=1 CLANG_FORMAT=/usr/local/clang-5.0.0/bin/clang-format
+    # os: linux
+    # addons:
+    # apt:
+      # sources:
+        # - llvm-toolchain-trusty-5.0
+      # packages:
+        # - clang-5.0
+
+sudo: required
+
+# Build and check this project according to the BUILD_TYPE
+script: 
+  - chmod +x ci_build.sh
+  - ./ci_build.sh
