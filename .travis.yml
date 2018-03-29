@@ -18,7 +18,7 @@ addons:
 env:
   matrix:
 #    - BUILD_TYPE=cmake DRAFT=enabled
-    - BUILD_TYPE=cmake
+    - BUILD_TYPE=cmake ZMQ_VERSION=4.2.5
 
 matrix:
   include:
@@ -41,4 +41,4 @@ script:
   - ./ci_build.sh
 
 after_success:
-  - coveralls --root . -E ".*external.*" -E ".*CMakeFiles.*" -E ".*tests/"
+  - coveralls --root . -E ".*external.*" -E ".*CMakeFiles.*" -E ".*tests/" -E ".*libzmq/"

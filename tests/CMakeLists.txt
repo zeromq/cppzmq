@@ -21,7 +21,7 @@ fetch_googletest(
     ${PROJECT_BINARY_DIR}/googletest
     )
     
-#find_package(cppzmq)
+find_package(cppzmq)
 
 enable_testing()
 
@@ -33,6 +33,7 @@ add_executable(
 target_link_libraries(
     unit_tests
     gtest_main
+    libzmq
     )
 
 add_test(

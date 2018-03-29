@@ -7,9 +7,9 @@ install_zeromq() {
 
     mkdir libzmq
     cd libzmq
-    curl -L https://github.com/zeromq/libzmq/releases/download/v${ZMQ_VERSION}/zeromq-${ZMQ_VERSION}.tar.gz >zeromq.tar.gz
+    curl -L https://github.com/zeromq/libzmq/archive/v${ZMQ_VERSION}.tar.gz >zeromq.tar.gz
     tar -xvzf zeromq.tar.gz
-    cd zeromq-${ZMQ_VERSION}
+    cd libzmq-${ZMQ_VERSION}
 
     mkdir build
     cd build
