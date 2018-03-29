@@ -7,9 +7,9 @@ install_zeromq() {
 
     mkdir libzmq
     cd libzmq
-    curl -L https://github.com/zeromq/libzmq/releases/download/v${ZMQ_VERSION}/zeromq-${ZMQ_VERSION}.tar.gz >zeromq.tar.gz
+    curl -L https://github.com/zeromq/libzmq/archive/v${ZMQ_VERSION}.tar.gz >zeromq.tar.gz
     tar -xvzf zeromq.tar.gz
-    cd zeromq-${ZMQ_VERSION}
+    cd libzmq-${ZMQ_VERSION}
 
     mkdir build
     cd build
@@ -25,14 +25,17 @@ if [ "${ZMQ_VERSION}" != "" ] ; then install_zeromq ; fi
 
 # build cppzmq
 
+pushd .
 mkdir build
 cd build
 cmake ..
 sudo make -j4 install
+popd
 
 # build cppzmq tests
-# cd tests
-# mkdir build
-# cd build
-# cmake ..
-# make -j5 test ARGS="-V"
+cd tests
+mkdir build
+cd build
+cmake ..
+cmake --build .
+ctest

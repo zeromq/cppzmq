@@ -1,6 +1,6 @@
 # Travis CI script
 
-language: c
+language: cpp
 
 os:
 - linux
@@ -10,10 +10,15 @@ dist: trusty
 
 cache: ccache
 
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+
 env:
   matrix:
 #    - BUILD_TYPE=cmake DRAFT=enabled
-    - BUILD_TYPE=cmake
+    - BUILD_TYPE=cmake ZMQ_VERSION=4.2.5
 
 matrix:
   include:
@@ -28,6 +33,12 @@ matrix:
 
 sudo: required
 
+before_install:
+  - pip install --user cpp-coveralls
+  
 # Build and check this project according to the BUILD_TYPE
 script: 
   - ./ci_build.sh
+
+after_success:
+  - coveralls --root . -E ".*external.*" -E ".*CMakeFiles.*" -E ".*tests/" -E ".*libzmq/"
