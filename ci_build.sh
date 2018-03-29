@@ -25,14 +25,17 @@ if [ "${ZMQ_VERSION}" != "" ] ; then install_zeromq ; fi
 
 # build cppzmq
 
+pushd .
 mkdir build
 cd build
 cmake ..
 sudo make -j4 install
+popd
 
 # build cppzmq tests
-# cd tests
-# mkdir build
-# cd build
-# cmake ..
-# make -j5 test ARGS="-V"
+cd tests
+mkdir build
+cd build
+cmake ..
+cmake --build .
+ctest
