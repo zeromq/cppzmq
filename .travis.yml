@@ -41,4 +41,4 @@ script:
   - ./ci_build.sh
 
 after_success:
-  - coveralls --root . -E ".*external.*" -E ".*CMakeFiles.*" -E ".*tests/" -E ".*libzmq/"
+  - coveralls --root . -E ".*external.*" -E ".*CMakeFiles.*" -E ".*tests/" -E ".*demo/" -E ".*libzmq/"

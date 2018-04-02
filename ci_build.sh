@@ -29,11 +29,13 @@ pushd .
 mkdir build
 cd build
 cmake ..
+cmake --build .
 sudo make -j4 install
+make test ARGS="-V"
 popd
 
-# build cppzmq tests
-cd tests
+# build cppzmq demo
+cd demo
 mkdir build
 cd build
 cmake ..
