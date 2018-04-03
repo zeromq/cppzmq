@@ -4,7 +4,7 @@ pkg_check_modules(PC_LIBZMQ QUIET libzmq)
 set(ZeroMQ_VERSION ${PC_LIBZMQ_VERSION})
 find_library(ZeroMQ_LIBRARY NAMES libzmq.so libzmq.dylib libzmq.dll
              PATHS ${PC_LIBZMQ_LIBDIR} ${PC_LIBZMQ_LIBRARY_DIRS})
-find_library(ZeroMQ_STATIC_LIBRARY NAMES libzmq.a libzmq.dll.a
+find_library(ZeroMQ_STATIC_LIBRARY NAMES libzmq-static.a libzmq.a libzmq.dll.a
              PATHS ${PC_LIBZMQ_LIBDIR} ${PC_LIBZMQ_LIBRARY_DIRS})
 
 if(ZeroMQ_LIBRARY AND ZeroMQ_STATIC_LIBRARY)

@@ -19,6 +19,7 @@ env:
   matrix:
 #    - BUILD_TYPE=cmake DRAFT=enabled
     - BUILD_TYPE=cmake ZMQ_VERSION=4.2.5
+    - BUILD_TYPE=cmake ZMQ_VERSION=4.2.0
 
 matrix:
   include:
