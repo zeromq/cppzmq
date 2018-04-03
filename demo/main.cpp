@@ -1,9 +1,8 @@
-#include "gtest/gtest.h"
 #include <zmq.hpp>
 
-TEST(create_context, add)
+int main(int argc, char** argv)
 {
     zmq::context_t context;
     
-    
+    return 0;
 }
