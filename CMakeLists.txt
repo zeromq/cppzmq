@@ -19,6 +19,18 @@ if (ZeroMQ_FOUND AND (NOT TARGET libzmq OR NOT TARGET libzmq-static))
   message(FATAL_ERROR "ZeroMQ version not supported!")
 endif()
 
+if (EXISTS "${SOURCE_DIR}/.git")
+    OPTION (ENABLE_DRAFTS "Build and install draft classes and methods" ON)
+else ()
+    OPTION (ENABLE_DRAFTS "Build and install draft classes and methods" OFF)
+endif ()
+IF (ENABLE_DRAFTS)
+    ADD_DEFINITIONS (-DZMQ_BUILD_DRAFT_API)
+    set (pkg_config_defines "-DZMQ_BUILD_DRAFT_API=1")
+ELSE (ENABLE_DRAFTS)
+    set (pkg_config_defines "")
+ENDIF (ENABLE_DRAFTS)
+
 message(STATUS "cppzmq v${CPPZMQ_VERSION}")
 
 set(CPPZMQ_HEADERS

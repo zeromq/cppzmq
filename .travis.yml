@@ -39,7 +39,7 @@ matrix:
           packages:
             - g++-7
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" BUILD_TYPE=cmake ZMQ_VERSION=4.2.5
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" BUILD_TYPE=cmake ZMQ_VERSION=4.2.5 DRAFT=1
 
 sudo: required
 

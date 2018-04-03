@@ -24,6 +24,7 @@ add_executable(
     unit_tests
     context.cpp
     socket.cpp
+    poller.cpp
     )
 
 target_link_libraries(
