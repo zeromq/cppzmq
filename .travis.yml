@@ -31,6 +31,15 @@ matrix:
         # - llvm-toolchain-trusty-5.0
       # packages:
         # - clang-5.0
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" BUILD_TYPE=cmake ZMQ_VERSION=4.2.5
 
 sudo: required
 
@@ -38,7 +47,8 @@ before_install:
   - pip install --user cpp-coveralls
   
 # Build and check this project according to the BUILD_TYPE
-script: 
+script:     
+  - eval "${MATRIX_EVAL}"
   - ./ci_build.sh
 
 after_success:
