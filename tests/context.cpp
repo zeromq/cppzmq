@@ -13,9 +13,3 @@ TEST(context, create_close)
     
     ASSERT_EQ(NULL, (void*)context);
 }
-
-TEST(socket, create_destroy)
-{
-    zmq::context_t context;
-    zmq::socket_t socket(context, ZMQ_ROUTER);
-}

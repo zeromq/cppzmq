@@ -22,7 +22,8 @@ fetch_googletest(
 
 add_executable(
     unit_tests
-    example_add.cpp
+    context.cpp
+    socket.cpp
     )
 
 target_link_libraries(
