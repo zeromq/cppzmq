@@ -1003,10 +1003,10 @@ namespace zmq
                 assert(rc == 0);
             }
         }
-		
+
         poller_t(const poller_t&) = delete;
         poller_t &operator=(const poller_t&) = delete;
-        poller_t(poller_t&& src) 
+        poller_t(poller_t&& src)
           : poller_ptr(src.poller_ptr)
           , poller_events(std::move (src.poller_events))
         {
@@ -1018,7 +1018,7 @@ namespace zmq
             poller_events = std::move (src.poller_events);
             src.poller_ptr = NULL;
             return *this;
-        }		
+        }
 
         void add (zmq::socket_t &socket, short events, std::function<void(void)> &handler)
         {
