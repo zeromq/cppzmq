@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <array>
 #include <zmq.hpp>
 
 #if defined(ZMQ_CPP11) && defined(ZMQ_BUILD_DRAFT_API)
