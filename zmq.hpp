@@ -1020,7 +1020,9 @@ namespace zmq
             return *this;
         }
 
-        void add (zmq::socket_t &socket, short events, std::function<void(void)> &handler)
+        using handler_t = std::function<void(short)>;
+
+        void add (zmq::socket_t &socket, short events, handler_t &handler)
         {
             if (0 == zmq_poller_add (poller_ptr, socket.ptr, handler ? &handler : NULL, events)) {
                 poller_events.emplace_back (zmq_poller_event_t ());
@@ -1044,7 +1046,7 @@ namespace zmq
             if (rc >= 0) {
                 std::for_each (poller_events.begin (), poller_events.begin () + rc, [](zmq_poller_event_t& event) {
                     if (event.user_data != NULL)
-                        (*reinterpret_cast<std::function<void(void)>*> (event.user_data)) ();
+                        (*reinterpret_cast<handler_t*> (event.user_data)) (event.events);
                 });
                 return true;
             }
