@@ -26,6 +26,14 @@
 #ifndef __ZMQ_HPP_INCLUDED__
 #define __ZMQ_HPP_INCLUDED__
 
+#if (__cplusplus >= 201402L)
+    #define ZMQ_DEPRECATED(msg) [[deprecated(msg)]]
+#elif defined(_MSC_VER)
+	#define ZMQ_DEPRECATED(msg) __declspec(deprecated(msg))
+#elif defined(__GNUC__)
+	#define ZMQ_DEPRECATED(msg) __attribute__((deprecated(msg)))
+#endif	
+
 #if (__cplusplus >= 201103L)
     #define ZMQ_CPP11
     #define ZMQ_NOTHROW noexcept
@@ -1022,9 +1030,21 @@ namespace zmq
 
         using handler_t = std::function<void(short)>;
 
-        void add (zmq::socket_t &socket, short events, handler_t &handler)
+		ZMQ_DEPRECATED("from 4.3.0, use overload accepting handler_t instead")
+        void add (zmq::socket_t &socket, short events, std::function<void(void)> &handler)
         {
-            if (0 == zmq_poller_add (poller_ptr, socket.ptr, handler ? &handler : NULL, events)) {
+		    add (socket, events, [&handler](short) { handler(); });
+		}
+
+        void add (zmq::socket_t &socket, short events, handler_t handler)
+        {
+		    handler_t *handler_ptr = nullptr;
+			/// \todo is it sensible to allow handler to be empty? doesn't this lead to an error when the event is signalled? (perhaps it should already lead to an error in zmq_poller_add then)
+			if (handler) {
+		        auto emplace_res = handlers.emplace(&socket, std::move(handler));
+		        handler_ptr = &emplace_res.first->second;
+			}
+            if (0 == zmq_poller_add (poller_ptr, socket.ptr, handler_ptr, events)) {
                 poller_events.emplace_back (zmq_poller_event_t ());
                 return;
             }
@@ -1034,7 +1054,11 @@ namespace zmq
         void remove (zmq::socket_t &socket)
         {
             if (0 == zmq_poller_remove (poller_ptr, socket.ptr)) {
-                poller_events.pop_back ();
+			    auto it = handlers.find (&socket);
+				if (it != handlers.end ()) { /// \todo this may only be false if handler was empty on add
+			      handlers.erase (it);
+				}
+                poller_events.pop_back ();				
                 return;
             }
             throw error_t ();
@@ -1060,10 +1084,16 @@ namespace zmq
 
             throw error_t ();
         }
+		
+		size_t size ()
+		{
+		    return poller_events.size();
+		}
 
     private:
         void *poller_ptr;
         std::vector<zmq_poller_event_t> poller_events;
+		std::map<socket_t*, handler_t> handlers;
     };  // class poller_t
 #endif //  defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && defined(ZMQ_HAVE_POLLER)
 

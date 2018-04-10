@@ -8,19 +8,62 @@
  TEST(poller, create_destroy)
  {
     zmq::poller_t poller;
+	ASSERT_EQ(0u, poller.size ());
 }
 
-TEST(poller, move_contruct)
+static_assert(!std::is_copy_constructible<zmq::poller_t>::value, "poller_t should not be copy-constructible");
+static_assert(!std::is_copy_assignable<zmq::poller_t>::value, "poller_t should not be copy-assignable");
+
+TEST(poller, move_construct_empty)
 {
-    zmq::poller_t poller;
-    zmq::poller_t poller_move {std::move (poller)};
+	std::unique_ptr<zmq::poller_t> a{new zmq::poller_t};
+	zmq::poller_t b = std::move(*a);
+
+	ASSERT_EQ(0u, a->size ());
+	a.reset ();
+	ASSERT_EQ(0u, b.size ());
 }
 
-TEST(poller, move_assign)
+TEST(poller, move_assign_empty)
 {
-    zmq::poller_t poller;
-    zmq::poller_t poller_assign;
-    poller_assign = std::move (poller);
+	std::unique_ptr<zmq::poller_t> a{new zmq::poller_t};
+	zmq::poller_t b;
+
+	b = std::move(*a);
+
+	ASSERT_EQ(0u, a->size ());
+	a.reset ();
+	ASSERT_EQ(0u, b.size ());
+}
+
+TEST(poller, move_construct_non_empty)
+{
+    zmq::context_t context;
+    zmq::socket_t socket{context, zmq::socket_type::router};
+
+	std::unique_ptr<zmq::poller_t> a{new zmq::poller_t};
+	a->add(socket, ZMQ_POLLIN, [](short) {});
+	zmq::poller_t b = std::move(*a);
+
+	ASSERT_EQ(0u, a->size ());
+	a.reset ();
+	ASSERT_EQ(1u, b.size ());
+}
+
+TEST(poller, move_assign_non_empty)
+{
+    zmq::context_t context;
+    zmq::socket_t socket{context, zmq::socket_type::router};
+
+	std::unique_ptr<zmq::poller_t> a{new zmq::poller_t};
+	a->add(socket, ZMQ_POLLIN, [](short) {});
+	zmq::poller_t b;
+
+	b = std::move(*a);
+
+	ASSERT_EQ(0u, a->size ());
+	a.reset ();
+	ASSERT_EQ(1u, b.size ());
 }
 
 TEST(poller, add_handler)
@@ -49,12 +92,14 @@ TEST(poller, add_handler_twice_throws)
     zmq::poller_t poller;
     zmq::poller_t::handler_t handler;
     poller.add(socket, ZMQ_POLLIN, handler);
+	/// \todo the actual error code should be checked
     ASSERT_THROW(poller.add(socket, ZMQ_POLLIN, handler), zmq::error_t);
 }
 
 TEST(poller, wait_with_no_handlers_throws)
 {
     zmq::poller_t poller;
+	/// \todo the actual error code should be checked
     ASSERT_THROW(poller.wait(std::chrono::milliseconds{10}), zmq::error_t);
 }
 
@@ -63,16 +108,26 @@ TEST(poller, remove_unregistered_throws)
     zmq::context_t context;
     zmq::socket_t socket{context, zmq::socket_type::router};
     zmq::poller_t poller;
+	/// \todo the actual error code should be checked
     ASSERT_THROW(poller.remove(socket), zmq::error_t);
 }
 
-TEST(poller, remove_registered)
+/// \todo this should lead to an exception instead
+TEST(poller, remove_registered_empty)
 {
     zmq::context_t context;
     zmq::socket_t socket{context, zmq::socket_type::router};
     zmq::poller_t poller;
-    zmq::poller_t::handler_t handler;
-    poller.add(socket, ZMQ_POLLIN, handler);
+    poller.add(socket, ZMQ_POLLIN, zmq::poller_t::handler_t{});
+    ASSERT_NO_THROW(poller.remove(socket));
+}
+
+TEST(poller, remove_registered_non_empty)
+{
+    zmq::context_t context;
+    zmq::socket_t socket{context, zmq::socket_type::router};
+    zmq::poller_t poller;    
+    poller.add(socket, ZMQ_POLLIN, [](short) {});
     ASSERT_NO_THROW(poller.remove(socket));
 }
 
@@ -85,7 +140,7 @@ public:
     std::string endpoint() { return endpoint_; }
 private:
     // Helper function used in constructor
-    // as Gtest allows only void returning functions
+    // as Gtest allows ASSERT_* only in void returning functions
     // and constructor/destructor are not.
     void bind(zmq::socket_t &socket)
     {
@@ -112,7 +167,7 @@ TEST(poller, poll_basic)
     zmq::socket_t sink{context, zmq::socket_type::pull};
     ASSERT_NO_THROW(sink.connect(endpoint));
 
-    std::string message = "H";
+    const std::string message = "H";
 
     // TODO: send overload for string would be handy.
     ASSERT_NO_THROW(vent.send(std::begin(message), std::end(message)));
@@ -128,10 +183,11 @@ TEST(poller, poll_basic)
     ASSERT_TRUE(message_received);
 }
 
+/// \todo this contains multiple test cases that should be split up
 TEST(poller, client_server)
 {
     zmq::context_t context;
-    std::string send_msg = "Hi";
+    const std::string send_msg = "Hi";
 
     // Setup server
     zmq::socket_t server{context, zmq::socket_type::router};
