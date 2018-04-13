@@ -5,8 +5,8 @@
 
 #include <array>
 
- TEST(poller, create_destroy)
- {
+TEST(poller, create_destroy)
+{
     zmq::poller_t poller;
     ASSERT_EQ(0u, poller.size ());
 }
