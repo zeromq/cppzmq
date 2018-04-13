@@ -1,6 +1,11 @@
 #include <gtest/gtest.h>
 #include <zmq.hpp>
 
+#if defined(ZMQ_CPP11)
+static_assert(!std::is_copy_constructible<zmq::message_t>::value, "message_t should not be copy-constructible");
+static_assert(!std::is_copy_assignable<zmq::message_t>::value, "message_t should not be copy-assignable");
+#endif
+
 TEST (message, constructor_default)
 {
     const zmq::message_t message;
@@ -45,6 +50,28 @@ TEST (message, constructor_container)
 TEST (message, constructor_move)
 {
     zmq::message_t hi_msg (zmq::message_t(data, strlen (data)));
+}
+
+TEST (message, assign_move_empty_before)
+{
+    zmq::message_t hi_msg;
+    hi_msg = zmq::message_t (data, strlen (data));
+    ASSERT_EQ (2u, hi_msg.size ());
+    ASSERT_EQ (0, memcmp (data, hi_msg.data (), 2));
+}
+
+TEST (message, assign_move_empty_after)
+{
+    zmq::message_t hi_msg (data, strlen (data));
+    hi_msg = zmq::message_t();
+    ASSERT_EQ (0u, hi_msg.size ());
+}
+
+TEST (message, assign_move_empty_before_and_after)
+{
+    zmq::message_t hi_msg;
+    hi_msg = zmq::message_t();
+    ASSERT_EQ (0u, hi_msg.size ());
 }
 #endif
 
