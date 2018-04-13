@@ -1,30 +1,67 @@
 #include <gtest/gtest.h>
 #include <zmq.hpp>
 
-TEST (message, create_destroy)
+TEST (message, constructor_default)
 {
-    zmq::message_t message;
+    const zmq::message_t message;
+    ASSERT_EQ (0u, message.size ());
 }
 
-TEST (message, constructors)
+const char* const data = "Hi";
+
+TEST (message, constructor_iterators)
 {
-    const std::string hi ("Hi");
-    zmq::message_t hi_msg_a (hi.begin (), hi.end ());
-    ASSERT_EQ (hi_msg_a.size (), hi.size ());
-    zmq::message_t hi_msg_b (hi.data (), hi.size ());
-    ASSERT_EQ (hi_msg_b.size (), hi.size ());
-    ASSERT_EQ (hi_msg_a, hi_msg_b);
-#if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11)
-    zmq::message_t hello_msg_a ("Hello");
-    ASSERT_NE (hi_msg_a, hello_msg_a);
-    ASSERT_NE (hi_msg_b, hello_msg_a);
-    zmq::message_t hi_msg_c (hi);
-    ASSERT_EQ (hi_msg_c, hi_msg_a);
-    ASSERT_EQ (hi_msg_c, hi_msg_b);
-    ASSERT_NE (hi_msg_c, hello_msg_a);
-#endif
-#ifdef ZMQ_HAS_RVALUE_REFS
-    zmq::message_t hello_msg_b(zmq::message_t("Hello"));
-    ASSERT_EQ (hello_msg_a, hello_msg_b);
-#endif
+    const std::string hi (data);
+    const zmq::message_t hi_msg (hi.begin (), hi.end ());
+    ASSERT_EQ (2u, hi_msg.size ());
+    ASSERT_EQ (0, memcmp (data, hi_msg.data (), 2));
 }
+
+TEST (message, constructor_pointer_size)
+{
+    const std::string hi (data);
+    const zmq::message_t hi_msg (hi.data (), hi.size ());
+    ASSERT_EQ (2u, hi_msg.size ());
+    ASSERT_EQ (0, memcmp (data, hi_msg.data (), 2));
+}
+
+TEST (message, constructor_char_array) {
+    const zmq::message_t hi_msg (data, strlen (data));
+    ASSERT_EQ (2u, hi_msg.size ());
+    ASSERT_EQ (0, memcmp (data, hi_msg.data (), 2));
+}
+
+#if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11)
+TEST (message, constructor_container)
+{
+    const std::string hi (data);
+    zmq::message_t hi_msg (hi);
+    ASSERT_EQ (2u, hi_msg.size ());
+    ASSERT_EQ (0, memcmp (data, hi_msg.data (), 2));
+}
+#endif
+
+#ifdef ZMQ_HAS_RVALUE_REFS
+TEST (message, constructor_move)
+{
+    zmq::message_t hi_msg (zmq::message_t(data, strlen (data)));
+}
+#endif
+
+TEST (message, equality_self) {
+    const zmq::message_t hi_msg (data, strlen (data));
+    ASSERT_EQ (hi_msg, hi_msg);
+}
+
+TEST (message, equality_equal) {
+    const zmq::message_t hi_msg_a (data, strlen (data));
+    const zmq::message_t hi_msg_b (data, strlen (data));
+    ASSERT_EQ (hi_msg_a, hi_msg_b);
+}
+
+TEST (message, equality_non_equal) {
+    const zmq::message_t msg_a ("Hi", 2);
+    const zmq::message_t msg_b ("Hello", 5);
+    ASSERT_NE (msg_a, msg_b);
+}
+
