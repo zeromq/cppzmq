@@ -59,9 +59,27 @@ TEST (message, equality_equal) {
     ASSERT_EQ (hi_msg_a, hi_msg_b);
 }
 
+TEST (message, equality_equal_empty) {
+    const zmq::message_t msg_a;
+    const zmq::message_t msg_b;
+    ASSERT_EQ (msg_a, msg_b);
+}
+
 TEST (message, equality_non_equal) {
     const zmq::message_t msg_a ("Hi", 2);
     const zmq::message_t msg_b ("Hello", 5);
+    ASSERT_NE (msg_a, msg_b);
+}
+
+TEST (message, equality_non_equal_rhs_empty) {
+    const zmq::message_t msg_a ("Hi", 2);
+    const zmq::message_t msg_b;
+    ASSERT_NE (msg_a, msg_b);
+}
+
+TEST (message, equality_non_equal_lhs_empty) {
+    const zmq::message_t msg_a;
+    const zmq::message_t msg_b ("Hi", 2);
     ASSERT_NE (msg_a, msg_b);
 }
 
