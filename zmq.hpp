@@ -393,11 +393,10 @@ namespace zmq
 
         inline bool operator==(const message_t &other) const ZMQ_NOTHROW
         {
+            size_t my_size = size ();
             if (size () != other.size ())
                 return false;
-            const std::string a(data<char>(), size());
-            const std::string b(other.data<char>(), other.size());
-            return a == b;
+            return 0 == memcmp (data (), other.data (), my_size);
         }
 
         inline bool operator!=(const message_t &other) const ZMQ_NOTHROW
