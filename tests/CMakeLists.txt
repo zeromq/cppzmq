@@ -22,6 +22,7 @@ fetch_googletest(
 
 add_executable(
     unit_tests
+    message.cpp
     context.cpp
     socket.cpp
     poller.cpp

@@ -271,6 +271,12 @@ namespace zmq
                 throw error_t ();
         }
 
+#if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11)
+        template<typename T> message_t (const T &msg_)
+            : message_t (std::begin (msg_), std::end (msg_))
+        {}
+#endif
+
 #ifdef ZMQ_HAS_RVALUE_REFS
         inline message_t (message_t &&rhs): msg (rhs.msg)
         {
@@ -379,13 +385,28 @@ namespace zmq
             return static_cast<T const*>( data() );
         }
 
+        ZMQ_DEPRECATED("from 4.3.0, use operator== instead")
         inline bool equal(const message_t* other) const ZMQ_NOTHROW
         {
             if (size() != other->size())
                 return false;
-            std::string a(data<char>(), size());
-            std::string b(other->data<char>(), other->size());
+            const std::string a(data<char>(), size());
+            const std::string b(other->data<char>(), other->size());
             return a == b;
+        }
+
+        inline bool operator==(const message_t &other) const ZMQ_NOTHROW
+        {
+            if (size () != other.size ())
+                return false;
+            const std::string a(data<char>(), size());
+            const std::string b(other.data<char>(), other.size());
+            return a == b;
+        }
+
+        inline bool operator!=(const message_t &other) const ZMQ_NOTHROW
+        {
+            return !(*this == other);
         }
 
 #if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 1, 0)

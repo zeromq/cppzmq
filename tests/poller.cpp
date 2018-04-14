@@ -167,10 +167,7 @@ TEST(poller, poll_basic)
     zmq::socket_t sink{context, zmq::socket_type::pull};
     ASSERT_NO_THROW(sink.connect(endpoint));
 
-    const std::string message = "H";
-
-    // TODO: send overload for string would be handy.
-    ASSERT_NO_THROW(vent.send(std::begin(message), std::end(message)));
+    ASSERT_NO_THROW(vent.send("Hi"));
 
     zmq::poller_t poller;
     bool message_received = false;
@@ -217,7 +214,7 @@ TEST(poller, client_server)
     // Setup client and send message
     zmq::socket_t client{context, zmq::socket_type::dealer};
     ASSERT_NO_THROW(client.connect(endpoint));
-    ASSERT_NO_THROW(client.send(std::begin(send_msg), std::end(send_msg)));
+    ASSERT_NO_THROW(client.send(send_msg));
 
     ASSERT_NO_THROW(poller.wait(std::chrono::milliseconds{-1}));
     ASSERT_TRUE(got_pollin);
