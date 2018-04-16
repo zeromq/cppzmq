@@ -4,6 +4,7 @@
 #if defined(ZMQ_CPP11) && defined(ZMQ_BUILD_DRAFT_API)
 
 #include <array>
+#include <memory>
 
 TEST(poller, create_destroy)
 {

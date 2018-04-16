@@ -24,6 +24,11 @@ macro(fetch_googletest _download_module_path _download_root)
             ${_download_root}
         )
 
+if (MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING")
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+endif()
+
     # adds the targers: gtest, gtest_main, gmock, gmock_main
     add_subdirectory(
         ${_download_root}/googletest-src
