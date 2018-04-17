@@ -30,5 +30,6 @@ build:
     verbosity: normal
 
 test_script:
+    - cp Build-libzmq/bin/%configuration%/libzmq*.dll Build/bin/%configuration/
     - cd Build
     - ctest -V -C %configuration%
