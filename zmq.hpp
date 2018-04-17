@@ -389,20 +389,13 @@ namespace zmq
         ZMQ_DEPRECATED("from 4.3.0, use operator== instead")
         inline bool equal(const message_t* other) const ZMQ_NOTHROW
         {
-            if (size() != other->size())
-                return false;
-            const std::string a(data<char>(), size());
-            const std::string b(other->data<char>(), other->size());
-            return a == b;
+            return *this == *other;
         }
 
         inline bool operator==(const message_t &other) const ZMQ_NOTHROW
         {
-            if (size () != other.size ())
-                return false;
-            const std::string a(data<char>(), size());
-            const std::string b(other.data<char>(), other.size());
-            return a == b;
+            const size_t my_size = size ();
+            return my_size == other.size () && 0 == memcmp (data (), other.data (), my_size);
         }
 
         inline bool operator!=(const message_t &other) const ZMQ_NOTHROW
