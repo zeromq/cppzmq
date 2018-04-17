@@ -1,0 +1,35 @@
+version: build-{build}
+
+os:
+    - Visual Studio 2017
+    - Visual Studio 2015
+
+init:
+    - cmake --version
+    - msbuild /version
+
+platform:
+    - Win32
+    - x64
+
+configuration:
+    - Debug
+
+environment:
+    ZMQ_VERSION: 4.2.5
+
+before_build:
+    - appveyor DownloadFile https://github.com/zeromq/libzmq/archive/v%ZMQ_VERSION%.zip
+    - 7z x v%ZMQ_VERSION%.zip >NUL
+    - cmake -H./libzmq-%ZMQ_VERSION% -BBuild-libzmq -DENABLE_DRAFTS=ON -DWITH_PERF_TOOL=OFF -DZMQ_BUILD_TESTS=OFF -DENABLE_CPACK=OFF -A%PLATFORM%
+    - cmake --build Build-libzmq
+    - cmake -H. -BBuild -DCMAKE_PREFIX_PATH=./Build-libzmq -A%PLATFORM%
+
+build:
+    project: Build/cppzmq.sln
+    verbosity: normal
+
+test_script:
+    - cp Build-libzmq/bin/%configuration%/libzmq*.dll Build/bin/%configuration%/
+    - cd Build
+    - ctest -V -C %configuration%

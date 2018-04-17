@@ -73,6 +73,7 @@
     #include <chrono>
     #include <tuple>
     #include <functional>
+    #include <unordered_map>
 #endif
 
 //  Detect whether the compiler supports C++11 rvalue references.
@@ -1107,7 +1108,7 @@ namespace zmq
     private:
         void *poller_ptr;
         std::vector<zmq_poller_event_t> poller_events;
-        std::map<socket_t*, handler_t> handlers;
+        std::unordered_map<socket_t*, handler_t> handlers;
     };  // class poller_t
 #endif //  defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && defined(ZMQ_HAVE_POLLER)
 
