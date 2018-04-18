@@ -1058,18 +1058,17 @@ namespace zmq
 
         void add (zmq::socket_t &socket, short events, handler_t handler)
         {
-            if (!socket)
-                throw error_t ();
-            handler_t *handler_ptr = nullptr;
-            /// \todo is it sensible to allow handler to be empty? doesn't this lead to an error when the event is signalled? (perhaps it should already lead to an error in zmq_poller_add then)
-            if (handler) {
-                auto emplace_res = handlers.emplace (socket.ptr, std::move (handler));
-                handler_ptr = &emplace_res.first->second;
-            }
-            if (0 == zmq_poller_add (poller_ptr, socket.ptr, handler_ptr, events)) {
+            auto it = std::end (handlers);
+            auto inserted = false;
+            if (handler)
+                std::tie(it, inserted) = handlers.emplace (socket.ptr, std::move (handler));
+            if (0 == zmq_poller_add (poller_ptr, socket.ptr, inserted ? &(it->second) : nullptr, events)) {
                 poller_events.emplace_back (zmq_poller_event_t ());
                 return;
             }
+            // rollback
+            if (inserted)
+                handlers.erase (socket.ptr);
             throw error_t ();
         }
 
