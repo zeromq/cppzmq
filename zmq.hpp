@@ -536,6 +536,11 @@ namespace zmq
         {
             return ptr;
         }
+
+        inline operator bool() const ZMQ_NOTHROW
+        {
+            return ptr != NULL;
+        }
     private:
 
         void *ptr;
@@ -1053,10 +1058,12 @@ namespace zmq
 
         void add (zmq::socket_t &socket, short events, handler_t handler)
         {
+            if (!socket)
+                throw error_t ();
             handler_t *handler_ptr = nullptr;
             /// \todo is it sensible to allow handler to be empty? doesn't this lead to an error when the event is signalled? (perhaps it should already lead to an error in zmq_poller_add then)
             if (handler) {
-                auto emplace_res = handlers.emplace(&socket, std::move(handler));
+                auto emplace_res = handlers.emplace (socket.ptr, std::move (handler));
                 handler_ptr = &emplace_res.first->second;
             }
             if (0 == zmq_poller_add (poller_ptr, socket.ptr, handler_ptr, events)) {
@@ -1069,10 +1076,7 @@ namespace zmq
         void remove (zmq::socket_t &socket)
         {
             if (0 == zmq_poller_remove (poller_ptr, socket.ptr)) {
-                auto it = handlers.find (&socket);
-                if (it != handlers.end ()) { /// \todo this may only be false if handler was empty on add
-                    handlers.erase (it);
-                }
+                handlers.erase (socket.ptr);
                 poller_events.pop_back ();
                 return;
             }
@@ -1108,7 +1112,7 @@ namespace zmq
     private:
         void *poller_ptr;
         std::vector<zmq_poller_event_t> poller_events;
-        std::unordered_map<socket_t*, handler_t> handlers;
+        std::unordered_map<void*, handler_t> handlers;
     };  // class poller_t
 #endif //  defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && defined(ZMQ_HAVE_POLLER)
 

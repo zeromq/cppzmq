@@ -228,4 +228,28 @@ TEST(poller, client_server)
     ASSERT_TRUE(got_pollout);
 }
 
+TEST(poller, poller_add_invalid_socket_throws)
+{
+    zmq::context_t context;
+    zmq::poller_t poller;
+    zmq::socket_t a {context, zmq::socket_type::router};
+    zmq::socket_t b {std::move (a)};
+    ASSERT_THROW (poller.add (a, ZMQ_POLLIN, zmq::poller_t::handler_t {}),
+                  zmq::error_t);
+    ASSERT_EQ (0u, poller.size ());
+}
+
+TEST(poller, poller_remove_invalid_socket_throws)
+{
+    zmq::context_t context;
+    zmq::socket_t socket {context, zmq::socket_type::router};
+    zmq::poller_t poller;
+    ASSERT_NO_THROW (poller.add (socket, ZMQ_POLLIN, zmq::poller_t::handler_t {}));
+    ASSERT_EQ (1u, poller.size ());
+    std::vector<zmq::socket_t> sockets;
+    sockets.emplace_back (std::move (socket));
+    ASSERT_THROW (poller.remove (socket), zmq::error_t);
+    ASSERT_EQ (1u, poller.size ());
+}
+
 #endif
