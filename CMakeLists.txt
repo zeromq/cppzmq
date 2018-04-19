@@ -76,5 +76,9 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/libzmq-pkg-config/FindZeroMQ.cmake
               DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR}/libzmq-pkg-config)
 
-enable_testing()
-add_subdirectory(tests)
+option(CPPZMQ_BUILD_TESTS "Whether or not to build the tests" ON)
+
+if (CPPZMQ_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
