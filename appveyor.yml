@@ -22,7 +22,7 @@ cache:
   - libzmq-%ZMQ_VERSION% -> appveyor.yml
 
 before_build:
-    if not exist libzmq-%ZMQ_VERSION% (
+    - if not exist libzmq-%ZMQ_VERSION% (
         appveyor DownloadFile https://github.com/zeromq/libzmq/archive/v%ZMQ_VERSION%.zip &&
         7z x v%ZMQ_VERSION%.zip >NUL &&
         cmake -H./libzmq-%ZMQ_VERSION% -BBuild-libzmq -DENABLE_DRAFTS=ON -DWITH_PERF_TOOL=OFF -DZMQ_BUILD_TESTS=OFF -DENABLE_CPACK=OFF -A%PLATFORM% &&
