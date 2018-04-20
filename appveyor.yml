@@ -17,25 +17,24 @@ configuration:
 
 environment:
     ZMQ_VERSION: 4.2.5
-    ZMQ_SRC: libzmq-%ZMQ_VERSION%
-    ZMQ_BLD: %ZMQ_SRC%/build
+    ZMQ_DIR: libzmq-%ZMQ_VERSION%
 
 cache:
-    - %ZMQ_SRC% -> appveyor.yml
+    - %ZMQ_DIR% -> appveyor.yml
 
 before_build:
     - if not exist %ZMQ_SRC% (
         appveyor DownloadFile https://github.com/zeromq/libzmq/archive/v%ZMQ_VERSION%.zip &&
         7z x v%ZMQ_VERSION%.zip >NUL &&
-        cmake -H./%ZMQ_SRC% -B%ZMQ_BLD% -DENABLE_DRAFTS=ON -DWITH_PERF_TOOL=OFF -DZMQ_BUILD_TESTS=OFF -DENABLE_CPACK=OFF -A%PLATFORM% &&
-        cmake --build %ZMQ_BLD%)
-    - cmake -H. -BBuild -DCMAKE_PREFIX_PATH=./%ZMQ_BLD% -A%PLATFORM%
+        cmake -H./%ZMQ_DIR% -B%ZMQ_DIR%/build -DENABLE_DRAFTS=ON -DWITH_PERF_TOOL=OFF -DZMQ_BUILD_TESTS=OFF -DENABLE_CPACK=OFF -A%PLATFORM% &&
+        cmake --build %ZMQ_DIR%/build)
+    - cmake -H. -BBuild -DCMAKE_PREFIX_PATH=./%ZMQ_DIR%/build -A%PLATFORM%
 
 build:
     project: Build/cppzmq.sln
     verbosity: normal
 
 test_script:
-    - cp %ZMQ_BLD%/bin/%configuration%/libzmq*.dll Build/bin/%configuration%/
+    - cp %ZMQ_DIR%/build/bin/%configuration%/libzmq*.dll Build/bin/%configuration%/
     - cd Build
     - ctest -V -C %configuration%
