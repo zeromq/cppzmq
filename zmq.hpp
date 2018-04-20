@@ -1053,7 +1053,8 @@ namespace zmq
         ZMQ_DEPRECATED("from 4.3.0, use overload accepting handler_t instead")
         void add (zmq::socket_t &socket, short events, std::function<void(void)> &handler)
         {
-            add (socket, events, [&handler](short) { handler(); });
+            add (socket, events, handler ? [&handler](short) { handler(); }
+                                         : handler_t{});
         }
 
         void add (zmq::socket_t &socket, short events, handler_t handler)
