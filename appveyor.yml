@@ -15,15 +15,20 @@ platform:
 configuration:
     - Debug
 
+cache:
+  - libzmq-%ZMQ_VERSION% -> appveyor.yml
+
 environment:
     ZMQ_VERSION: 4.2.5
 
 before_build:
-    - appveyor DownloadFile https://github.com/zeromq/libzmq/archive/v%ZMQ_VERSION%.zip
-    - 7z x v%ZMQ_VERSION%.zip >NUL
-    - cmake -H./libzmq-%ZMQ_VERSION% -BBuild-libzmq -DENABLE_DRAFTS=ON -DWITH_PERF_TOOL=OFF -DZMQ_BUILD_TESTS=OFF -DENABLE_CPACK=OFF -A%PLATFORM%
-    - cmake --build Build-libzmq
-    - cmake -H. -BBuild -DCMAKE_PREFIX_PATH=./Build-libzmq -A%PLATFORM%
+    if not exist libzmq-%ZMQ_VERSION% (
+        appveyor DownloadFile https://github.com/zeromq/libzmq/archive/v%ZMQ_VERSION%.zip &&
+        7z x v%ZMQ_VERSION%.zip >NUL &&
+        cmake -H./libzmq-%ZMQ_VERSION% -BBuild-libzmq -DENABLE_DRAFTS=ON -DWITH_PERF_TOOL=OFF -DZMQ_BUILD_TESTS=OFF -DENABLE_CPACK=OFF -A%PLATFORM% &&
+        cmake --build Build-libzmq &&
+        cmake -H. -BBuild -DCMAKE_PREFIX_PATH=./Build-libzmq -A%PLATFORM%
+    )
 
 build:
     project: Build/cppzmq.sln
