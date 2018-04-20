@@ -15,13 +15,13 @@ platform:
 configuration:
     - Debug
 
-cache:
-  - libzmq-%ZMQ_VERSION% -> appveyor.yml
-
 environment:
     ZMQ_VERSION: 4.2.5
 
-before_build:
+cache:
+  - libzmq-%ZMQ_VERSION% -> appveyor.yml
+
+install:
     if not exist libzmq-%ZMQ_VERSION% (
         appveyor DownloadFile https://github.com/zeromq/libzmq/archive/v%ZMQ_VERSION%.zip &&
         7z x v%ZMQ_VERSION%.zip >NUL &&
