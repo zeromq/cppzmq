@@ -252,4 +252,19 @@ TEST(poller, poller_remove_invalid_socket_throws)
     ASSERT_EQ (1u, poller.size ());
 }
 
+TEST(poller, wait_on_added_empty_handler)
+{
+    zmq::context_t context;
+    zmq::socket_t vent{context, zmq::socket_type::push};
+    auto endpoint = loopback_ip4_binder(vent).endpoint();
+
+    zmq::socket_t sink{context, zmq::socket_type::pull};
+    ASSERT_NO_THROW(sink.connect(endpoint));
+    ASSERT_NO_THROW(vent.send("Hi"));
+
+    zmq::poller_t poller;
+    std::function<void(void)> handler;
+    ASSERT_NO_THROW(poller.add(sink, ZMQ_POLLIN, handler));
+    ASSERT_NO_THROW(poller.wait(std::chrono::milliseconds{-1}));
+}
 #endif
