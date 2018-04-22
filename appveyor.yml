@@ -20,6 +20,7 @@ environment:
 
 cache:
     - libzmq-%ZMQ_VER% -> appveyor.yml
+    - Build/tests/googletest -> tests/cmake/googletest-download.cmake
 
 before_build:
     - if not exist libzmq-%ZMQ_VER% (
