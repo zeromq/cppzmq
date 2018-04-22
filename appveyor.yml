@@ -26,7 +26,7 @@ before_build:
     - if not exist libzmq (
         appveyor DownloadFile https://github.com/zeromq/libzmq/archive/v%ZMQ_VER%.zip &&
         7z x v%ZMQ_VER%.zip >NUL &&
-        cmake -H./libzmq-%ZMQ_VER% -Blibzmq-%ZMQ_VER%/build -CMAKE_INSTALL_PREFIX=libzmq -DENABLE_DRAFTS=ON -DWITH_PERF_TOOL=OFF -DZMQ_BUILD_TESTS=OFF -DENABLE_CPACK=OFF -A%PLATFORM% &&
+        cmake -H./libzmq-%ZMQ_VER% -Blibzmq-%ZMQ_VER%/build -DCMAKE_INSTALL_PREFIX=libzmq -DENABLE_DRAFTS=ON -DWITH_PERF_TOOL=OFF -DZMQ_BUILD_TESTS=OFF -DENABLE_CPACK=OFF -A%PLATFORM% &&
         cmake --build libzmq-%ZMQ_VER%/build --target install)
     - cmake -H. -BBuild -DCMAKE_PREFIX_PATH=./libzmq -A%PLATFORM%
 
