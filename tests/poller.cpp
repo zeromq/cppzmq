@@ -289,7 +289,7 @@ TEST(poller, modify_invalid_socket_throws)
     ASSERT_THROW (poller.modify (a, ZMQ_POLLIN), zmq::error_t);
 }
 
-TEST(poller, modified_not_added_throws)
+TEST(poller, modify_not_added_throws)
 {
     zmq::context_t context;
     zmq::socket_t a {context, zmq::socket_type::push};
@@ -297,6 +297,15 @@ TEST(poller, modified_not_added_throws)
     zmq::poller_t poller;
     ASSERT_NO_THROW (poller.add (a, ZMQ_POLLIN, zmq::poller_t::handler_t {}));
     ASSERT_THROW (poller.modify (b, ZMQ_POLLIN), zmq::error_t);
+}
+
+TEST(poller, modify_simple)
+{
+    zmq::context_t context;
+    zmq::socket_t a {context, zmq::socket_type::push};
+    zmq::poller_t poller;
+    ASSERT_NO_THROW (poller.add (a, ZMQ_POLLIN, zmq::poller_t::handler_t {}));
+    ASSERT_NO_THROW (poller.modify (a, ZMQ_POLLIN|ZMQ_POLLOUT));
 }
 
 TEST(poller, poll_client_server)
