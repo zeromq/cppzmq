@@ -1083,6 +1083,12 @@ namespace zmq
             throw error_t ();
         }
 
+        void modify (zmq::socket_t &socket, short events)
+        {
+            if (0 != zmq_poller_modify (poller_ptr, socket.ptr, events))
+                throw error_t ();
+        }
+
         bool wait (std::chrono::milliseconds timeout)
         {
             int rc = zmq_poller_wait_all (poller_ptr, poller_events.data (), static_cast<int> (poller_events.size ()), static_cast<long>(timeout.count ()));
