@@ -265,11 +265,11 @@ TEST(poller, poller_remove_invalid_socket_throws)
 TEST(poller, wait_on_added_empty_handler)
 {
     server_client_setup s;
-    ASSERT_NO_THROW(s.client.send("Hi"));
+    ASSERT_NO_THROW (s.client.send ("Hi"));
     zmq::poller_t poller;
-    std::function<void(void)> handler;
-    ASSERT_NO_THROW(poller.add(s.server, ZMQ_POLLIN, handler));
-    ASSERT_NO_THROW(poller.wait(std::chrono::milliseconds{-1}));
+    zmq::poller_t::handler_t handler;
+    ASSERT_NO_THROW (poller.add (s.server, ZMQ_POLLIN, handler));
+    ASSERT_NO_THROW (poller.wait (std::chrono::milliseconds {-1}));
 }
 
 TEST(poller, modify_empty_throws)
