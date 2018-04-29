@@ -33,5 +33,6 @@ endif()
     add_subdirectory(
         ${_download_root}/googletest-src
         ${_download_root}/googletest-build
+        EXCLUDE_FROM_ALL
         )
 endmacro()
