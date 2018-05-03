@@ -358,8 +358,9 @@ TEST(poller, remove_from_handler)
         }));
     }
     // Clients send messages
-    for (auto & s : setup_list)
+    for (auto & s : setup_list) {
         ASSERT_NO_THROW(s.client.send("Hi"));
+    }
 
     // Wait for all servers to receive a message
     for (auto & s : setup_list) {
