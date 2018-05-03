@@ -9,7 +9,6 @@
 TEST(poller, create_destroy)
 {
     zmq::poller_t poller;
-    ASSERT_EQ(0u, poller.size ());
 }
 
 static_assert(!std::is_copy_constructible<zmq::poller_t>::value, "poller_t should not be copy-constructible");
@@ -20,9 +19,7 @@ TEST(poller, move_construct_empty)
     std::unique_ptr<zmq::poller_t> a{new zmq::poller_t};
     zmq::poller_t b = std::move(*a);
 
-    ASSERT_EQ(0u, a->size ());
     a.reset ();
-    ASSERT_EQ(0u, b.size ());
 }
 
 TEST(poller, move_assign_empty)
@@ -32,9 +29,7 @@ TEST(poller, move_assign_empty)
 
     b = std::move(*a);
 
-    ASSERT_EQ(0u, a->size ());
     a.reset ();
-    ASSERT_EQ(0u, b.size ());
 }
 
 TEST(poller, move_construct_non_empty)
@@ -46,9 +41,7 @@ TEST(poller, move_construct_non_empty)
     a->add(socket, ZMQ_POLLIN, [](short) {});
     zmq::poller_t b = std::move(*a);
 
-    ASSERT_EQ(0u, a->size ());
     a.reset ();
-    ASSERT_EQ(1u, b.size ());
 }
 
 TEST(poller, move_assign_non_empty)
@@ -62,9 +55,7 @@ TEST(poller, move_assign_non_empty)
 
     b = std::move(*a);
 
-    ASSERT_EQ(0u, a->size ());
     a.reset ();
-    ASSERT_EQ(1u, b.size ());
 }
 
 TEST(poller, add_handler)
@@ -246,7 +237,6 @@ TEST(poller, poller_add_invalid_socket_throws)
     zmq::socket_t b {std::move (a)};
     ASSERT_THROW (poller.add (a, ZMQ_POLLIN, zmq::poller_t::handler_t {}),
                   zmq::error_t);
-    ASSERT_EQ (0u, poller.size ());
 }
 
 TEST(poller, poller_remove_invalid_socket_throws)
@@ -255,11 +245,9 @@ TEST(poller, poller_remove_invalid_socket_throws)
     zmq::socket_t socket {context, zmq::socket_type::router};
     zmq::poller_t poller;
     ASSERT_NO_THROW (poller.add (socket, ZMQ_POLLIN, zmq::poller_t::handler_t {}));
-    ASSERT_EQ (1u, poller.size ());
     std::vector<zmq::socket_t> sockets;
     sockets.emplace_back (std::move (socket));
     ASSERT_THROW (poller.remove (socket), zmq::error_t);
-    ASSERT_EQ (1u, poller.size ());
 }
 
 TEST(poller, wait_on_added_empty_handler)
@@ -329,6 +317,59 @@ TEST(poller, poll_client_server)
     ASSERT_NO_THROW(poller.modify(s.server, ZMQ_POLLIN | ZMQ_POLLOUT));
     ASSERT_NO_THROW(poller.wait(std::chrono::milliseconds{500}));
     ASSERT_EQ(s.events, ZMQ_POLLIN | ZMQ_POLLOUT);
+}
+
+TEST(poller, wait_one_return)
+{
+    // Setup server and client
+    server_client_setup s;
+
+    int count = 0;
+
+    // Setup poller
+    zmq::poller_t poller;
+    ASSERT_NO_THROW(poller.add(s.server, ZMQ_POLLIN, [&count](short) {
+        ++count;
+    }));
+
+    // client sends message
+    ASSERT_NO_THROW(s.client.send("Hi"));
+
+    // wait for message and verify events
+    int result = poller.wait(std::chrono::milliseconds{500});
+    ASSERT_EQ(count, result);
+}
+
+TEST(poller, remove_from_handler)
+{
+    constexpr auto ITER_NO = 10;
+
+    // Setup servers and clients
+    std::vector<server_client_setup> setup_list;
+    for (auto i = 0; i < ITER_NO; ++i)
+        setup_list.emplace_back (server_client_setup{});
+
+    // Setup poller
+    zmq::poller_t poller;
+    for (auto i = 0; i < ITER_NO; ++i) {
+        ASSERT_NO_THROW(poller.add(setup_list[i].server, ZMQ_POLLIN, [&,i](short events) {
+            ASSERT_EQ(events, ZMQ_POLLIN);
+            poller.remove(setup_list[ITER_NO - i -1].server);
+        }));
+    }
+    // Clients send messages
+    for (auto & s : setup_list)
+        ASSERT_NO_THROW(s.client.send("Hi"));
+
+    // Wait for all servers to receive a message
+    for (auto & s : setup_list) {
+        zmq::pollitem_t items [] = { { s.server, 0, ZMQ_POLLIN, 0 } };
+        zmq::poll (&items [0], 1);
+    }
+
+    // Fire all handlers in one wait
+    int count = poller.wait (std::chrono::milliseconds{-1});
+    ASSERT_EQ(count, ITER_NO);
 }
 
 #endif
