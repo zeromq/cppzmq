@@ -31,7 +31,7 @@ else (ENABLE_DRAFTS)
     set (pkg_config_defines "")
 endif (ENABLE_DRAFTS)
 
-message(STATUS "cppzmq v${CPPZMQ_VERSION}")
+message(STATUS "cppzmq v${cppzmq_VERSION}")
 
 set(CPPZMQ_HEADERS
     zmq.hpp
