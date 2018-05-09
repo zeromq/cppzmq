@@ -9,6 +9,7 @@
 TEST(poller, create_destroy)
 {
     zmq::poller_t poller;
+    ASSERT_TRUE(poller.empty ());
 }
 
 static_assert(!std::is_copy_constructible<zmq::poller_t>::value, "poller_t should not be copy-constructible");
@@ -16,19 +17,26 @@ static_assert(!std::is_copy_assignable<zmq::poller_t>::value, "poller_t should n
 
 TEST(poller, move_construct_empty)
 {
-    std::unique_ptr<zmq::poller_t> a{new zmq::poller_t};
-    zmq::poller_t b = std::move(*a);
-
+    std::unique_ptr<zmq::poller_t> a {new zmq::poller_t};
+    ASSERT_TRUE(a->empty ());
+    zmq::poller_t b = std::move (*a);
+    ASSERT_TRUE(b.empty ());
+    ASSERT_EQ(0u, a->size ());
+    ASSERT_EQ(0u, b.size ());
     a.reset ();
 }
 
 TEST(poller, move_assign_empty)
 {
     std::unique_ptr<zmq::poller_t> a{new zmq::poller_t};
+    ASSERT_TRUE(a->empty());
     zmq::poller_t b;
-
+    ASSERT_TRUE(b.empty());
     b = std::move(*a);
-
+    ASSERT_EQ(0u, a->size ());
+    ASSERT_EQ(0u, b.size ());
+    ASSERT_TRUE(a->empty());
+    ASSERT_TRUE(b.empty());
     a.reset ();
 }
 
@@ -39,8 +47,13 @@ TEST(poller, move_construct_non_empty)
 
     std::unique_ptr<zmq::poller_t> a{new zmq::poller_t};
     a->add(socket, ZMQ_POLLIN, [](short) {});
-    zmq::poller_t b = std::move(*a);
-
+    ASSERT_FALSE(a->empty ());
+    ASSERT_EQ(1u, a->size ());
+    zmq::poller_t b = std::move (*a);
+    ASSERT_TRUE(a->empty ());
+    ASSERT_EQ(0u, a->size ());
+    ASSERT_FALSE(b.empty ());
+    ASSERT_EQ(1u, b.size ());
     a.reset ();
 }
 
@@ -51,10 +64,14 @@ TEST(poller, move_assign_non_empty)
 
     std::unique_ptr<zmq::poller_t> a{new zmq::poller_t};
     a->add(socket, ZMQ_POLLIN, [](short) {});
+    ASSERT_FALSE(a->empty());
+    ASSERT_EQ(1u, a->size ());
     zmq::poller_t b;
-
     b = std::move(*a);
-
+    ASSERT_TRUE(a->empty ());
+    ASSERT_EQ(0u, a->size ());
+    ASSERT_FALSE(b.empty ());
+    ASSERT_EQ(1u, b.size ());
     a.reset ();
 }
 
@@ -75,6 +92,8 @@ TEST(poller, add_handler_invalid_events_type)
     zmq::poller_t::handler_t handler;
     short invalid_events_type = 2 << 10;
     ASSERT_NO_THROW(poller.add(socket, invalid_events_type, handler));
+    ASSERT_FALSE(poller.empty ());
+    ASSERT_EQ(1u, poller.size ());
 }
 
 TEST(poller, add_handler_twice_throws)
@@ -229,7 +248,7 @@ TEST(poller, client_server)
     ASSERT_EQ(events, ZMQ_POLLOUT);
 }
 
-TEST(poller, poller_add_invalid_socket_throws)
+TEST(poller, add_invalid_socket_throws)
 {
     zmq::context_t context;
     zmq::poller_t poller;
@@ -239,15 +258,17 @@ TEST(poller, poller_add_invalid_socket_throws)
                   zmq::error_t);
 }
 
-TEST(poller, poller_remove_invalid_socket_throws)
+TEST(poller, remove_invalid_socket_throws)
 {
     zmq::context_t context;
     zmq::socket_t socket {context, zmq::socket_type::router};
     zmq::poller_t poller;
     ASSERT_NO_THROW (poller.add (socket, ZMQ_POLLIN, zmq::poller_t::handler_t {}));
+    ASSERT_EQ (1u, poller.size ());
     std::vector<zmq::socket_t> sockets;
     sockets.emplace_back (std::move (socket));
     ASSERT_THROW (poller.remove (socket), zmq::error_t);
+    ASSERT_EQ (1u, poller.size ());
 }
 
 TEST(poller, wait_on_added_empty_handler)
@@ -354,9 +375,11 @@ TEST(poller, remove_from_handler)
     for (auto i = 0; i < ITER_NO; ++i) {
         ASSERT_NO_THROW(poller.add(setup_list[i].server, ZMQ_POLLIN, [&,i](short events) {
             ASSERT_EQ(events, ZMQ_POLLIN);
-            poller.remove(setup_list[ITER_NO - i -1].server);
+            poller.remove(setup_list[ITER_NO-i-1].server);
+            ASSERT_EQ(ITER_NO-i-1, poller.size());
         }));
     }
+    ASSERT_EQ(ITER_NO, poller.size());
     // Clients send messages
     for (auto & s : setup_list) {
         ASSERT_NO_THROW(s.client.send("Hi"));

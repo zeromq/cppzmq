@@ -1099,6 +1099,16 @@ namespace zmq
             throw error_t ();
         }
 
+        bool empty () const
+        {
+            return handlers.empty ();
+        }
+
+        size_t size () const
+        {
+            return handlers.size ();
+        }
+
     private:
         std::unique_ptr<void, std::function<void(void*)>> poller_ptr
         {
