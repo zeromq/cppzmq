@@ -183,8 +183,8 @@ struct server_client_setup
     };
 
     zmq::context_t context;
-    zmq::socket_t server {context, zmq::socket_type::router};
-    zmq::socket_t client {context, zmq::socket_type::dealer};
+    zmq::socket_t server {context, zmq::socket_type::server};
+    zmq::socket_t client {context, zmq::socket_type::client};
     std::string endpoint;
     short events = 0;
 };
@@ -222,7 +222,6 @@ TEST(poller, client_server)
     zmq::poller_t::handler_t handler = [&](short e) {
         if (0 != (e & ZMQ_POLLIN)) {
             zmq::message_t zmq_msg;
-            ASSERT_NO_THROW(s.server.recv(&zmq_msg)); // skip msg id
             ASSERT_NO_THROW(s.server.recv(&zmq_msg)); // get message
             std::string recv_msg(zmq_msg.data<char>(),
                                  zmq_msg.size());
