@@ -2,17 +2,17 @@ BasedOnStyle: LLVM
 IndentWidth: 4
 UseTab: Never
 BreakBeforeBraces: Custom
-BraceWrapping: 
+BraceWrapping:
     AfterClass: true
     AfterControlStatement: false
-    AfterEnum: true 
-    AfterFunction: true 
+    AfterEnum: true
+    AfterFunction: true
     AfterNamespace: true
-    AfterObjCDeclaration: true 
-    AfterStruct: true 
-    AfterUnion: true 
-    BeforeCatch: true 
-    BeforeElse: false 
+    AfterObjCDeclaration: true
+    AfterStruct: true
+    AfterUnion: true
+    BeforeCatch: true
+    BeforeElse: false
     IndentBraces: false
 
 AlignConsecutiveAssignments: false
