@@ -577,7 +577,6 @@ namespace zmq
     class socket_t
     {
         friend class monitor_t;
-        friend class poller_t;
     public:
         inline socket_t(context_t& context_, int type_)
         {
@@ -1019,6 +1018,67 @@ namespace zmq
     };
 
 #if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && defined(ZMQ_HAVE_POLLER)
+    template <typename T = void>
+    class base_poller_t
+    {
+    public:
+        void add (zmq::socket_t &socket, short events, T *user_data)
+        {
+            if (0 != zmq_poller_add (poller_ptr.get (), static_cast<void*>(socket), user_data, events))
+            {
+                throw error_t ();
+            }
+        }
+            
+        void remove (zmq::socket_t &socket)
+        {
+            if (0 != zmq_poller_remove (poller_ptr.get (), static_cast<void*>(socket)))
+            {
+                throw error_t ();
+            }
+        }
+
+        void modify (zmq::socket_t &socket, short events)
+        {
+            if (0 != zmq_poller_modify (poller_ptr.get (), static_cast<void*>(socket), events))
+            {
+                throw error_t ();
+            }
+        }
+        
+        int wait_all (std::vector<zmq_poller_event_t> &poller_events, const std::chrono::microseconds timeout)
+        {
+            int rc = zmq_poller_wait_all (poller_ptr.get (), poller_events.data (),
+                                          static_cast<int> (poller_events.size ()),
+                                          static_cast<long>(timeout.count ()));
+            if (rc > 0)
+                return rc;
+
+#if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 3)
+            if (zmq_errno () == EAGAIN)
+#else
+            if (zmq_errno () == ETIMEDOUT)
+#endif
+                return 0;
+
+            throw error_t ();
+        }
+    private:
+        std::unique_ptr<void, std::function<void(void*)>> poller_ptr
+        {
+            []() {
+                auto poller_new = zmq_poller_new ();
+                if (poller_new)
+                    return poller_new;
+                throw error_t ();
+            }(),
+            [](void *ptr) {
+                int rc = zmq_poller_destroy (&ptr);
+                ZMQ_ASSERT (rc == 0);
+            }
+        };
+    };
+
     class poller_t
     {
     public:
@@ -1035,33 +1095,35 @@ namespace zmq
 
         void add (zmq::socket_t &socket, short events, handler_t handler)
         {
-            auto it = std::end (handlers);
-            auto inserted = false;
-            std::tie(it, inserted) = handlers.emplace (socket.ptr, std::make_shared<handler_t> (std::move (handler)));
-            if (0 == zmq_poller_add (poller_ptr.get (), socket.ptr, inserted && *(it->second) ? it->second.get() : nullptr, events)) {
-                need_rebuild = true;
-                return;
+            auto it = decltype (handlers)::iterator {};
+            auto inserted = bool {};
+            std::tie(it, inserted) = handlers.emplace (static_cast<void*>(socket), std::make_shared<handler_t> (std::move (handler)));
+            try 
+            {
+                base_poller.add (socket, events, inserted && *(it->second) ? it->second.get() : nullptr);
+                need_rebuild |= inserted;
             }
-            // rollback
-            if (inserted)
-                handlers.erase (socket.ptr);
-            throw error_t ();
+            catch (const zmq::error_t&) 
+            {
+                // rollback
+                if (inserted)
+                {
+                    handlers.erase (static_cast<void*>(socket));
+                }
+                throw;
+            }
         }
 
         void remove (zmq::socket_t &socket)
         {
-            if (0 == zmq_poller_remove (poller_ptr.get (), socket.ptr)) {
-                handlers.erase (socket.ptr);
-                need_rebuild = true;
-                return;
-            }
-            throw error_t ();
+            base_poller.remove (socket);
+            handlers.erase (static_cast<void*>(socket));
+            need_rebuild = true;
         }
 
         void modify (zmq::socket_t &socket, short events)
         {
-            if (0 != zmq_poller_modify (poller_ptr.get (), socket.ptr, events))
-                throw error_t ();
+            base_poller.modify (socket, events);
         }
 
         int wait (std::chrono::milliseconds timeout)
@@ -1077,25 +1139,15 @@ namespace zmq
                 }
                 need_rebuild = false;
             }
-            int rc = zmq_poller_wait_all (poller_ptr.get (), poller_events.data (),
-                                          static_cast<int> (poller_events.size ()),
-                                          static_cast<long>(timeout.count ()));
-            if (rc > 0) {
-                std::for_each (poller_events.begin (), poller_events.begin () + rc,
+            const int count = base_poller.wait_all (poller_events, timeout);
+            if (count != 0) {
+                std::for_each (poller_events.begin (), poller_events.begin () + count,
                                [](zmq_poller_event_t& event) {
                     if (event.user_data != NULL)
                         (*reinterpret_cast<handler_t*> (event.user_data)) (event.events);
                 });
-                return rc;
             }
-#if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 3)
-            if (zmq_errno () == EAGAIN)
-#else
-            if (zmq_errno () == ETIMEDOUT)
-#endif
-                return 0;
-
-            throw error_t ();
+            return count;
         }
 
         bool empty () const
@@ -1109,20 +1161,9 @@ namespace zmq
         }
 
     private:
-        std::unique_ptr<void, std::function<void(void*)>> poller_ptr
-        {
-            []() {
-                auto poller_new = zmq_poller_new ();
-                if (poller_new)
-                    return poller_new;
-                throw error_t ();
-            }(),
-            [](void *ptr) {
-                int rc = zmq_poller_destroy (&ptr);
-                ZMQ_ASSERT (rc == 0);
-            }
-        };
         bool need_rebuild {false};
+        
+        base_poller_t<handler_t> base_poller {};
         std::unordered_map<void*, std::shared_ptr<handler_t>> handlers {};
         std::vector<zmq_poller_event_t> poller_events {};
         std::vector<std::shared_ptr<handler_t>> poller_handlers {};

@@ -204,7 +204,7 @@ TEST(poller, poll_basic)
         message_received = true;
     };
     ASSERT_NO_THROW(poller.add(s.server, ZMQ_POLLIN, handler));
-    ASSERT_NO_THROW(poller.wait(std::chrono::milliseconds{-1}));
+    ASSERT_EQ(1, poller.wait(std::chrono::milliseconds{-1}));
     ASSERT_TRUE(message_received);
 }
 
@@ -237,13 +237,13 @@ TEST(poller, client_server)
     // client sends message
     ASSERT_NO_THROW(s.client.send(send_msg));
 
-    ASSERT_NO_THROW(poller.wait(std::chrono::milliseconds{-1}));
+    ASSERT_EQ(1, poller.wait(std::chrono::milliseconds{-1}));
     ASSERT_EQ(events, ZMQ_POLLIN);
 
     // Re-add server socket with pollout flag
     ASSERT_NO_THROW(poller.remove(s.server));
     ASSERT_NO_THROW(poller.add(s.server, ZMQ_POLLIN | ZMQ_POLLOUT, handler));
-    ASSERT_NO_THROW(poller.wait(std::chrono::milliseconds{-1}));
+    ASSERT_EQ(1, poller.wait(std::chrono::milliseconds{-1}));
     ASSERT_EQ(events, ZMQ_POLLOUT);
 }
 
@@ -335,7 +335,7 @@ TEST(poller, poll_client_server)
 
     // Modify server socket with pollout flag
     ASSERT_NO_THROW(poller.modify(s.server, ZMQ_POLLIN | ZMQ_POLLOUT));
-    ASSERT_NO_THROW(poller.wait(std::chrono::milliseconds{500}));
+    ASSERT_EQ(1, poller.wait(std::chrono::milliseconds{500}));
     ASSERT_EQ(s.events, ZMQ_POLLIN | ZMQ_POLLOUT);
 }
 
@@ -356,8 +356,8 @@ TEST(poller, wait_one_return)
     ASSERT_NO_THROW(s.client.send("Hi"));
 
     // wait for message and verify events
-    int result = poller.wait(std::chrono::milliseconds{500});
-    ASSERT_EQ(count, result);
+    ASSERT_EQ(1, poller.wait(std::chrono::milliseconds{500}));
+    ASSERT_EQ(1u, count);
 }
 
 TEST(poller, wait_on_move_constructed_poller)
@@ -401,14 +401,14 @@ TEST(poller, received_on_move_construced_poller)
     // client sends message
     ASSERT_NO_THROW(s.client.send("Hi"));
     // wait for message and verify it is received
-    a.wait(std::chrono::milliseconds{500});
+    ASSERT_EQ(1, a.wait(std::chrono::milliseconds{500}));
     ASSERT_EQ(1u, count);
     // Move construct poller b
     zmq::poller_t b{std::move(a)};
     // client sends message again
     ASSERT_NO_THROW(s.client.send("Hi"));
     // wait for message and verify it is received
-    b.wait(std::chrono::milliseconds{500});
+    ASSERT_EQ(1, b.wait(std::chrono::milliseconds{500}));
     ASSERT_EQ(2u, count);
 }
 
@@ -424,12 +424,14 @@ TEST(poller, remove_from_handler)
 
     // Setup poller
     zmq::poller_t poller;
+    int count = 0;
     for (auto i = 0; i < ITER_NO; ++i) {
         ASSERT_NO_THROW(poller.add(setup_list[i].server, ZMQ_POLLIN, [&,i](short events) {
             ASSERT_EQ(events, ZMQ_POLLIN);
             poller.remove(setup_list[ITER_NO-i-1].server);
             ASSERT_EQ(ITER_NO-i-1, poller.size());
         }));
+        ++count;
     }
     ASSERT_EQ(ITER_NO, poller.size());
     // Clients send messages
@@ -444,8 +446,8 @@ TEST(poller, remove_from_handler)
     }
 
     // Fire all handlers in one wait
-    int count = poller.wait (std::chrono::milliseconds{-1});
-    ASSERT_EQ(count, ITER_NO);
+    ASSERT_EQ(ITER_NO, poller.wait (std::chrono::milliseconds{-1}));
+    ASSERT_EQ(ITER_NO, count);
 }
 
 #endif
