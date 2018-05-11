@@ -477,12 +477,10 @@ inline std::ostream& operator<<(std::ostream& os, const multipart_t& msg)
         int wait (std::chrono::milliseconds timeout)
         {
             if (need_rebuild) {
-                poller_events.clear ();
+                poller_events.resize (handlers.size ());
                 poller_handlers.clear ();
-                poller_events.reserve (handlers.size ());
                 poller_handlers.reserve (handlers.size ());
                 for (const auto &handler : handlers) {
-                    poller_events.emplace_back (zmq_poller_event_t {});
                     poller_handlers.push_back (handler.second);
                 }
                 need_rebuild = false;
