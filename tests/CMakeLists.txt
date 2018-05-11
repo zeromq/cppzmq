@@ -25,7 +25,7 @@ add_executable(
     message.cpp
     context.cpp
     socket.cpp
-    poller.cpp
+    active_poller.cpp
     multipart.cpp
     )
 
