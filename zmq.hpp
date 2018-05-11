@@ -1022,12 +1022,7 @@ namespace zmq
     class poller_t
     {
     public:
-        poller_t ()
-        {
-            if (!poller_ptr)
-                throw error_t ();
-        }
-
+        poller_t () = default;
         ~poller_t () = default;
 
         poller_t(const poller_t&) = delete;
@@ -1116,7 +1111,12 @@ namespace zmq
     private:
         std::unique_ptr<void, std::function<void(void*)>> poller_ptr
         {
-            zmq_poller_new (),
+            []() {
+                auto poller_new = zmq_poller_new ();
+                if (poller_new)
+                    return poller_new;
+                throw error_t ();
+            }(),
             [](void *ptr) {
                 int rc = zmq_poller_destroy (&ptr);
                 ZMQ_ASSERT (rc == 0);
