@@ -563,6 +563,10 @@ namespace zmq
         xsub = ZMQ_XSUB,
         push = ZMQ_PUSH,
         pull = ZMQ_PULL,
+#ifdef ZMQ_BUILD_DRAFT_API
+        server = ZMQ_SERVER,
+        client = ZMQ_CLIENT,
+#endif
 #if ZMQ_VERSION_MAJOR >= 4
         stream = ZMQ_STREAM,
 #endif
