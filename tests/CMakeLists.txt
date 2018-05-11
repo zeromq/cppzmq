@@ -26,6 +26,8 @@ add_executable(
     context.cpp
     socket.cpp
     poller.cpp
+    active_poller.cpp
+    multipart.cpp
     )
 
 target_link_libraries(
