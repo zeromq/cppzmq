@@ -367,28 +367,29 @@ TEST(poller, wait_on_move_constructed_poller)
     zmq::poller_t a;
     zmq::poller_t::handler_t handler;
     ASSERT_NO_THROW (a.add (s.server, ZMQ_POLLIN, handler));
-    ASSERT_EQ(1u, a.size ());
     zmq::poller_t b {std::move (a)};
     ASSERT_EQ(1u, b.size ());
-    ASSERT_NO_THROW (b.wait (std::chrono::milliseconds {-1}));
+    /// \todo the actual error code should be checked
+    ASSERT_THROW(a.wait(std::chrono::milliseconds{10}), zmq::error_t);
+    ASSERT_TRUE (b.wait (std::chrono::milliseconds {-1}));
 }
 
-TEST(poller, wait_on_move_assign_poller)
+TEST(poller, wait_on_move_assigned_poller)
 {
     server_client_setup s;
     ASSERT_NO_THROW (s.client.send ("Hi"));
     zmq::poller_t a;
     zmq::poller_t::handler_t handler;
     ASSERT_NO_THROW (a.add (s.server, ZMQ_POLLIN, handler));
-    ASSERT_EQ(1u, a.size ());
     zmq::poller_t b;
-    ASSERT_EQ(0u, b.size ());
     b = {std::move (a)};
     ASSERT_EQ(1u, b.size ());
-    ASSERT_NO_THROW (b.wait (std::chrono::milliseconds {-1}));
+    /// \todo the actual error code should be checked
+    ASSERT_THROW(a.wait(std::chrono::milliseconds{10}), zmq::error_t);
+    ASSERT_TRUE (b.wait (std::chrono::milliseconds {-1}));
 }
 
-TEST(poller, received_on_move_construced_poller)
+TEST(poller, received_on_move_constructed_poller)
 {
     // Setup server and client
     server_client_setup s;
