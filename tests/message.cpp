@@ -2,8 +2,10 @@
 #include <zmq.hpp>
 
 #if defined(ZMQ_CPP11)
-static_assert(!std::is_copy_constructible<zmq::message_t>::value, "message_t should not be copy-constructible");
-static_assert(!std::is_copy_assignable<zmq::message_t>::value, "message_t should not be copy-assignable");
+static_assert (!std::is_copy_constructible<zmq::message_t>::value,
+               "message_t should not be copy-constructible");
+static_assert (!std::is_copy_assignable<zmq::message_t>::value,
+               "message_t should not be copy-assignable");
 #endif
 
 TEST (message, constructor_default)
@@ -12,7 +14,7 @@ TEST (message, constructor_default)
     ASSERT_EQ (0u, message.size ());
 }
 
-const char* const data = "Hi";
+const char *const data = "Hi";
 
 TEST (message, constructor_iterators)
 {
@@ -30,7 +32,8 @@ TEST (message, constructor_pointer_size)
     ASSERT_EQ (0, memcmp (data, hi_msg.data (), 2));
 }
 
-TEST (message, constructor_char_array) {
+TEST (message, constructor_char_array)
+{
     const zmq::message_t hi_msg (data, strlen (data));
     ASSERT_EQ (2u, hi_msg.size ());
     ASSERT_EQ (0, memcmp (data, hi_msg.data (), 2));
@@ -49,7 +52,7 @@ TEST (message, constructor_container)
 #ifdef ZMQ_HAS_RVALUE_REFS
 TEST (message, constructor_move)
 {
-    zmq::message_t hi_msg (zmq::message_t(data, strlen (data)));
+    zmq::message_t hi_msg (zmq::message_t (data, strlen (data)));
 }
 
 TEST (message, assign_move_empty_before)
@@ -63,50 +66,55 @@ TEST (message, assign_move_empty_before)
 TEST (message, assign_move_empty_after)
 {
     zmq::message_t hi_msg (data, strlen (data));
-    hi_msg = zmq::message_t();
+    hi_msg = zmq::message_t ();
     ASSERT_EQ (0u, hi_msg.size ());
 }
 
 TEST (message, assign_move_empty_before_and_after)
 {
     zmq::message_t hi_msg;
-    hi_msg = zmq::message_t();
+    hi_msg = zmq::message_t ();
     ASSERT_EQ (0u, hi_msg.size ());
 }
 #endif
 
-TEST (message, equality_self) {
+TEST (message, equality_self)
+{
     const zmq::message_t hi_msg (data, strlen (data));
     ASSERT_EQ (hi_msg, hi_msg);
 }
 
-TEST (message, equality_equal) {
+TEST (message, equality_equal)
+{
     const zmq::message_t hi_msg_a (data, strlen (data));
     const zmq::message_t hi_msg_b (data, strlen (data));
     ASSERT_EQ (hi_msg_a, hi_msg_b);
 }
 
-TEST (message, equality_equal_empty) {
+TEST (message, equality_equal_empty)
+{
     const zmq::message_t msg_a;
     const zmq::message_t msg_b;
     ASSERT_EQ (msg_a, msg_b);
 }
 
-TEST (message, equality_non_equal) {
+TEST (message, equality_non_equal)
+{
     const zmq::message_t msg_a ("Hi", 2);
     const zmq::message_t msg_b ("Hello", 5);
     ASSERT_NE (msg_a, msg_b);
 }
 
-TEST (message, equality_non_equal_rhs_empty) {
+TEST (message, equality_non_equal_rhs_empty)
+{
     const zmq::message_t msg_a ("Hi", 2);
     const zmq::message_t msg_b;
     ASSERT_NE (msg_a, msg_b);
 }
 
-TEST (message, equality_non_equal_lhs_empty) {
+TEST (message, equality_non_equal_lhs_empty)
+{
     const zmq::message_t msg_a;
     const zmq::message_t msg_b ("Hi", 2);
     ASSERT_NE (msg_a, msg_b);
 }
-
