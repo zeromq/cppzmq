@@ -408,7 +408,7 @@ public:
         if (size() != other->size())
             return false;
         for (size_t i = 0; i < size(); i++)
-            if (!peek(i)->equal(other->peek(i)))
+            if (*peek(i) != *other->peek(i))
                 return false;
         return true;
     }
@@ -419,12 +419,12 @@ private:
     void operator=(const multipart_t& other) ZMQ_DELETED_FUNCTION;
 };  // class multipart_t
 
-#endif  // ZMQ_HAS_RVALUE_REFS
-
 inline std::ostream& operator<<(std::ostream& os, const multipart_t& msg)
 {
     return os << msg.str();
 }
+
+#endif  // ZMQ_HAS_RVALUE_REFS
 
 #if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && defined(ZMQ_HAVE_POLLER)
     class active_poller_t
