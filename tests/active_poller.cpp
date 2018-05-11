@@ -1,5 +1,6 @@
-#include <gtest/gtest.h>
 #include <zmq_addon.hpp>
+
+#include "testutil.hpp"
 
 #if defined(ZMQ_CPP11) && defined(ZMQ_BUILD_DRAFT_API)
 
@@ -82,6 +83,9 @@ TEST(active_poller, add_handler)
 
 TEST(active_poller, add_handler_invalid_events_type)
 {
+    /// \todo is it good that this is accepted? should probably already be 
+    ///   checked by zmq_poller_add/modify in libzmq:
+    ///   https://github.com/zeromq/libzmq/issues/3088
     zmq::context_t context;
     zmq::socket_t socket{context, zmq::socket_type::router};
     zmq::active_poller_t active_poller;
@@ -138,54 +142,15 @@ TEST(active_poller, remove_registered_non_empty)
 }
 
 namespace {
-
-class loopback_ip4_binder
+struct server_client_setup : common_server_client_setup
 {
-public:
-    loopback_ip4_binder(zmq::socket_t &socket) { bind(socket); }
-    std::string endpoint() { return endpoint_; }
-private:
-    // Helper function used in constructor
-    // as Gtest allows ASSERT_* only in void returning functions
-    // and constructor/destructor are not.
-    void bind(zmq::socket_t &socket)
-    {
-        ASSERT_NO_THROW(socket.bind("tcp://127.0.0.1:*"));
-        std::array<char, 100> endpoint{};
-        size_t endpoint_size = endpoint.size();
-        ASSERT_NO_THROW(socket.getsockopt(ZMQ_LAST_ENDPOINT, endpoint.data(),
-                                          &endpoint_size));
-        ASSERT_TRUE(endpoint_size < endpoint.size());
-        endpoint_ = std::string{endpoint.data()};
-    }
-    std::string endpoint_;
-};
-
-struct server_client_setup
-{
-    server_client_setup ()
-    {
-        init ();
-    }
-
-    void init()
-    {
-        endpoint = loopback_ip4_binder {server}.endpoint ();
-        ASSERT_NO_THROW (client.connect (endpoint));
-    }
-
     zmq::active_poller_t::handler_t handler = [&](short e) {
         events = e;
     };
 
-    zmq::context_t context;
-    zmq::socket_t server {context, zmq::socket_type::server};
-    zmq::socket_t client {context, zmq::socket_type::client};
-    std::string endpoint;
     short events = 0;
 };
-
-} //namespace
+}
 
 TEST(active_poller, poll_basic)
 {
