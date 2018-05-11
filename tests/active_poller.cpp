@@ -291,7 +291,6 @@ TEST(active_poller, poll_client_server)
 
     // wait for message and verify events
     ASSERT_NO_THROW(active_poller.wait(std::chrono::milliseconds{500}));
-    ASSERT_TRUE(s.events == ZMQ_POLLIN);
     ASSERT_EQ(s.events, ZMQ_POLLIN);
 
     // Modify server socket with pollout flag
