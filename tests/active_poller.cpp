@@ -17,27 +17,25 @@ static_assert(!std::is_copy_assignable<zmq::active_poller_t>::value, "active_act
 
 TEST(active_poller, move_construct_empty)
 {
-    std::unique_ptr<zmq::active_poller_t> a {new zmq::active_poller_t};
-    ASSERT_TRUE(a->empty ());
-    zmq::active_poller_t b = std::move (*a);
+    zmq::active_poller_t a;
+    ASSERT_TRUE(a.empty ());
+    zmq::active_poller_t b = std::move (a);
     ASSERT_TRUE(b.empty ());
-    ASSERT_EQ(0u, a->size ());
+    ASSERT_EQ(0u, a.size ());
     ASSERT_EQ(0u, b.size ());
-    a.reset ();
 }
 
 TEST(active_poller, move_assign_empty)
 {
-    std::unique_ptr<zmq::active_poller_t> a{new zmq::active_poller_t};
-    ASSERT_TRUE(a->empty());
+    zmq::active_poller_t a;
+    ASSERT_TRUE(a.empty());
     zmq::active_poller_t b;
     ASSERT_TRUE(b.empty());
-    b = std::move(*a);
-    ASSERT_EQ(0u, a->size ());
+    b = std::move(a);
+    ASSERT_EQ(0u, a.size ());
     ASSERT_EQ(0u, b.size ());
-    ASSERT_TRUE(a->empty());
+    ASSERT_TRUE(a.empty());
     ASSERT_TRUE(b.empty());
-    a.reset ();
 }
 
 TEST(active_poller, move_construct_non_empty)
@@ -45,16 +43,15 @@ TEST(active_poller, move_construct_non_empty)
     zmq::context_t context;
     zmq::socket_t socket{context, zmq::socket_type::router};
 
-    std::unique_ptr<zmq::active_poller_t> a{new zmq::active_poller_t};
-    a->add(socket, ZMQ_POLLIN, [](short) {});
-    ASSERT_FALSE(a->empty ());
-    ASSERT_EQ(1u, a->size ());
-    zmq::active_poller_t b = std::move (*a);
-    ASSERT_TRUE(a->empty ());
-    ASSERT_EQ(0u, a->size ());
+    zmq::active_poller_t a;
+    a.add(socket, ZMQ_POLLIN, [](short) {});
+    ASSERT_FALSE(a.empty ());
+    ASSERT_EQ(1u, a.size ());
+    zmq::active_poller_t b = std::move (a);
+    ASSERT_TRUE(a.empty ());
+    ASSERT_EQ(0u, a.size ());
     ASSERT_FALSE(b.empty ());
     ASSERT_EQ(1u, b.size ());
-    a.reset ();
 }
 
 TEST(active_poller, move_assign_non_empty)
@@ -62,17 +59,16 @@ TEST(active_poller, move_assign_non_empty)
     zmq::context_t context;
     zmq::socket_t socket{context, zmq::socket_type::router};
 
-    std::unique_ptr<zmq::active_poller_t> a{new zmq::active_poller_t};
-    a->add(socket, ZMQ_POLLIN, [](short) {});
-    ASSERT_FALSE(a->empty());
-    ASSERT_EQ(1u, a->size ());
+    zmq::active_poller_t a;
+    a.add(socket, ZMQ_POLLIN, [](short) {});
+    ASSERT_FALSE(a.empty());
+    ASSERT_EQ(1u, a.size ());
     zmq::active_poller_t b;
-    b = std::move(*a);
-    ASSERT_TRUE(a->empty ());
-    ASSERT_EQ(0u, a->size ());
+    b = std::move(a);
+    ASSERT_TRUE(a.empty ());
+    ASSERT_EQ(0u, a.size ());
     ASSERT_FALSE(b.empty ());
     ASSERT_EQ(1u, b.size ());
-    a.reset ();
 }
 
 TEST(active_poller, add_handler)
