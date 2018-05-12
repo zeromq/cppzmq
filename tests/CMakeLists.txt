@@ -36,9 +36,6 @@ target_link_libraries(
     cppzmq
     )
 
-target_include_directories(unit_tests PRIVATE ${cppzmq_INCLUDE_DIR}
-                                              ${ZeroMQ_INCLUDE_DIR})
-
 add_test(
   NAME
     unit

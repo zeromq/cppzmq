@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 
 project(cppzmq-demo CXX)
 
-find_package(cppzmq REQUIRED)
+find_package(cppzmq)
 
 enable_testing()
 add_executable(
@@ -14,9 +14,6 @@ target_link_libraries(
     demo
     cppzmq
     )
-
-target_include_directories(demo PRIVATE ${cppzmq_INCLUDE_DIR}
-                                        ${ZeroMQ_INCLUDE_DIR})
 
 add_test(
   NAME

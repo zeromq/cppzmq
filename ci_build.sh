@@ -16,11 +16,23 @@ install_zeromq() {
     curl -L https://github.com/zeromq/libzmq/archive/v${ZMQ_VERSION}.tar.gz \
       >zeromq.tar.gz
     tar -xvzf zeromq.tar.gz
-    cmake -Hlibzmq-${ZMQ_VERSION} -B${LIBZMQ} -DWITH_PERF_TOOL=OFF \
-                                              -DZMQ_BUILD_TESTS=OFF \
-                                              -DCMAKE_BUILD_TYPE=Release \
-                                              ${ZEROMQ_CMAKE_FLAGS}
-    cmake --build ${LIBZMQ}
+    if [ "${ZMQ_BUILD_TYPE}" = "cmake" ] ; then
+        cmake -Hlibzmq-${ZMQ_VERSION} -B${LIBZMQ} -DWITH_PERF_TOOL=OFF \
+                                                  -DZMQ_BUILD_TESTS=OFF \
+                                                  -DCMAKE_BUILD_TYPE=Release \
+                                                  ${ZEROMQ_CMAKE_FLAGS}
+        cmake --build ${LIBZMQ}
+    elif [ "${ZMQ_BUILD_TYPE}" = "pkgconf" ] ; then
+        pushd .
+        cd libzmq-${ZMQ_VERSION}
+        ./autogen.sh
+        ./configure
+        sudo make VERBOSE=1 -j5 install
+        popd
+    else
+        echo "Unsupported build type ${ZMQ_BUILD_TYPE}."
+        exit 1
+    fi
 }
 
 # build zeromq first
@@ -28,6 +40,7 @@ install_zeromq() {
 if [ "${ZMQ_VERSION}" != "" ] ; then install_zeromq ; fi
 
 # build cppzmq
+# for pkgconf ZMQ_BUILD_TYPE ZeroMQ_DIR is invalid but it should still work
 pushd .
 ZeroMQ_DIR=${LIBZMQ} cmake -H. -B${CPPZMQ} ${ZEROMQ_CMAKE_FLAGS}
 cmake --build ${CPPZMQ}
