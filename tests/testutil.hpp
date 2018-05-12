@@ -8,10 +8,11 @@
 
 class loopback_ip4_binder
 {
-public:
+  public:
     loopback_ip4_binder(zmq::socket_t &socket) { bind(socket); }
     std::string endpoint() { return endpoint_; }
-private:
+
+  private:
     // Helper function used in constructor
     // as Gtest allows ASSERT_* only in void returning functions
     // and constructor/destructor are not.
@@ -20,8 +21,8 @@ private:
         ASSERT_NO_THROW(socket.bind("tcp://127.0.0.1:*"));
         std::array<char, 100> endpoint{};
         size_t endpoint_size = endpoint.size();
-        ASSERT_NO_THROW(socket.getsockopt(ZMQ_LAST_ENDPOINT, endpoint.data(),
-                                          &endpoint_size));
+        ASSERT_NO_THROW(
+          socket.getsockopt(ZMQ_LAST_ENDPOINT, endpoint.data(), &endpoint_size));
         ASSERT_TRUE(endpoint_size < endpoint.size());
         endpoint_ = std::string{endpoint.data()};
     }
@@ -30,20 +31,17 @@ private:
 
 struct common_server_client_setup
 {
-    common_server_client_setup ()
-    {
-        init ();
-    }
+    common_server_client_setup() { init(); }
 
     void init()
     {
-        endpoint = loopback_ip4_binder {server}.endpoint ();
-        ASSERT_NO_THROW (client.connect (endpoint));
+        endpoint = loopback_ip4_binder{server}.endpoint();
+        ASSERT_NO_THROW(client.connect(endpoint));
     }
 
     zmq::context_t context;
-    zmq::socket_t server {context, zmq::socket_type::server};
-    zmq::socket_t client {context, zmq::socket_type::client};
+    zmq::socket_t server{context, zmq::socket_type::server};
+    zmq::socket_t client{context, zmq::socket_type::client};
     std::string endpoint;
 };
 #endif

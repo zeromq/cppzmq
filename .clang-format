@@ -26,14 +26,14 @@ AllowShortBlocksOnASingleLine: false
 AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortFunctionsOnASingleLine: InlineOnly
 AlwaysBreakTemplateDeclarations: false
-ColumnLimit: 80
+ColumnLimit: 85
 MaxEmptyLinesToKeep: 2
 KeepEmptyLinesAtTheStartOfBlocks: false
 ContinuationIndentWidth: 2
 PointerAlignment: Right
 ReflowComments: false
 SpaceBeforeAssignmentOperators: true
-SpaceBeforeParens: Always
+SpaceBeforeParens: ControlStatements
 SpaceInEmptyParentheses: false
 SpacesInAngles: false
 SpacesInParentheses: false
@@ -44,7 +44,7 @@ SortIncludes: false
 
 FixNamespaceComments: false
 BreakBeforeBinaryOperators: NonAssignment
-SpaceAfterTemplateKeyword: true
+SpaceAfterTemplateKeyword: false
 AlignAfterOpenBracket: Align
 AlignOperands: true
 BreakConstructorInitializers: AfterColon
