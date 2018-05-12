@@ -398,7 +398,7 @@ class active_poller_t
         base_poller.modify (socket, events);
     }
 
-    int wait (std::chrono::milliseconds timeout)
+    size_t wait (std::chrono::milliseconds timeout)
     {
         if (need_rebuild) {
             poller_events.resize (handlers.size ());
@@ -409,16 +409,13 @@ class active_poller_t
             }
             need_rebuild = false;
         }
-        const int count = base_poller.wait_all (poller_events, timeout);
-        if (count != 0) {
-            std::for_each (poller_events.begin (),
-                           poller_events.begin () + count,
-                           [](zmq_poller_event_t &event) {
-                               if (event.user_data != NULL)
-                                   (*reinterpret_cast<handler_t *> (
-                                     event.user_data)) (event.events);
-                           });
-        }
+        const auto count = base_poller.wait_all (poller_events, timeout);
+        std::for_each (poller_events.begin (), poller_events.begin () + count,
+                       [](zmq_poller_event_t &event) {
+                           if (event.user_data != NULL)
+                               (*reinterpret_cast<handler_t *> (
+                                 event.user_data)) (event.events);
+                       });
         return count;
     }
 
