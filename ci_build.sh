@@ -10,12 +10,17 @@ if [ "$DRAFT" = "1" ] ; then
     export ZEROMQ_CMAKE_FLAGS="-DENABLE_DRAFTS=ON"
 fi
 
+LIBZMQ=${PWD}/libzmq-build
+CPPZMQ=${PWD}/cppzmq-build
 install_zeromq() {
     curl -L https://github.com/zeromq/libzmq/archive/v${ZMQ_VERSION}.tar.gz \
       >zeromq.tar.gz
     tar -xvzf zeromq.tar.gz
-    cmake -Hlibzmq-${ZMQ_VERSION} -Blibzmq ${ZEROMQ_CMAKE_FLAGS}
-    cmake --build libzmq
+    cmake -Hlibzmq-${ZMQ_VERSION} -B${LIBZMQ} -DWITH_PERF_TOOL=OFF \
+                                              -DZMQ_BUILD_TESTS=OFF \
+                                              -DCMAKE_BUILD_TYPE=Release \
+                                              ${ZEROMQ_CMAKE_FLAGS}
+    cmake --build ${LIBZMQ}
 }
 
 # build zeromq first
@@ -24,14 +29,14 @@ if [ "${ZMQ_VERSION}" != "" ] ; then install_zeromq ; fi
 
 # build cppzmq
 pushd .
-ZeroMQ_DIR=libzmq cmake -H. -Bbuild ${ZEROMQ_CMAKE_FLAGS}
-cmake --build build
-cd build
+ZeroMQ_DIR=${LIBZMQ} cmake -H. -B${CPPZMQ} ${ZEROMQ_CMAKE_FLAGS}
+cmake --build ${CPPZMQ}
+cd ${CPPZMQ}
 ctest -V
 popd
 
 # build cppzmq demo
-ZeroMQ_DIR=libzmq cppzmq_DIR=build cmake -Hdemo -Bdemo/build
+ZeroMQ_DIR=${LIBZMQ} cppzmq_DIR=${CPPZMQ} cmake -Hdemo -Bdemo/build
 cmake --build demo/build
 cd demo/build
 ctest

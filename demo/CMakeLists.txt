@@ -15,7 +15,8 @@ target_link_libraries(
     cppzmq
     )
 
-include_directories(${ZeroMQ_INCLUDE_DIR} ${cppzmq_INCLUDE_DIR})
+target_include_directories(demo PRIVATE ${cppzmq_INCLUDE_DIR}
+                                        ${ZeroMQ_INCLUDE_DIR})
 
 add_test(
   NAME
