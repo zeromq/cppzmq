@@ -1091,14 +1091,14 @@ template <typename T = void> class poller_t
         }
     }
 
-    int wait_all (std::vector<zmq_poller_event_t> &poller_events,
-                  const std::chrono::microseconds timeout)
+    size_t wait_all (std::vector<zmq_poller_event_t> &poller_events,
+                     const std::chrono::microseconds timeout)
     {
         int rc = zmq_poller_wait_all (poller_ptr.get (), poller_events.data (),
                                       static_cast<int> (poller_events.size ()),
                                       static_cast<long> (timeout.count ()));
         if (rc > 0)
-            return rc;
+            return static_cast<size_t> (rc);
 
 #if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 3)
         if (zmq_errno () == EAGAIN)
