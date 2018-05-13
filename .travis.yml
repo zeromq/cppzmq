@@ -17,13 +17,12 @@ addons:
 
 env:
   matrix:
-#    - ZMQ_BUILD_TYPE=cmake DRAFT=enabled
-    - ZMQ_BUILD_TYPE=cmake ZMQ_VERSION=4.2.5
-    - ZMQ_BUILD_TYPE=pkgconf ZMQ_VERSION=4.2.0
+    - ZMQ_VERSION=4.2.5
+    - ZMQ_VERSION=4.2.4
 
 matrix:
   include:
-  # - env: ZMQ_BUILD_TYPE=cmake DO_CLANG_FORMAT_CHECK=1 CLANG_FORMAT=/usr/local/clang-5.0.0/bin/clang-format
+  # - env: BUILD_TYPE=cmake DO_CLANG_FORMAT_CHECK=1 CLANG_FORMAT=/usr/local/clang-5.0.0/bin/clang-format
     # os: linux
     # addons:
     # apt:
@@ -39,14 +38,14 @@ matrix:
           packages:
             - g++-7
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" ZMQ_BUILD_TYPE=cmake ZMQ_VERSION=4.2.5 DRAFT=1
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" ZMQ_VERSION=4.2.5 DRAFT=1
 
 sudo: required
 
 before_install:
   - pip install --user cpp-coveralls
 
-# Build and check this project according to the ZMQ_BUILD_TYPE
+# Build and check this project
 script:
   - eval "${MATRIX_EVAL}"
   - ./ci_build.sh
