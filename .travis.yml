@@ -25,8 +25,8 @@ matrix:
 
     - os: osx
       osx_image: xcode9.1
-      env:
-        - MATRIX_EVAL="brew install cmake" ZMQ_VERSION=4.2.5 DRAFT=1
+      compiler: clang
+      env: ZMQ_VERSION=4.2.5 DRAFT=1
 
     ##########################################################
     # GCC on Linux
