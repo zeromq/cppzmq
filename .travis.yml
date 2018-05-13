@@ -2,18 +2,8 @@
 
 language: cpp
 
-os:
-- linux
-#- osx
-
 dist: trusty
-
 cache: ccache
-
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
 
 matrix:
   include:
