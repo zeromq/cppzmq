@@ -59,10 +59,10 @@ matrix:
       # packages:
         # - clang-5.0
 
-sudo: required
+sudo: false
 
 before_install:
-  - pip install --user cpp-coveralls
+  - pip install --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --user cpp-coveralls
 
 # Build and check this project
 script:
