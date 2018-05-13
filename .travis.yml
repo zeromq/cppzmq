@@ -15,11 +15,6 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
 
-env:
-  matrix:
-    - ZMQ_VERSION=4.2.5
-    - ZMQ_VERSION=4.2.4
-
 matrix:
   include:
     ##########################################################
@@ -27,18 +22,25 @@ matrix:
     # Travis takes longer to start OSX instances,
     # so leaving it first for the overall build to be faster.
     ##########################################################
+
     - os: osx
       osx_image: xcode9.1
       env:
         - MATRIX_EVAL="brew install cmake" ZMQ_VERSION=4.2.5 DRAFT=1
-  # - env: BUILD_TYPE=cmake DO_CLANG_FORMAT_CHECK=1 CLANG_FORMAT=/usr/local/clang-5.0.0/bin/clang-format
-    # os: linux
-    # addons:
-    # apt:
-      # sources:
-        # - llvm-toolchain-trusty-5.0
-      # packages:
-        # - clang-5.0
+
+    ##########################################################
+    # GCC on Linux
+    ##########################################################
+
+    # GCC default, draft disabled, latest libzmq
+    - os: linux
+      env: ZMQ_VERSION=4.2.5
+
+    # GCC default, draft disabled,  older libzmq
+    - os: linux
+      env: ZMQ_VERSION=4.2.4
+
+    # GCC 7, draft enabled, latest libzmq
     - os: linux
       addons:
         apt:
@@ -48,6 +50,14 @@ matrix:
             - g++-7
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" ZMQ_VERSION=4.2.5 DRAFT=1
+  # - env: BUILD_TYPE=cmake DO_CLANG_FORMAT_CHECK=1 CLANG_FORMAT=/usr/local/clang-5.0.0/bin/clang-format
+    # os: linux
+    # addons:
+    # apt:
+      # sources:
+        # - llvm-toolchain-trusty-5.0
+      # packages:
+        # - clang-5.0
 
 sudo: required
 
