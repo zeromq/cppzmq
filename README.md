@@ -23,18 +23,18 @@ Supported platforms
 
  - Only a subset of the platforms that are supported by libzmq itself are supported. Some features already require a compiler supporting C++11. In the future, probably all features will require C++11. To build and run the tests, cmake and googletest are required.
  - Tested libzmq versions are
-   - 4.2.0 (without DRAFT API)
+   - 4.2.4 (without DRAFT API)
    - 4.2.5 (with and without DRAFT API)
  - Platforms with full support (i.e. CI executing build and tests)
    - Ubuntu 14.04 x64 (with gcc 4.8.4) (without DRAFT API only)
    - Ubuntu 14.04 x64 (with gcc 7.3.0)
    - Visual Studio 2015 x86
    - Visual Studio 2017 x86
+   - OSX (with clang xcode9.1) (without DRAFT API)
  - Additional platforms that are known to work:
    - We have no current reports on additional platforms that are known to work yet. Please add your platform here. If CI can be provided for them with a cloud-based CI service working with GitHub, you are invited to add CI, and make it possible to be included in the list above.
  - Additional platforms that probably work:
    - Any platform supported by libzmq that provides a sufficiently recent gcc (4.8.1 or newer) or clang (3.3 or newer)
-   - MacOS X
    - Visual Studio 2012+ x86/x64
 
 Contribution policy

@@ -33,10 +33,8 @@ add_executable(
 target_link_libraries(
     unit_tests
     gtest_main
-    libzmq
+    cppzmq
     )
-
-target_include_directories(unit_tests PRIVATE ..)
 
 add_test(
   NAME

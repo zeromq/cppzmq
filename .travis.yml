@@ -2,35 +2,35 @@
 
 language: cpp
 
-os:
-- linux
-#- osx
-
 dist: trusty
-
 cache: ccache
-
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-
-env:
-  matrix:
-#    - BUILD_TYPE=cmake DRAFT=enabled
-    - BUILD_TYPE=cmake ZMQ_VERSION=4.2.5
-    - BUILD_TYPE=cmake ZMQ_VERSION=4.2.0
 
 matrix:
   include:
-  # - env: BUILD_TYPE=cmake DO_CLANG_FORMAT_CHECK=1 CLANG_FORMAT=/usr/local/clang-5.0.0/bin/clang-format
-    # os: linux
-    # addons:
-    # apt:
-      # sources:
-        # - llvm-toolchain-trusty-5.0
-      # packages:
-        # - clang-5.0
+    ##########################################################
+    # Clang on OSX
+    # Travis takes longer to start OSX instances,
+    # so leaving it first for the overall build to be faster.
+    ##########################################################
+
+    - os: osx
+      osx_image: xcode9.1
+      compiler: clang
+      env: ZMQ_VERSION=4.2.5 DRAFT=1
+
+    ##########################################################
+    # GCC on Linux
+    ##########################################################
+
+    # GCC default, draft disabled, latest libzmq
+    - os: linux
+      env: ZMQ_VERSION=4.2.5
+
+    # GCC default, draft disabled,  older libzmq
+    - os: linux
+      env: ZMQ_VERSION=4.2.4
+
+    # GCC 7, draft enabled, latest libzmq
     - os: linux
       addons:
         apt:
@@ -39,17 +39,26 @@ matrix:
           packages:
             - g++-7
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" BUILD_TYPE=cmake ZMQ_VERSION=4.2.5 DRAFT=1
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" ZMQ_VERSION=4.2.5 DRAFT=1
+  # - env: BUILD_TYPE=cmake DO_CLANG_FORMAT_CHECK=1 CLANG_FORMAT=/usr/local/clang-5.0.0/bin/clang-format
+    # os: linux
+    # addons:
+    # apt:
+      # sources:
+        # - llvm-toolchain-trusty-5.0
+      # packages:
+        # - clang-5.0
 
-sudo: required
+sudo: false
 
 before_install:
-  - pip install --user cpp-coveralls
-  
-# Build and check this project according to the BUILD_TYPE
-script:     
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then pip install --user cpp-coveralls; fi
+
+# Build and check this project
+script:
   - eval "${MATRIX_EVAL}"
+  - cmake --version
   - ./ci_build.sh
 
 after_success:
-  - coveralls --root . -E ".*external.*" -E ".*CMakeFiles.*" -E ".*tests/" -E ".*demo/" -E ".*libzmq/"
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then coveralls --root . -E ".*external.*" -E ".*CMakeFiles.*" -E ".*tests/" -E ".*demo/" -E ".*libzmq/"; fi

@@ -12,7 +12,7 @@ add_executable(
 
 target_link_libraries(
     demo
-    libzmq
+    cppzmq
     )
 
 add_test(
