@@ -62,7 +62,7 @@ matrix:
 sudo: false
 
 before_install:
-  - pip install --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --user cpp-coveralls
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then pip install --user cpp-coveralls; fi
 
 # Build and check this project
 script:
@@ -71,4 +71,4 @@ script:
   - ./ci_build.sh
 
 after_success:
-  - coveralls --root . -E ".*external.*" -E ".*CMakeFiles.*" -E ".*tests/" -E ".*demo/" -E ".*libzmq/"
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then coveralls --root . -E ".*external.*" -E ".*CMakeFiles.*" -E ".*tests/" -E ".*demo/" -E ".*libzmq/"; fi
