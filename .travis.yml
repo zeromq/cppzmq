@@ -22,14 +22,14 @@ matrix:
     # GCC on Linux
     ##########################################################
 
-    # GCC default, draft disabled, latest libzmq
-    - os: linux
-      env: ZMQ_VERSION=4.2.5
-
-    # GCC default, draft disabled,  older libzmq, libzmq with pkg-config
+    # GCC default, draft disabled,  older libzmq with pkg-config
     - os: linux
       sudo: true
       env: ZMQ_VERSION=4.2.0 BUILD_TYPE=pkgconf
+
+    # GCC default, draft disabled, latest libzmq
+    - os: linux
+      env: ZMQ_VERSION=4.2.5
 
     # GCC 7, draft enabled, latest libzmq
     - os: linux

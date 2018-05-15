@@ -46,7 +46,9 @@ pushd .
 ZeroMQ_DIR=${LIBZMQ} cmake -H. -B${CPPZMQ} ${ZEROMQ_CMAKE_FLAGS}
 cmake --build ${CPPZMQ} -- -j${JOBS}
 if [ "$BUILD_TYPE" = "pkgconf" ] ; then
-    sudo cmake --build ${CPPZMQ} --target install
+    pushd .
+    cd ${CPPZMQ} && sudo make install
+    popd
 fi
 cd ${CPPZMQ}
 ctest -V -j${JOBS}
