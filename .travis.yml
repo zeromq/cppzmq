@@ -26,9 +26,10 @@ matrix:
     - os: linux
       env: ZMQ_VERSION=4.2.5
 
-    # GCC default, draft disabled,  older libzmq
+    # GCC default, draft disabled,  older libzmq, libzmq with pkg-config
     - os: linux
-      env: ZMQ_VERSION=4.2.4
+      sudo: true
+      env: ZMQ_VERSION=4.2.0 BUILD_TYPE=pkgconf
 
     # GCC 7, draft enabled, latest libzmq
     - os: linux
@@ -48,8 +49,6 @@ matrix:
         # - llvm-toolchain-trusty-5.0
       # packages:
         # - clang-5.0
-
-sudo: false
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then pip install --user cpp-coveralls; fi

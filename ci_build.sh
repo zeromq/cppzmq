@@ -3,6 +3,7 @@
 set -x
 set -e
 
+BUILD_TYPE=${BUILD_TYPE:-cmake}
 LIBZMQ=${PWD}/libzmq-build
 CPPZMQ=${PWD}/cppzmq-build
 # Travis machines have 2 cores
@@ -19,11 +20,21 @@ install_zeromq() {
     curl -L https://github.com/zeromq/libzmq/archive/v${ZMQ_VERSION}.tar.gz \
       >zeromq.tar.gz
     tar -xvzf zeromq.tar.gz
-    cmake -Hlibzmq-${ZMQ_VERSION} -B${LIBZMQ} -DWITH_PERF_TOOL=OFF \
-                                              -DZMQ_BUILD_TESTS=OFF \
-                                              -DCMAKE_BUILD_TYPE=Release \
-                                              ${ZEROMQ_CMAKE_FLAGS}
-    cmake --build ${LIBZMQ} -- -j${JOBS}
+    if [ "$BUILD_TYPE" = "cmake" ] ; then
+        cmake -Hlibzmq-${ZMQ_VERSION} -B${LIBZMQ} -DWITH_PERF_TOOL=OFF \
+                                                  -DZMQ_BUILD_TESTS=OFF \
+                                                  -DCMAKE_BUILD_TYPE=Release \
+                                                  ${ZEROMQ_CMAKE_FLAGS}
+        cmake --build ${LIBZMQ} -- -j${JOBS}
+    elif [ "$BUILD_TYPE" = "pkgconf" ] ; then
+        pushd .
+        cd libzmq-${ZMQ_VERSION}
+        ./autogen.sh &&
+        ./configure &&
+        make VERBOSE=1 -j${JOBS}
+        sudo make install
+        popd
+    fi
 }
 
 # build zeromq first
@@ -34,6 +45,9 @@ if [ "${ZMQ_VERSION}" != "" ] ; then install_zeromq ; fi
 pushd .
 ZeroMQ_DIR=${LIBZMQ} cmake -H. -B${CPPZMQ} ${ZEROMQ_CMAKE_FLAGS}
 cmake --build ${CPPZMQ} -- -j${JOBS}
+if [ "$BUILD_TYPE" = "pkgconf" ] ; then
+    sudo cmake --build ${CPPZMQ} --target install
+fi
 cd ${CPPZMQ}
 ctest -V -j${JOBS}
 popd
