@@ -16,7 +16,7 @@ if [ "$DRAFT" = "1" ] ; then
     export ZEROMQ_CMAKE_FLAGS="-DENABLE_DRAFTS=ON"
 fi
 
-install_zeromq() {
+libzmq_install() {
     curl -L https://github.com/zeromq/libzmq/archive/v${ZMQ_VERSION}.tar.gz \
       >zeromq.tar.gz
     tar -xvzf zeromq.tar.gz
@@ -26,7 +26,7 @@ install_zeromq() {
                                                   -DCMAKE_BUILD_TYPE=Release \
                                                   ${ZEROMQ_CMAKE_FLAGS}
         cmake --build ${LIBZMQ} -- -j${JOBS}
-    elif [ "$BUILD_TYPE" = "pkgconf" ] ; then
+    elif [ "$BUILD_TYPE" = "pkgconfig" ] ; then
         pushd .
         cd libzmq-${ZMQ_VERSION}
         ./autogen.sh &&
@@ -37,25 +37,44 @@ install_zeromq() {
     fi
 }
 
+
 # build zeromq first
-
-if [ "${ZMQ_VERSION}" != "" ] ; then install_zeromq ; fi
-
-# build cppzmq
-pushd .
-ZeroMQ_DIR=${LIBZMQ} cmake -H. -B${CPPZMQ} ${ZEROMQ_CMAKE_FLAGS}
-cmake --build ${CPPZMQ} -- -j${JOBS}
-if [ "$BUILD_TYPE" = "pkgconf" ] ; then
+cppzmq_build() {
     pushd .
-    cd ${CPPZMQ} && sudo make install
+    if [ "$BUILD_TYPE" = "cmake" ] ; then
+        export ZeroMQ_DIR=${LIBZMQ}
+    fi
+    cmake -H. -B${CPPZMQ} ${ZEROMQ_CMAKE_FLAGS}
+    cmake --build ${CPPZMQ} -- -j${JOBS}
+    if [ "$BUILD_TYPE" = "pkgconfig" ] ; then
+        cd ${CPPZMQ}
+        sudo make install
+    fi
     popd
-fi
-cd ${CPPZMQ}
-ctest -V -j${JOBS}
-popd
+}
 
-# build cppzmq demo
-ZeroMQ_DIR=${LIBZMQ} cppzmq_DIR=${CPPZMQ} cmake -Hdemo -Bdemo/build
-cmake --build demo/build
-cd demo/build
-ctest -V
+cppzmq_tests() {
+    pushd .
+    cd ${CPPZMQ}
+    ctest -V -j${JOBS}
+    popd
+}
+
+cppzmq_demo() {
+    pushd .
+    if [ "$BUILD_TYPE" = "cmake" ] ; then
+        export ZeroMQ_DIR=${LIBZMQ}
+        export cppzmq_DIR=${CPPZMQ}
+    fi
+    cmake -Hdemo -Bdemo/build
+    cmake --build demo/build
+    cd demo/build
+    ctest -V
+    popd
+}
+
+if [ "${ZMQ_VERSION}" != "" ] ; then libzmq_install ; fi
+
+cppzmq_build
+cppzmq_tests
+cppzmq_demo
