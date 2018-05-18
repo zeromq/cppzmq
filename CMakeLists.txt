@@ -59,6 +59,10 @@ install(FILES ${CPPZMQ_HEADERS}
 # GNUInstallDirs "DATADIR" wrong here; CMake search path wants "share".
 set(CPPZMQ_CMAKECONFIG_INSTALL_DIR "share/cmake/${PROJECT_NAME}" CACHE STRING "install path for cppzmqConfig.cmake")
 
+configure_file(libzmq-pkg-config/FindZeroMQ.cmake
+               libzmq-pkg-config/FindZeroMQ.cmake
+               COPYONLY)
+
 export(EXPORT ${PROJECT_NAME}-targets
      FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
 configure_package_config_file(${PROJECT_NAME}Config.cmake.in

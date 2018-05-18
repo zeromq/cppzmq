@@ -48,10 +48,6 @@ cppzmq_build() {
     fi
     cmake -H. -B${CPPZMQ} ${ZEROMQ_CMAKE_FLAGS}
     cmake --build ${CPPZMQ} -- -j${JOBS}
-    if [ "${BUILD_TYPE}" = "pkgconfig" ] ; then
-        cd ${CPPZMQ}
-        sudo make install
-    fi
     popd
 }
 
@@ -66,8 +62,8 @@ cppzmq_demo() {
     pushd .
     if [ "${BUILD_TYPE}" = "cmake" ] ; then
         export ZeroMQ_DIR=${LIBZMQ}
-        export cppzmq_DIR=${CPPZMQ}
     fi
+    cppzmq_DIR=${CPPZMQ} \
     cmake -Hdemo -Bdemo/build
     cmake --build demo/build
     cd demo/build
