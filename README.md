@@ -23,7 +23,7 @@ Supported platforms
 
  - Only a subset of the platforms that are supported by libzmq itself are supported. Some features already require a compiler supporting C++11. In the future, probably all features will require C++11. To build and run the tests, cmake and googletest are required.
  - Tested libzmq versions are
-   - 4.2.4 (without DRAFT API)
+   - 4.2.0 (without DRAFT API)
    - 4.2.5 (with and without DRAFT API)
  - Platforms with full support (i.e. CI executing build and tests)
    - Ubuntu 14.04 x64 (with gcc 4.8.4) (without DRAFT API only)
