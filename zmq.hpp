@@ -396,6 +396,21 @@ class message_t
         return value;
     }
 #endif
+
+#if defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 0)
+    inline uint32_t routing_id() const
+    {
+        return zmq_msg_routing_id(const_cast<zmq_msg_t*>(&msg));
+    }
+
+    inline void set_routing_id(uint32_t routing_id)
+    {
+        int rc = zmq_msg_set_routing_id(&msg, routing_id);
+        if (rc != 0)
+            throw error_t();
+    }
+#endif
+
     /** Dump content to string. Ascii chars are readable, the rest is printed as hex.
          *  Probably ridiculously slow.
          */

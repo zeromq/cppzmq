@@ -118,3 +118,12 @@ TEST(message, equality_non_equal_lhs_empty)
     const zmq::message_t msg_b("Hi", 2);
     ASSERT_NE(msg_a, msg_b);
 }
+
+#if defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 0)
+TEST(message, routing_id_persists)
+{
+    zmq::message_t msg;
+    msg.set_routing_id(123);
+    ASSERT_EQ(123u, msg.routing_id());
+}
+#endif
