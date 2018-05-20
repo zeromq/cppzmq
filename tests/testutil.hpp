@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include <zmq.hpp>
 
-#if defined(ZMQ_CPP11)
+#if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11)
 #include <array>
 
 class loopback_ip4_binder
