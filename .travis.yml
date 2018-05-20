@@ -30,7 +30,18 @@ matrix:
     # GCC default, draft disabled, default libzmq (defined in ci_build.sh)
     - os: linux
 
-    # GCC 7, draft enabled (default), latest libzmq (default)
+    # GCC 6, draft disabled (default), latest libzmq (default)
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+      env:
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+
+    # GCC 7, draft enabled, latest libzmq (default)
     - os: linux
       addons:
         apt:
