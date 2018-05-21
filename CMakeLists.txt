@@ -76,7 +76,15 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/libzmq-pkg-config/FindZeroMQ.cmake
               DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR}/libzmq-pkg-config)
 
-option(CPPZMQ_BUILD_TESTS "Whether or not to build the tests" ON)
+if(${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
+ set(THIS_PROJECT_IS_MAINPROJECT TRUE)
+else()
+ set(THIS_PROJECT_IS_MAINPROJECT FALSE)
+endif(${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
+
+# The unit tests are disabled by default if this project is part of a bigger project.
+# you can overwrite this behavior by setting CPPZMQ_BUILD_TESTS to TRUE
+option(CPPZMQ_BUILD_TESTS "Whether or not to build the tests" ${THIS_PROJECT_IS_MAINPROJECT})
 
 if (CPPZMQ_BUILD_TESTS)
     enable_testing()
