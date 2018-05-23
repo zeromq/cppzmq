@@ -1,3 +1,4 @@
+set(PKG_CONFIG_USE_CMAKE_PREFIX_PATH ON)
 find_package(PkgConfig)
 pkg_check_modules(PC_LIBZMQ QUIET libzmq)
 

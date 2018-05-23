@@ -4,6 +4,7 @@ language: cpp
 
 dist: trusty
 cache: ccache
+sudo: false
 
 matrix:
   include:
@@ -16,7 +17,7 @@ matrix:
     - os: osx
       osx_image: xcode9.1
       compiler: clang
-      env: DRAFT=1
+      env: ENABLE_DRAFTS=ON
 
     ##########################################################
     # GCC on Linux
@@ -24,7 +25,6 @@ matrix:
 
     # GCC default, draft disabled,  older libzmq with pkg-config
     - os: linux
-      sudo: true
       env: ZMQ_VERSION=4.2.0 BUILD_TYPE=pkgconfig
 
     # GCC default, draft disabled, default libzmq (defined in ci_build.sh)
@@ -50,7 +50,7 @@ matrix:
           packages:
             - g++-7
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" DRAFT=1
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" ENABLE_DRAFTS=ON
   # - env: BUILD_TYPE=cmake DO_CLANG_FORMAT_CHECK=1 CLANG_FORMAT=/usr/local/clang-5.0.0/bin/clang-format
     # os: linux
     # addons:
