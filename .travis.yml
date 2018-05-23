@@ -4,6 +4,7 @@ language: cpp
 
 dist: trusty
 cache: ccache
+sudo: false
 
 matrix:
   include:
@@ -24,7 +25,6 @@ matrix:
 
     # GCC default, draft disabled,  older libzmq with pkg-config
     - os: linux
-      sudo: true
       env: ZMQ_VERSION=4.2.0 BUILD_TYPE=pkgconfig
 
     # GCC default, draft disabled, default libzmq (defined in ci_build.sh)
