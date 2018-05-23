@@ -25,9 +25,9 @@ libzmq_install() {
         pushd .
         cd libzmq-${ZMQ_VERSION}
         ./autogen.sh &&
-        ./configure &&
-        make VERBOSE=1 -j${JOBS}
-        sudo make install
+        ./configure --prefix=${LIBZMQ} &&
+        make -j${JOBS}
+        make install
         popd
     fi
 }
@@ -36,9 +36,7 @@ libzmq_install() {
 # build zeromq first
 cppzmq_build() {
     pushd .
-    if [ "${BUILD_TYPE}" = "cmake" ] ; then
-        export ZeroMQ_DIR=${LIBZMQ}
-    fi
+    ZeroMQ_DIR=${LIBZMQ} \
     cmake -H. -B${CPPZMQ} -DENABLE_DRAFTS=${ENABLE_DRAFTS}
     cmake --build ${CPPZMQ} -- -j${JOBS}
     popd
@@ -53,9 +51,7 @@ cppzmq_tests() {
 
 cppzmq_demo() {
     pushd .
-    if [ "${BUILD_TYPE}" = "cmake" ] ; then
-        export ZeroMQ_DIR=${LIBZMQ}
-    fi
+    ZeroMQ_DIR=${LIBZMQ} \
     cppzmq_DIR=${CPPZMQ} \
     cmake -Hdemo -Bdemo/build
     cmake --build demo/build
