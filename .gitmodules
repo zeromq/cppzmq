@@ -1,0 +1,6 @@
+[submodule "submodule/pesto"]
+	path = submodule/pesto
+	url = git@github.com:lhftio/pesto
+[submodule "submodule/zmq"]
+	path = submodule/zmq
+	url = git@github.com:lhftio/zmq

@@ -1,3 +1,7 @@
+# Lighthouse
+.bazelrc
+bazel-*
+
 # Vim tmp files
 *.swp
 

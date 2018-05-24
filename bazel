@@ -1,0 +1,255 @@
+#!/bin/sh -eu
+
+: ${BAZEL_BIN:=bazel}
+: ${BAZEL_SCRIPT:=./bazel}
+: ${BAZEL_SCRIPT_PESTO:=submodule/pesto/bazel}
+: ${BAZEL_WORKSPACE:="$(git rev-parse --show-toplevel)"}
+: ${BAZEL_GIT:="git -C $BAZEL_WORKSPACE"}
+: ${BAZEL_SUBMODULES_RAW:=$($BAZEL_GIT submodule)}
+: ${BAZEL_SUBMODULES=$(echo "$BAZEL_SUBMODULES_RAW" | awk '{ print $2 }')}
+
+bazel_usage() {
+    # The regex below relaces bazel with ./bazel, but only if it's the
+    # first or second word of the line.
+    $BAZEL_BIN | perl -pe 's/^(\s*|\s*[^\s]+\s*)bazel/\1.\/bazel/g'
+
+    cat <<EOF
+
+Submodule commands:
+  upgrade             Upgrade one or more submodules to the latest master.
+  status              Check the current status of all submodules.
+EOF
+}
+
+bazel_upgrade_usage() {
+    cat <<EOF
+Usage: ./bazel upgrade <options>
+
+  ./bazel upgrade ...
+      Upgrade all submodules to the latest master.
+
+  ./bazel upgrade submodule/<name>
+      Upgrade a single submodule to the latest master.
+EOF
+}
+
+
+bazel_status_usage() {
+    cat <<EOF
+Usage: ./bazel status
+
+  ./bazel status
+      Check the current status of all submodules in relation to their master branch.
+
+  ./bazel status -n
+  ./bazel status --no-fetch
+      Check the current status of all submodules, but skip fetching from their remotes.
+EOF
+}
+
+if [ -t 1 ]; then
+    ANSI_RED=$(tput setaf 1)
+    ANSI_GREEN=$(tput setaf 2)
+    ANSI_YELLOW=$(tput setaf 3)
+    ANSI_BLUE=$(tput setaf 4)
+    ANSI_MAGENTA=$(tput setaf 5)
+    ANSI_CYAN=$(tput setaf 6)
+    ANSI_BRIGHT_BLUE=$(tput setaf 12)
+    ANSI_BOLD=$(tput bold)
+    ANSI_RESET=$(tput sgr0)
+    ANSI_UP=$(tput cuu1)
+    ANSI_CLEAR=$(tput el)
+else
+    ANSI_RED=
+    ANSI_GREEN=
+    ANSI_YELLOW=
+    ANSI_BLUE=
+    ANSI_MAGENTA=
+    ANSI_CYAN=
+    ANSI_BRIGHT_BLUE=
+    ANSI_BOLD=
+    ANSI_RESET=
+    ANSI_UP=
+    ANSI_CLEAR=
+fi
+
+bazel_submodule_init() {
+    NEEDS_INIT=$(echo "$BAZEL_SUBMODULES_RAW" | grep "^-" | cut -d ' ' -f 2)
+
+    for SUBMODULE in $NEEDS_INIT; do
+        $BAZEL_GIT submodule update --init $SUBMODULE 2>&1 | sed 's/Submodule path//; s/^Submodule //' | while read LINE; do
+            >&2 echo "${ANSI_GREEN}INFO:${ANSI_RESET} $LINE"
+        done
+
+        EXIT_CODE=${PIPESTATUS[0]}
+        if [ $EXIT_CODE -ne 0 ]; then
+            echo "${ANSI_RED}${ANSI_BOLD}ERROR:${ANSI_RESET} git submodule update --init $SUBMODULE (failed with exit code $EXIT_CODE)"
+            exit $EXIT_CODE
+        fi
+    done
+}
+
+bazel_submodule_check() {
+    OUT_OF_SYNC=$(echo "$BAZEL_SUBMODULES_RAW" | grep "^+" | cut -d ' ' -f 2)
+
+    for SUBMODULE in $OUT_OF_SYNC; do
+        >&2 echo "${ANSI_YELLOW}WARN:${ANSI_RESET} $SUBMODULE is out of sync with the git index."
+    done
+}
+
+bazel_script_init() {
+
+    #
+    # If submodule/pesto is not initialized or is out of sync with the git index, then we shouldn't check for a new
+    # script.
+    #
+    if [ -z "$(echo "$BAZEL_SUBMODULES_RAW" | grep '^ ' | grep ' submodule/pesto ')" ]; then
+        return 0
+    fi
+
+    #
+    # If submodule/pesto contains a different ./bazel script, then we assume it is newer and copy it over.
+    #
+    if ! cmp -s $BAZEL_SCRIPT $BAZEL_SCRIPT_PESTO; then
+        >&2 echo "${ANSI_BRIGHT_BLUE}UPGRADE:${ANSI_RESET} Found a new version of the $BAZEL_SCRIPT script, it has been upgraded and can now be committed."
+        cp $BAZEL_SCRIPT_PESTO $BAZEL_SCRIPT
+        exit 1
+    fi
+}
+
+bazel_help() {
+    if [ $# -ge 1 ]; then
+        case "$1" in
+            upgrade|status) bazel_$1_usage ;;
+            *) bazel help $@
+        esac
+    else
+        bazel_usage
+    fi
+}
+
+bazel_upgrade() {
+    if [ $# -eq 0 ]; then
+        bazel_upgrade_usage
+        exit 0
+    fi
+
+    SUBMODULE=$1
+}
+
+bazel_submodule_fetch_single() {
+    git -C $BAZEL_WORKSPACE/$1 remote update >/dev/null 2>&1
+}
+
+bazel_submodule_fetch() {
+    if [ $# -ne 1 ]; then
+        fail "bazel_submodule_fetch: expected exactly one argument"
+    fi
+
+    SUBMODULE="$1"
+
+    if [ "$SUBMODULE" = "..." ]; then
+        >&2 echo "${ANSI_GREEN}INFO:${ANSI_RESET} Fetching submodules..."
+        echo "$BAZEL_SUBMODULES" | xargs -n1 -P10 -I {} sh -c 'bazel_submodule_fetch_single $@' _ {}
+        >&2 echo -n "${ANSI_UP}${ANSI_CLEAR}"
+    else
+        >&2 echo "${ANSI_GREEN}INFO:${ANSI_RESET} Fetching $SUBMODULE..."
+        bazel_submodule_fetch_single $SUBMODULE
+        >&2 echo -n "${ANSI_UP}${ANSI_CLEAR}"
+    fi
+}
+
+export BAZEL_WORKSPACE
+export BAZEL_SUBMODULES
+export -f bazel_submodule_fetch_single
+
+bazel_status_single() {
+    if [ $# -ne 1 ]; then
+        fail "bazel_status_single: expected exactly one argument"
+    fi
+
+    SUBMODULE=$1
+    SUBMODULE_GIT="git -C $BAZEL_WORKSPACE/$SUBMODULE"
+
+    OUT=$($SUBMODULE_GIT rev-list --left-right --count origin/master...)
+    BEHIND=$(echo $OUT | awk '{ print $1 }')
+    AHEAD=$(echo $OUT | awk '{ print $2 }')
+
+    if [ "$AHEAD" -eq 0 -a "$BEHIND" -eq 0 ]; then
+        >&2 echo "${ANSI_BLUE} ${ANSI_GREEN}✔${ANSI_RESET} $SUBMODULE"
+    elif [ "$AHEAD" -eq 0 -a "$BEHIND" -gt 0 ]; then
+        >&2 echo "${ANSI_GREEN} ${ANSI_BRIGHT_BLUE}↻${ANSI_RESET} $SUBMODULE (behind master)"
+    elif [ "$AHEAD" -gt 0 -a "$BEHIND" -eq 0 ]; then
+        >&2 echo "${ANSI_GREEN} ${ANSI_RED}✘${ANSI_RESET} $SUBMODULE (commits not on master)"
+    elif [ "$AHEAD" -gt 0 -a "$BEHIND" -gt 0 ]; then
+        >&2 echo "${ANSI_GREEN} ${ANSI_RED}✘${ANSI_RESET} $SUBMODULE (commits not on master / behind master)"
+    fi
+}
+
+bazel_status() {
+    if [ $# -ge 1 ]; then
+        case "$@" in
+            -n|--no-fetch)
+                : # don't fetch
+                ;;
+            *)
+                bazel_status_usage
+                exit 0
+        esac
+    else
+        bazel_submodule_fetch ...
+    fi
+
+    for SUBMODULE in $BAZEL_SUBMODULES; do
+        bazel_status_single $SUBMODULE
+    done
+}
+
+bazel_upgrade() {
+    if [ $# -ne 1 ]; then
+        bazel_upgrade_usage
+        exit 0
+    fi
+
+    SUBMODULE="$1"
+    bazel_submodule_fetch $SUBMODULE
+
+    if [ "$SUBMODULE" = "..." ]; then
+        for SUBMODULE in $BAZEL_SUBMODULES; do
+            if ! [ "$SUBMODULE" = "submodule/pesto" ]; then
+                SUBMODULE_GIT="git -C $BAZEL_WORKSPACE/$SUBMODULE"
+                $SUBMODULE_GIT checkout origin/master >/dev/null 2>&1
+                bazel_status_single $SUBMODULE
+            fi
+        done
+    else
+        SUBMODULE_GIT="git -C $BAZEL_WORKSPACE/$SUBMODULE"
+        $SUBMODULE_GIT checkout origin/master >/dev/null 2>&1
+        bazel_status_single $SUBMODULE
+    fi
+}
+
+bazel_submodule_init
+bazel_script_init
+
+if [ $# -eq 0 ]; then
+    bazel_usage
+    exit 0
+fi
+
+BAZEL_MODE=$1; shift
+case "$BAZEL_MODE" in
+    upgrade)
+        bazel_$BAZEL_MODE "$@"
+        ;;
+    help|status)
+        bazel_$BAZEL_MODE "$@"
+        ;;
+    test)
+        bazel_submodule_check
+        $BAZEL_BIN test --test_output=errors $@
+        ;;
+    *)
+        bazel_submodule_check
+        $BAZEL_BIN $BAZEL_MODE $@
+esac
