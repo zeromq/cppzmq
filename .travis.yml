@@ -23,6 +23,21 @@ matrix:
     # GCC on Linux
     ##########################################################
 
+    # Coverage, GCC 7, draft enabled, latest libzmq (default)
+    - os: linux
+      before_install:
+        - pip install --user cpp-coveralls
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" ENABLE_DRAFTS=ON COVERAGE=ON
+      after_success:
+        - coveralls -r . -E ".*external.*" -E ".*CMakeFiles.*" -E ".*tests/" -E ".*demo/" -E ".*libzmq.*/" -b cppzmq-build --gcov-options '\-lp'
+
     # GCC default, draft disabled,  older libzmq with pkg-config
     - os: linux
       env: ZMQ_VERSION=4.2.0 BUILD_TYPE=pkgconfig
@@ -51,6 +66,7 @@ matrix:
             - g++-7
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" ENABLE_DRAFTS=ON
+
   # - env: BUILD_TYPE=cmake DO_CLANG_FORMAT_CHECK=1 CLANG_FORMAT=/usr/local/clang-5.0.0/bin/clang-format
     # os: linux
     # addons:
@@ -60,14 +76,9 @@ matrix:
       # packages:
         # - clang-5.0
 
-before_install:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then pip install --user cpp-coveralls; fi
-
 # Build and check this project
 script:
   - eval "${MATRIX_EVAL}"
   - cmake --version
   - ./ci_build.sh
 
-after_success:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then coveralls --root . -E ".*external.*" -E ".*CMakeFiles.*" -E ".*tests/" -E ".*demo/" -E ".*libzmq/"; fi
