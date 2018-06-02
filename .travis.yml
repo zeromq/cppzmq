@@ -51,6 +51,22 @@ matrix:
             - g++-7
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" DRAFT=1
+
+    # Coverage, GCC 7, draft enabled, latest libzmq (default)
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+            - lcov
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" DRAFT=1 COVERAGE=1
+      after_success:
+        - cd build
+        - bash <(curl -s https://codecov.io/bash) -X fix
+
   # - env: BUILD_TYPE=cmake DO_CLANG_FORMAT_CHECK=1 CLANG_FORMAT=/usr/local/clang-5.0.0/bin/clang-format
     # os: linux
     # addons:
@@ -60,14 +76,8 @@ matrix:
       # packages:
         # - clang-5.0
 
-before_install:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then pip install --user cpp-coveralls; fi
-
 # Build and check this project
 script:
   - eval "${MATRIX_EVAL}"
   - cmake --version
   - ./ci_build.sh
-
-after_success:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then coveralls --root . -E ".*external.*" -E ".*CMakeFiles.*" -E ".*tests/" -E ".*demo/" -E ".*libzmq/"; fi

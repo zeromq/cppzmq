@@ -3,11 +3,13 @@
 set -x
 set -e
 
+SOURCE=${PWD}
 BUILD_TYPE=${BUILD_TYPE:-cmake}
 LIBZMQ=${PWD}/libzmq-build
 CPPZMQ=${PWD}/cppzmq-build
 ZMQ_VERSION="4.2.5"
 DRAFT=${DRAFT:-0}
+COVERAGE=${COVERAGE:-0}
 # Travis machines have 2 cores
 JOBS=2
 
@@ -42,19 +44,24 @@ libzmq_install() {
 
 # build zeromq first
 cppzmq_build() {
-    pushd .
     if [ "${BUILD_TYPE}" = "cmake" ] ; then
         export ZeroMQ_DIR=${LIBZMQ}
     fi
     cmake -H. -B${CPPZMQ} ${ZEROMQ_CMAKE_FLAGS}
     cmake --build ${CPPZMQ} -- -j${JOBS}
-    popd
 }
 
 cppzmq_tests() {
     pushd .
     cd ${CPPZMQ}
+    if [ "${COVERAGE}" = "1" ] ; then
+        lcov -c -i -b ${SOURCE} -d . -o Coverage.baseline
+    fi
     ctest -V -j${JOBS}
+    if [ "${COVERAGE}" = "1" ] ; then
+        lcov -c -b ${SOURCE} -d . -o Coverage.out
+        lcov -a Coverage.baseline -a Coverage.out -o Coverage.lcov
+    fi
     popd
 }
 
