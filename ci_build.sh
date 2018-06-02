@@ -3,9 +3,11 @@
 set -x
 set -e
 
+SOURCE=${PWD}
 BUILD_TYPE=${BUILD_TYPE:-cmake}
 ZMQ_VERSION=${ZMQ_VERSION:-4.2.5}
 ENABLE_DRAFTS=${ENABLE_DRAFTS:-OFF}
+COVERAGE=${COVERAGE:-OFF}
 LIBZMQ=${PWD}/libzmq-build
 CPPZMQ=${PWD}/cppzmq-build
 # Travis machines have 2 cores
@@ -35,17 +37,22 @@ libzmq_install() {
 
 # build zeromq first
 cppzmq_build() {
-    pushd .
     CMAKE_PREFIX_PATH=${LIBZMQ} \
     cmake -H. -B${CPPZMQ} -DENABLE_DRAFTS=${ENABLE_DRAFTS}
     cmake --build ${CPPZMQ} -- -j${JOBS}
-    popd
 }
 
 cppzmq_tests() {
     pushd .
     cd ${CPPZMQ}
+    if [ "${COVERAGE}" = "ON" ] ; then
+        lcov -c -i -b ${SOURCE} -d . -o Coverage.baseline
+    fi
     ctest -V -j${JOBS}
+    if [ "${COVERAGE}" = "ON" ] ; then
+        lcov -c -b ${SOURCE} -d . -o Coverage.out
+        lcov -a Coverage.baseline -a Coverage.out -o Coverage.lcov
+    fi
     popd
 }
 

@@ -1,6 +1,6 @@
 [![Travis-CI Status](https://travis-ci.org/zeromq/cppzmq.svg?branch=master)](https://travis-ci.org/zeromq/cppzmq)
 [![Appveyor Status](https://ci.appveyor.com/api/projects/status/bvi5axi8um7goh50/branch/master?svg=true)](https://ci.appveyor.com/project/zeromq/cppzmq/branch/master)
-[![Coverage Status](https://coveralls.io/repos/github/zeromq/cppzmq/badge.svg?branch=master)](https://coveralls.io/github/zeromq/cppzmq?branch=master)
+[![Coverage Status](https://codecov.io/github/zeromq/cppzmq/coverage.svg?branch=master)](https://codecov.io/gh/github/zeromq/cppzmq/branch/master)
 
 Introduction & Design Goals
 ===========================
