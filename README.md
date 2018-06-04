@@ -71,10 +71,7 @@ cpp zmq (which will also include libzmq for you).
 ```
 #find cppzmq wrapper, installed by make of cppzmq
 find_package(cppzmq)
-if(cppzmq_FOUND)
-    include_directories(${ZeroMQ_INCLUDE_DIR} ${cppzmq_INCLUDE_DIR})
-    target_link_libraries(*Your Project Name* ${cppzmq_LIBRARY})
-endif()
+target_link_libraries(*Your Project Name* cppzmq)
 ```
 
 
