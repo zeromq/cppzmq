@@ -6,6 +6,7 @@ set -e
 BUILD_TYPE=${BUILD_TYPE:-cmake}
 ZMQ_VERSION=${ZMQ_VERSION:-4.2.5}
 ENABLE_DRAFTS=${ENABLE_DRAFTS:-OFF}
+COVERAGE=${COVERAGE:-OFF}
 LIBZMQ=${PWD}/libzmq-build
 CPPZMQ=${PWD}/cppzmq-build
 # Travis machines have 2 cores
@@ -37,7 +38,8 @@ libzmq_install() {
 cppzmq_build() {
     pushd .
     CMAKE_PREFIX_PATH=${LIBZMQ} \
-    cmake -H. -B${CPPZMQ} -DENABLE_DRAFTS=${ENABLE_DRAFTS}
+    cmake -H. -B${CPPZMQ} -DENABLE_DRAFTS=${ENABLE_DRAFTS} \
+                          -DCOVERAGE=${COVERAGE}
     cmake --build ${CPPZMQ} -- -j${JOBS}
     popd
 }
