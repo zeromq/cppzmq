@@ -849,7 +849,7 @@ class monitor_t
 #ifdef ZMQ_EVENT_MONITOR_STOPPED
         if (event->event == ZMQ_EVENT_MONITOR_STOPPED) {
             zmq_msg_close(&eventMsg);
-            return true;
+            return false;
         }
 
 #endif
@@ -923,11 +923,7 @@ class monitor_t
         if (socketPtr)
             zmq_socket_monitor(socketPtr, NULL, 0);
 
-        if (monitor_socket)
-            zmq_close(monitor_socket);
-
         socketPtr = NULL;
-        monitor_socket = NULL;
     }
 #endif
     virtual void on_monitor_started() {}
