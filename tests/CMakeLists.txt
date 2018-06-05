@@ -23,11 +23,13 @@ add_executable(
     poller.cpp
     active_poller.cpp
     multipart.cpp
+	monitor.cpp
     )
 
 target_link_libraries(
     unit_tests
-    PRIVATE gtest_main
+	PRIVATE gtest
+	PRIVATE gmock_main
     PRIVATE cppzmq
     )
 
