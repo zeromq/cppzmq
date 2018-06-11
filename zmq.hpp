@@ -230,10 +230,10 @@ class message_t
             throw error_t();
     }
 
-    template<typename I> message_t(I first, I last) : msg()
+    template<typename T> message_t(T first, T last) : msg()
     {
-        typedef typename std::iterator_traits<I>::difference_type size_type;
-        typedef typename std::iterator_traits<I>::value_type value_t;
+        typedef typename std::iterator_traits<T>::difference_type size_type;
+        typedef typename std::iterator_traits<T>::value_type value_t;
 
         size_type const size_ = std::distance(first, last) * sizeof(value_t);
         int const rc = zmq_msg_init_size(&msg, size_);
@@ -685,7 +685,7 @@ class socket_t
         throw error_t();
     }
 
-    template<typename I> bool send(I first, I last, int flags_ = 0)
+    template<typename T> bool send(T first, T last, int flags_ = 0)
     {
         zmq::message_t msg(first, last);
         return send(msg, flags_);
