@@ -30,9 +30,7 @@ if(NOT ZeroMQ_FOUND)
 endif()
 
 if(NOT TARGET @PROJECT_NAME@)
-  include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
-
-  get_target_property(@PROJECT_NAME@_INCLUDE_DIR cppzmq INTERFACE_INCLUDE_DIRECTORIES)
-  get_target_property(@PROJECT_NAME@_LIBRARY libzmq LOCATION)
-  get_target_property(@PROJECT_NAME@_STATIC_LIBRARY libzmq-static LOCATION)
+    include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+    get_target_property(@PROJECT_NAME@_INCLUDE_DIR cppzmq INTERFACE_INCLUDE_DIRECTORIES)
 endif()
+
