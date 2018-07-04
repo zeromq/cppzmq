@@ -1,9 +1,10 @@
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-#include <zmq.hpp>
+#include "testutil.hpp"
 
+#include <gmock/gmock.h>
 #ifdef ZMQ_CPP11
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 #endif
 
 class mock_monitor_t : public zmq::monitor_t
@@ -18,63 +19,65 @@ TEST(monitor, create_destroy)
     zmq::monitor_t monitor;
 }
 
+#if defined(ZMQ_CPP11)
 TEST(monitor, init_check)
 {
-    zmq::context_t ctx;
-    zmq::socket_t bind_socket(ctx, ZMQ_DEALER);
-
-    bind_socket.bind("tcp://127.0.0.1:*");
-    char endpoint[255];
-    size_t endpoint_len = sizeof(endpoint);
-    bind_socket.getsockopt(ZMQ_LAST_ENDPOINT, &endpoint, &endpoint_len);
-
-    zmq::socket_t connect_socket(ctx, ZMQ_DEALER);
-
+    common_server_client_setup s{false};
     mock_monitor_t monitor;
-    EXPECT_CALL(monitor, on_event_connect_delayed(testing::_, testing::_))
-      .Times(testing::AtLeast(1));
-    EXPECT_CALL(monitor, on_event_connected(testing::_, testing::_))
-      .Times(testing::AtLeast(1));
 
-    monitor.init(connect_socket, "inproc://foo");
+    const int expected_event_count = 2;
+    int event_count = 0;
+    auto count_event = [&event_count](const zmq_event_t &, const char *) {
+        ++event_count;
+    };
+
+    EXPECT_CALL(monitor, on_event_connect_delayed(testing::_, testing::_))
+      .Times(1)
+      .WillOnce(testing::Invoke(count_event));
+    EXPECT_CALL(monitor, on_event_connected(testing::_, testing::_))
+      .Times(1)
+      .WillOnce(testing::Invoke(count_event));
+
+    monitor.init(s.client, "inproc://foo");
 
     ASSERT_FALSE(monitor.check_event(0));
-    connect_socket.connect(endpoint);
+    s.init();
 
-    while (monitor.check_event(100)) {
+    while (monitor.check_event(100) && event_count < expected_event_count) {
     }
 }
 
-#ifdef ZMQ_CPP11
 TEST(monitor, init_abort)
 {
-    zmq::context_t ctx;
-    zmq::socket_t bind_socket(ctx, zmq::socket_type::dealer);
-
-    bind_socket.bind("tcp://127.0.0.1:*");
-    char endpoint[255];
-    size_t endpoint_len = sizeof(endpoint);
-    bind_socket.getsockopt(ZMQ_LAST_ENDPOINT, &endpoint, &endpoint_len);
-
-    zmq::socket_t connect_socket(ctx, zmq::socket_type::dealer);
-
+    common_server_client_setup s(false);
     mock_monitor_t monitor;
-    monitor.init(connect_socket, "inproc://foo");
+    monitor.init(s.client, "inproc://foo");
+
+    std::mutex mutex;
+    std::condition_variable cond_var;
+    bool done{false};
+
     EXPECT_CALL(monitor, on_event_connect_delayed(testing::_, testing::_))
-      .Times(testing::AtLeast(1));
+      .Times(1);
     EXPECT_CALL(monitor, on_event_connected(testing::_, testing::_))
-      .Times(testing::AtLeast(1));
+      .Times(1)
+      .WillOnce(testing::Invoke([&](const zmq_event_t &, const char *) {
+        std::lock_guard<std::mutex> lock(mutex);
+        done = true;
+        cond_var.notify_one();
+        }));
 
     auto thread = std::thread([&monitor] {
         while (monitor.check_event(-1)) {
         }
     });
 
-    connect_socket.connect(endpoint);
-    std::this_thread::sleep_for(std::chrono::milliseconds(250));
-    // TODO instead of sleeping an arbitrary amount of time, we should better
-    // wait until the expectations have met. How can this be done with
-    // googlemock?
+    s.init();
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        EXPECT_TRUE(cond_var.wait_for(lock, std::chrono::seconds(1),
+            [&done] { return done; }));
+    }
 
     monitor.abort();
     thread.join();

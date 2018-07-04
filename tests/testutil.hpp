@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include <zmq.hpp>
 
-#if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11)
+#if defined(ZMQ_CPP11)
 #include <array>
 
 class loopback_ip4_binder
@@ -31,7 +31,11 @@ class loopback_ip4_binder
 
 struct common_server_client_setup
 {
-    common_server_client_setup() { init(); }
+    common_server_client_setup(bool initialize = true)
+    {
+        if (initialize)
+            init();
+    }
 
     void init()
     {
@@ -40,8 +44,8 @@ struct common_server_client_setup
     }
 
     zmq::context_t context;
-    zmq::socket_t server{context, zmq::socket_type::server};
-    zmq::socket_t client{context, zmq::socket_type::client};
+    zmq::socket_t server{context, zmq::socket_type::pair};
+    zmq::socket_t client{context, zmq::socket_type::pair};
     std::string endpoint;
 };
 #endif
