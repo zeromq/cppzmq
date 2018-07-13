@@ -409,6 +409,18 @@ class message_t
         if (rc != 0)
             throw error_t();
     }
+
+    inline const char* group() const
+    {
+        return zmq_msg_group(const_cast<zmq_msg_t*>(&msg));
+    }
+
+    inline void set_group(const char* group)
+    {
+        int rc = zmq_msg_set_group(&msg, group);
+        if (rc != 0)
+            throw error_t();
+    }
 #endif
 
     /** Dump content to string. Ascii chars are readable, the rest is printed as hex.
@@ -546,9 +558,11 @@ enum class socket_type : int
     xsub = ZMQ_XSUB,
     push = ZMQ_PUSH,
     pull = ZMQ_PULL,
-#ifdef ZMQ_BUILD_DRAFT_API
+#if defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 0)
     server = ZMQ_SERVER,
     client = ZMQ_CLIENT,
+    radio = ZMQ_RADIO,
+    dish = ZMQ_DISH,
 #endif
 #if ZMQ_VERSION_MAJOR >= 4
     stream = ZMQ_STREAM,
@@ -714,6 +728,22 @@ class socket_t
             return false;
         throw error_t();
     }
+
+#if defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 0)
+    inline void join(const char* group)
+    {
+        int rc = zmq_join(ptr, group);
+        if (rc != 0)
+            throw error_t();
+    }
+
+    inline void leave(const char* group)
+    {
+        int rc = zmq_leave(ptr, group);
+        if (rc != 0)
+            throw error_t();
+    }
+#endif
 
   private:
     inline void init(context_t &context_, int type_)
