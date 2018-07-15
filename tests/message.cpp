@@ -126,4 +126,11 @@ TEST(message, routing_id_persists)
     msg.set_routing_id(123);
     ASSERT_EQ(123u, msg.routing_id());
 }
+
+TEST(message, group_persists)
+{
+    zmq::message_t msg;
+    msg.set_group("mygroup");
+    ASSERT_STREQ("mygroup", msg.group());
+}
 #endif
