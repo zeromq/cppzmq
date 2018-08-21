@@ -264,7 +264,7 @@ class message_t
 
 #if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11)
     template<typename T>
-    message_t(const T &msg_) : message_t(std::begin(msg_), std::end(msg_))
+    explicit message_t(const T &msg_) : message_t(std::begin(msg_), std::end(msg_))
     {
     }
 #endif

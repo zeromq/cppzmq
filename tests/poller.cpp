@@ -128,7 +128,7 @@ TEST(poller, poll_basic)
 {
     common_server_client_setup s;
 
-    ASSERT_NO_THROW(s.client.send("Hi"));
+    ASSERT_NO_THROW(s.client.send(zmq::message_t{"Hi"}));
 
     zmq::poller_t<int> poller;
     std::vector<zmq_poller_event_t> events{1};
@@ -206,7 +206,7 @@ TEST(poller, poll_client_server)
     ASSERT_NO_THROW(poller.add(s.server, ZMQ_POLLIN, s.server));
 
     // client sends message
-    ASSERT_NO_THROW(s.client.send("Hi"));
+    ASSERT_NO_THROW(s.client.send(zmq::message_t{"Hi"}));
 
     // wait for message and verify events
     std::vector<zmq_poller_event_t> events(1);
@@ -229,7 +229,7 @@ TEST(poller, wait_one_return)
     ASSERT_NO_THROW(poller.add(s.server, ZMQ_POLLIN, nullptr));
 
     // client sends message
-    ASSERT_NO_THROW(s.client.send("Hi"));
+    ASSERT_NO_THROW(s.client.send(zmq::message_t{"Hi"}));
 
     // wait for message and verify events
     std::vector<zmq_poller_event_t> events(1);
@@ -239,7 +239,7 @@ TEST(poller, wait_one_return)
 TEST(poller, wait_on_move_constructed_poller)
 {
     common_server_client_setup s;
-    ASSERT_NO_THROW(s.client.send("Hi"));
+    ASSERT_NO_THROW(s.client.send(zmq::message_t{"Hi"}));
     zmq::poller_t<> a;
     ASSERT_NO_THROW(a.add(s.server, ZMQ_POLLIN, nullptr));
     zmq::poller_t<> b{std::move(a)};
@@ -252,7 +252,7 @@ TEST(poller, wait_on_move_constructed_poller)
 TEST(poller, wait_on_move_assigned_poller)
 {
     common_server_client_setup s;
-    ASSERT_NO_THROW(s.client.send("Hi"));
+    ASSERT_NO_THROW(s.client.send(zmq::message_t{"Hi"}));
     zmq::poller_t<> a;
     ASSERT_NO_THROW(a.add(s.server, ZMQ_POLLIN, nullptr));
     zmq::poller_t<> b;
@@ -279,7 +279,7 @@ TEST(poller, remove_from_handler)
     }
     // Clients send messages
     for (auto &s : setup_list) {
-        ASSERT_NO_THROW(s.client.send("Hi"));
+        ASSERT_NO_THROW(s.client.send(zmq::message_t{"Hi"}));
     }
 
     // Wait for all servers to receive a message
