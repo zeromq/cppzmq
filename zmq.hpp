@@ -63,8 +63,8 @@
 
 /*  Version macros for compile-time API version detection                     */
 #define CPPZMQ_VERSION_MAJOR 4
-#define CPPZMQ_VERSION_MINOR 4 
-#define CPPZMQ_VERSION_PATCH 0
+#define CPPZMQ_VERSION_MINOR 3 
+#define CPPZMQ_VERSION_PATCH 1 
 
 #define CPPZMQ_VERSION                                                              \
     ZMQ_MAKE_VERSION(CPPZMQ_VERSION_MAJOR, CPPZMQ_VERSION_MINOR,                    \
@@ -264,7 +264,7 @@ class message_t
 
 #if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11)
     template<typename T>
-    message_t(const T &msg_) : message_t(std::begin(msg_), std::end(msg_))
+    explicit message_t(const T &msg_) : message_t(std::begin(msg_), std::end(msg_))
     {
     }
 #endif
