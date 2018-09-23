@@ -1,4 +1,5 @@
-#include <gtest/gtest.h>
+#define CATCH_CONFIG_MAIN
+#include <catch.hpp>
 #include <zmq.hpp>
 
 #if defined(ZMQ_CPP11)
@@ -8,129 +9,131 @@ static_assert(!std::is_copy_assignable<zmq::message_t>::value,
               "message_t should not be copy-assignable");
 #endif
 
-TEST(message, constructor_default)
+TEST_CASE("message default constructed", "[message]")
 {
     const zmq::message_t message;
-    ASSERT_EQ(0u, message.size());
+    CHECK(0u == message.size());
 }
 
+namespace {
 const char *const data = "Hi";
+}
 
-TEST(message, constructor_iterators)
+TEST_CASE("message constructor with iterators", "[message]")
 {
     const std::string hi(data);
     const zmq::message_t hi_msg(hi.begin(), hi.end());
-    ASSERT_EQ(2u, hi_msg.size());
-    ASSERT_EQ(0, memcmp(data, hi_msg.data(), 2));
+    CHECK(2u == hi_msg.size());
+    CHECK(0 == memcmp(data, hi_msg.data(), 2));
 }
 
-TEST(message, constructor_pointer_size)
+TEST_CASE("message constructor with buffer and size", "[message]")
 {
     const std::string hi(data);
     const zmq::message_t hi_msg(hi.data(), hi.size());
-    ASSERT_EQ(2u, hi_msg.size());
-    ASSERT_EQ(0, memcmp(data, hi_msg.data(), 2));
+    CHECK(2u == hi_msg.size());
+    CHECK(0 == memcmp(data, hi_msg.data(), 2));
 }
 
-TEST(message, constructor_char_array)
+TEST_CASE("message constructor with char array", "[message]")
 {
     const zmq::message_t hi_msg(data, strlen(data));
-    ASSERT_EQ(2u, hi_msg.size());
-    ASSERT_EQ(0, memcmp(data, hi_msg.data(), 2));
+    CHECK(2u == hi_msg.size());
+    CHECK(0 == memcmp(data, hi_msg.data(), 2));
 }
 
 #if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11)
-TEST(message, constructor_container)
+TEST_CASE("message constructor with container", "[message]")
 {
     const std::string hi(data);
     zmq::message_t hi_msg(hi);
-    ASSERT_EQ(2u, hi_msg.size());
-    ASSERT_EQ(0, memcmp(data, hi_msg.data(), 2));
+    CHECK(2u == hi_msg.size());
+    CHECK(0 == memcmp(data, hi_msg.data(), 2));
 }
 #endif
 
 #ifdef ZMQ_HAS_RVALUE_REFS
-TEST(message, constructor_move)
+TEST_CASE("message move constructor", "[message]")
 {
     zmq::message_t hi_msg(zmq::message_t(data, strlen(data)));
 }
 
-TEST(message, assign_move_empty_before)
+TEST_CASE("message assign move empty before", "[message]")
 {
     zmq::message_t hi_msg;
     hi_msg = zmq::message_t(data, strlen(data));
-    ASSERT_EQ(2u, hi_msg.size());
-    ASSERT_EQ(0, memcmp(data, hi_msg.data(), 2));
+    CHECK(2u == hi_msg.size());
+    CHECK(0 == memcmp(data, hi_msg.data(), 2));
 }
 
-TEST(message, assign_move_empty_after)
+TEST_CASE("message assign move empty after", "[message]")
 {
     zmq::message_t hi_msg(data, strlen(data));
     hi_msg = zmq::message_t();
-    ASSERT_EQ(0u, hi_msg.size());
+    CHECK(0u == hi_msg.size());
 }
 
-TEST(message, assign_move_empty_before_and_after)
+TEST_CASE("message assign move empty before and after", "[message]")
 {
     zmq::message_t hi_msg;
     hi_msg = zmq::message_t();
-    ASSERT_EQ(0u, hi_msg.size());
+    CHECK(0u == hi_msg.size());
 }
 #endif
 
-TEST(message, equality_self)
+TEST_CASE("message equality self", "[message]")
 {
     const zmq::message_t hi_msg(data, strlen(data));
-    ASSERT_EQ(hi_msg, hi_msg);
+    CHECK(hi_msg == hi_msg);
 }
 
-TEST(message, equality_equal)
+TEST_CASE("message equality equal", "[message]")
 {
     const zmq::message_t hi_msg_a(data, strlen(data));
     const zmq::message_t hi_msg_b(data, strlen(data));
-    ASSERT_EQ(hi_msg_a, hi_msg_b);
+    CHECK(hi_msg_a == hi_msg_b);
 }
 
-TEST(message, equality_equal_empty)
+TEST_CASE("message equality equal empty", "[message]")
 {
     const zmq::message_t msg_a;
     const zmq::message_t msg_b;
-    ASSERT_EQ(msg_a, msg_b);
+    CHECK(msg_a == msg_b);
 }
 
-TEST(message, equality_non_equal)
+TEST_CASE("message equality non equal", "[message]")
 {
     const zmq::message_t msg_a("Hi", 2);
     const zmq::message_t msg_b("Hello", 5);
-    ASSERT_NE(msg_a, msg_b);
+    CHECK(msg_a != msg_b);
 }
 
-TEST(message, equality_non_equal_rhs_empty)
+TEST_CASE("message equality non equal rhs empty", "[message]")
 {
     const zmq::message_t msg_a("Hi", 2);
     const zmq::message_t msg_b;
-    ASSERT_NE(msg_a, msg_b);
+    CHECK(msg_a != msg_b);
 }
 
-TEST(message, equality_non_equal_lhs_empty)
+TEST_CASE("message equality non equal lhs empty", "[message]")
 {
     const zmq::message_t msg_a;
     const zmq::message_t msg_b("Hi", 2);
-    ASSERT_NE(msg_a, msg_b);
+    CHECK(msg_a != msg_b);
 }
 
 #if defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 0)
-TEST(message, routing_id_persists)
+TEST_CASE("message routing id persists", "[message]")
 {
     zmq::message_t msg;
     msg.set_routing_id(123);
-    ASSERT_EQ(123u, msg.routing_id());
+    CHECK(123u == msg.routing_id());
 }
 
-TEST(message, group_persists)
+TEST_CASE("message group persists", "[message]")
 {
     zmq::message_t msg;
     msg.set_group("mygroup");
-    ASSERT_STREQ("mygroup", msg.group());
+    CHECK(std::string(msg.group()) == "mygroup");
 }
 #endif

@@ -34,18 +34,16 @@
 #define ZMQ_DEPRECATED(msg) __attribute__((deprecated(msg)))
 #endif
 
-#if (__cplusplus >= 201103L)
+#if (__cplusplus >= 201103L) || (defined(_MSC_VER) && (_MSC_VER >= 1900))
 #define ZMQ_CPP11
 #define ZMQ_NOTHROW noexcept
 #define ZMQ_EXPLICIT explicit
-#elif (defined(_MSC_VER) && (_MSC_VER >= 1900))
-#define ZMQ_CPP11
-#define ZMQ_NOTHROW noexcept
-#define ZMQ_EXPLICIT explicit
+#define ZMQ_OVERRIDE override
 #else
 #define ZMQ_CPP03
 #define ZMQ_NOTHROW
 #define ZMQ_EXPLICIT
+#define ZMQ_OVERRIDE
 #endif
 
 #include <zmq.h>

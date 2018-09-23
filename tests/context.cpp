@@ -1,15 +1,14 @@
-#include <gtest/gtest.h>
+#include <catch.hpp>
 #include <zmq.hpp>
 
-TEST(context, create_default_destroy)
+TEST_CASE("context construct default and destroy", "[context]")
 {
     zmq::context_t context;
 }
 
-TEST(context, create_close)
+TEST_CASE("context create, close and destroy", "[context]")
 {
     zmq::context_t context;
     context.close();
-
-    ASSERT_EQ(NULL, (void *) context);
+    CHECK(NULL == (void *) context);
 }

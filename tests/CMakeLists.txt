@@ -9,11 +9,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 
-include(cmake/googletest.cmake)
-fetch_googletest(
-    ${PROJECT_SOURCE_DIR}/cmake
-    ${PROJECT_BINARY_DIR}/googletest
-    )
+include(cmake/catch.cmake)
 
 add_executable(
     unit_tests
@@ -24,14 +20,15 @@ add_executable(
     active_poller.cpp
     multipart.cpp
 	monitor.cpp
-    )
+)
 
+add_dependencies(unit_tests catch)
+
+target_include_directories(unit_tests PUBLIC ${CATCH_INCLUDE_DIR})
 target_link_libraries(
     unit_tests
-	PRIVATE gtest
-	PRIVATE gmock_main
     PRIVATE cppzmq
-    )
+)
 
 OPTION (COVERAGE "Enable gcda file generation needed by lcov" OFF)
 
@@ -45,4 +42,4 @@ add_test(
     unit
   COMMAND
     ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/unit_tests
-  )
+)
