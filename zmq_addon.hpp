@@ -245,6 +245,18 @@ class multipart_t
         m_parts.pop_back();
         return message;
     }
+    
+    // get message part from front
+    const message_t &front()
+    {
+        return m_parts.front();
+    }
+
+    // get message part from back
+    const message_t &back()
+    {
+        return m_parts.back();
+    }
 
     // Get pointer to a specific message part
     const message_t *peek(size_t index) const { return &m_parts[index]; }
