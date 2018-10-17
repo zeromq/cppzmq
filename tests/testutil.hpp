@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gtest/gtest.h>
+#include <catch.hpp>
 #include <zmq.hpp>
 
 #if defined(ZMQ_CPP11)
@@ -18,12 +18,12 @@ class loopback_ip4_binder
     // and constructor/destructor are not.
     void bind(zmq::socket_t &socket)
     {
-        ASSERT_NO_THROW(socket.bind("tcp://127.0.0.1:*"));
+        REQUIRE_NOTHROW(socket.bind("tcp://127.0.0.1:*"));
         std::array<char, 100> endpoint{};
         size_t endpoint_size = endpoint.size();
-        ASSERT_NO_THROW(
+        REQUIRE_NOTHROW(
           socket.getsockopt(ZMQ_LAST_ENDPOINT, endpoint.data(), &endpoint_size));
-        ASSERT_TRUE(endpoint_size < endpoint.size());
+        REQUIRE(endpoint_size < endpoint.size());
         endpoint_ = std::string{endpoint.data()};
     }
     std::string endpoint_;
@@ -40,7 +40,7 @@ struct common_server_client_setup
     void init()
     {
         endpoint = loopback_ip4_binder{server}.endpoint();
-        ASSERT_NO_THROW(client.connect(endpoint));
+        REQUIRE_NOTHROW(client.connect(endpoint));
     }
 
     zmq::context_t context;

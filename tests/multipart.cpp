@@ -1,10 +1,10 @@
-#include <gtest/gtest.h>
+#include <catch.hpp>
 #include <zmq_addon.hpp>
 
 #ifdef ZMQ_HAS_RVALUE_REFS
 /// \todo split this up into separate test cases
 ///
-TEST(multipart, legacy_test)
+TEST_CASE("multipart legacy test", "[multipart]")
 {
     using namespace zmq;
 
