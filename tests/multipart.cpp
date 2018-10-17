@@ -74,6 +74,14 @@ TEST(multipart, legacy_test)
     multipart.pushtyp(1.0f);
     multipart.pushmem("Frame0", 6);
     assert(multipart.size() == 10);
+    
+    const message_t& front_msg = multipart.front();
+    assert(multipart.size() == 10);
+    assert(std::string(front_msg.data<char>(), front_msg.size()) == "Frame0");
+    
+    const message_t& back_msg = multipart.back();
+    assert(multipart.size() == 10);
+    assert(std::string(back_msg.data<char>(), back_msg.size()) == "Frame9");
 
     msg = multipart.remove();
     assert(multipart.size() == 9);
