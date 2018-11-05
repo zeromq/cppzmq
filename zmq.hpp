@@ -522,7 +522,11 @@ class context_t
         if (ptr == NULL)
             return;
 
-        int rc = zmq_ctx_destroy(ptr);
+        int rc;
+        do {
+            rc = zmq_ctx_destroy(ptr);
+        } while (rc == -1 && errno == EINTR);
+
         ZMQ_ASSERT(rc == 0);
         ptr = NULL;
     }
