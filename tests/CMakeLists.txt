@@ -9,7 +9,10 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 
+include(CTest)
 include(cmake/catch.cmake)
+include(${CATCH_MODULE_PATH}/Catch.cmake)
+
 find_package(Threads)
 
 add_executable(
@@ -25,7 +28,7 @@ add_executable(
 
 add_dependencies(unit_tests catch)
 
-target_include_directories(unit_tests PUBLIC ${CATCH_INCLUDE_DIR})
+target_include_directories(unit_tests PUBLIC ${CATCH_MODULE_PATH})
 target_link_libraries(
     unit_tests
     PRIVATE cppzmq
@@ -39,9 +42,4 @@ if (COVERAGE)
     target_link_libraries(unit_tests PRIVATE --coverage)
 endif()
 
-add_test(
-  NAME
-    unit
-  COMMAND
-    ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/unit_tests
-)
+catch_discover_tests(unit_tests)
