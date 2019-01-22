@@ -10,6 +10,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 
 include(cmake/catch.cmake)
+find_package(Threads)
 
 add_executable(
     unit_tests
@@ -28,6 +29,7 @@ target_include_directories(unit_tests PUBLIC ${CATCH_INCLUDE_DIR})
 target_link_libraries(
     unit_tests
     PRIVATE cppzmq
+    PRIVATE ${CMAKE_THREAD_LIBS_INIT}
 )
 
 OPTION (COVERAGE "Enable gcda file generation needed by lcov" OFF)
