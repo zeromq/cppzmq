@@ -1,4 +1,8 @@
+#ifdef USE_EXTERNAL_CATCH2
+#include <catch2/catch.hpp>
+#else
 #include <catch.hpp>
+#endif
 #include <zmq_addon.hpp>
 
 #ifdef ZMQ_HAS_RVALUE_REFS

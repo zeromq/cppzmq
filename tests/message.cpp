@@ -1,5 +1,9 @@
 #define CATCH_CONFIG_MAIN
+#ifdef USE_EXTERNAL_CATCH2
+#include <catch2/catch.hpp>
+#else
 #include <catch.hpp>
+#endif
 #include <zmq.hpp>
 
 #if defined(ZMQ_CPP11)
