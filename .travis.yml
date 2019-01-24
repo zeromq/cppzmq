@@ -23,7 +23,7 @@ matrix:
     # GCC on Linux
     ##########################################################
 
-    # Coverage, GCC 7, draft enabled, latest libzmq (default)
+    # Coverage, GCC 7, draft enabled, latest libzmq (default), external Catch2
     - os: linux
       before_install:
         - pip install --user cpp-coveralls
@@ -34,18 +34,18 @@ matrix:
           packages:
             - g++-7
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" ENABLE_DRAFTS=ON COVERAGE=ON
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" ENABLE_DRAFTS=ON COVERAGE=ON CATCH2_VERSION=2.5.0
       after_success:
         - coveralls -r . -E ".*external.*" -E ".*CMakeFiles.*" -E ".*tests/" -E ".*demo/" -E ".*libzmq.*/" -b cppzmq-build --gcov-options '\-lp'
 
-    # GCC default, draft disabled,  older libzmq with pkg-config
+    # GCC default, draft disabled,  older libzmq with pkg-config, internal Catch
     - os: linux
       env: ZMQ_VERSION=4.2.0 BUILD_TYPE=pkgconfig
 
-    # GCC default, draft disabled, default libzmq (defined in ci_build.sh)
+    # GCC default, draft disabled, default libzmq (defined in ci_build.sh), internal Catch
     - os: linux
 
-    # GCC 6, draft disabled (default), latest libzmq (default)
+    # GCC 6, draft disabled (default), latest libzmq (default), external Catch1
     - os: linux
       addons:
         apt:
@@ -53,10 +53,11 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-6
+            - catch
       env:
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
 
-    # GCC 7, draft enabled, latest libzmq (default)
+    # GCC 7, draft enabled, latest libzmq (default), internal Catch
     - os: linux
       addons:
         apt:
