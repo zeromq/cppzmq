@@ -675,10 +675,8 @@ class socket_t
     inline void disconnect(const char *addr_)
     {
         int rc = zmq_disconnect(ptr, addr_);
-        if (rc != 0) {
+        if (rc != 0)
             throw error_t();
-	}
-	ptr = NULL;
     }
 
     inline bool connected() const ZMQ_NOTHROW { return (ptr != NULL); }
