@@ -83,20 +83,20 @@ TEST_CASE("add handler", "[active_poller]")
     CHECK_NOTHROW(active_poller.add(socket, ZMQ_POLLIN, handler));
 }
 
+#if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 3, 0)
+// this behaviour was added by https://github.com/zeromq/libzmq/pull/3100
 TEST_CASE("add handler invalid events type", "[active_poller]")
 {
-    /// \todo is it good that this is accepted? should probably already be
-    ///   checked by zmq_poller_add/modify in libzmq:
-    ///   https://github.com/zeromq/libzmq/issues/3088
     zmq::context_t context;
     zmq::socket_t socket{context, zmq::socket_type::router};
     zmq::active_poller_t active_poller;
     zmq::active_poller_t::handler_t handler;
     short invalid_events_type = 2 << 10;
-    CHECK_NOTHROW(active_poller.add(socket, invalid_events_type, handler));
-    CHECK_FALSE(active_poller.empty());
-    CHECK(1u == active_poller.size());
+    CHECK_THROWS_AS(active_poller.add(socket, invalid_events_type, handler), zmq::error_t);
+    CHECK(active_poller.empty());
+    CHECK(0u == active_poller.size());
 }
+#endif
 
 TEST_CASE("add handler twice throws", "[active_poller]")
 {

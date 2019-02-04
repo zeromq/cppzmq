@@ -66,17 +66,17 @@ TEST_CASE("poller add non nullptr", "[poller]")
     CHECK_NOTHROW(poller.add(socket, ZMQ_POLLIN, &i));
 }
 
+#if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 3, 0)
+// this behaviour was added by https://github.com/zeromq/libzmq/pull/3100
 TEST_CASE("poller add handler invalid events type", "[poller]")
 {
-    /// \todo is it good that this is accepted? should probably already be
-    ///   checked by zmq_poller_add/modify in libzmq:
-    ///   https://github.com/zeromq/libzmq/issues/3088
     zmq::context_t context;
     zmq::socket_t socket{context, zmq::socket_type::router};
     zmq::poller_t<> poller;
     short invalid_events_type = 2 << 10;
-    CHECK_NOTHROW(poller.add(socket, invalid_events_type, nullptr));
+    CHECK_THROWS_AS(poller.add(socket, invalid_events_type, nullptr), zmq::error_t);
 }
+#endif
 
 TEST_CASE("poller add handler twice throws", "[poller]")
 {
