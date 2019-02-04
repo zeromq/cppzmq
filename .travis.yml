@@ -42,6 +42,10 @@ matrix:
     - os: linux
       env: ZMQ_VERSION=4.2.0 BUILD_TYPE=pkgconfig
 
+    # GCC default, draft disabled, latest 4.2.x libzmq (defined in ci_build.sh)
+    - os: linux
+      env: ZMQ_VERSION=4.2.5
+
     # GCC default, draft disabled, default libzmq (defined in ci_build.sh)
     - os: linux
 
