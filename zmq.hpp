@@ -42,7 +42,7 @@
 #define ZMQ_NULLPTR nullptr
 #else
 #define ZMQ_CPP03
-#define ZMQ_NOTHROW
+#define ZMQ_NOTHROW throw()
 #define ZMQ_EXPLICIT
 #define ZMQ_OVERRIDE
 #define ZMQ_NULLPTR 0
