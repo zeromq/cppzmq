@@ -385,6 +385,16 @@ class message_t
         return !(*this == other);
     }
 
+#if ZMQ_VERSION >= ZMQ_MAKE_VERSION(3, 2, 0)
+    inline int get(int property_)
+    {
+        int value = zmq_msg_get(&msg, property_);
+        if (value == -1)
+            throw error_t();
+        return value;
+    }
+#endif
+
 #if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 1, 0)
     inline const char *gets(const char *property_)
     {
