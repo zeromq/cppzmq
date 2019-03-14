@@ -137,3 +137,20 @@ TEST_CASE("message group persists", "[message]")
     CHECK(std::string(msg.group()) == "mygroup");
 }
 #endif
+
+#if ZMQ_VERSION >= ZMQ_MAKE_VERSION(3, 2, 0)
+TEST_CASE("message is not shared", "[message]")
+{
+    zmq::message_t msg;
+    CHECK(msg.get(ZMQ_SHARED) == 0);
+}
+
+TEST_CASE("message is shared", "[message]")
+{
+    size_t msg_sz = 1024; // large enough to be a type_lmsg
+    zmq::message_t msg1(msg_sz);
+    zmq::message_t msg2;
+    msg2.copy(&msg1);
+    CHECK(msg2.get(ZMQ_SHARED) == 1);
+}
+#endif
