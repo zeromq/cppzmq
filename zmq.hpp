@@ -480,8 +480,6 @@ class message_t
 
 class context_t
 {
-    friend class socket_t;
-
   public:
     inline context_t()
     {
@@ -586,12 +584,18 @@ class socket_t
     friend class monitor_t;
 
   public:
-    inline socket_t(context_t &context_, int type_) { init(context_, type_); }
+    inline socket_t(context_t &context_, int type_)
+        : ptr(zmq_socket(static_cast<void*>(context_), type_))
+        , ctxptr(static_cast<void*>(context_))
+    {
+        if (ptr == ZMQ_NULLPTR)
+            throw error_t();
+    }
 
 #ifdef ZMQ_CPP11
     inline socket_t(context_t &context_, socket_type type_)
+        : socket_t(context_, static_cast<int>(type_))
     {
-        init(context_, static_cast<int>(type_));
     }
 #endif
 
@@ -756,14 +760,6 @@ class socket_t
 #endif
 
   private:
-    inline void init(context_t &context_, int type_)
-    {
-        ctxptr = context_.ptr;
-        ptr = zmq_socket(context_.ptr, type_);
-        if (ptr == ZMQ_NULLPTR)
-            throw error_t();
-    }
-
     void *ptr;
     void *ctxptr;
 
