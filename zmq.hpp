@@ -147,29 +147,54 @@ class error_t : public std::exception
     int errnum;
 };
 
-inline int poll(zmq_pollitem_t const *items_, size_t nitems_, long timeout_ = -1)
+inline int poll(zmq_pollitem_t *items_, size_t nitems_, long timeout_ = -1)
 {
-    int rc = zmq_poll(const_cast<zmq_pollitem_t *>(items_),
-                      static_cast<int>(nitems_), timeout_);
+    int rc = zmq_poll(items_, static_cast<int>(nitems_), timeout_);
     if (rc < 0)
         throw error_t();
     return rc;
 }
 
+ZMQ_DEPRECATED("from 4.3.1, use poll taking non-const items")
+inline int poll(zmq_pollitem_t const *items_, size_t nitems_, long timeout_ = -1)
+{
+    return poll(const_cast<zmq_pollitem_t *>(items_), nitems_, timeout_);
+}
+
 #ifdef ZMQ_CPP11
+ZMQ_DEPRECATED("from 4.3.1, use poll taking non-const items")
 inline int
 poll(zmq_pollitem_t const *items, size_t nitems, std::chrono::milliseconds timeout)
+{
+    return poll(const_cast<zmq_pollitem_t *>(items), nitems, static_cast<long>(timeout.count()));
+}
+
+ZMQ_DEPRECATED("from 4.3.1, use poll taking non-const items")
+inline int poll(std::vector<zmq_pollitem_t> const &items,
+                std::chrono::milliseconds timeout)
+{
+    return poll(const_cast<zmq_pollitem_t *>(items.data()), items.size(), static_cast<long>(timeout.count()));
+}
+
+ZMQ_DEPRECATED("from 4.3.1, use poll taking non-const items")
+inline int poll(std::vector<zmq_pollitem_t> const &items, long timeout_ = -1)
+{
+    return poll(const_cast<zmq_pollitem_t *>(items.data()), items.size(), timeout_);
+}
+
+inline int
+poll(zmq_pollitem_t *items, size_t nitems, std::chrono::milliseconds timeout)
 {
     return poll(items, nitems, static_cast<long>(timeout.count()));
 }
 
-inline int poll(std::vector<zmq_pollitem_t> const &items,
+inline int poll(std::vector<zmq_pollitem_t> &items,
                 std::chrono::milliseconds timeout)
 {
     return poll(items.data(), items.size(), static_cast<long>(timeout.count()));
 }
 
-inline int poll(std::vector<zmq_pollitem_t> const &items, long timeout_ = -1)
+inline int poll(std::vector<zmq_pollitem_t> &items, long timeout_ = -1)
 {
     return poll(items.data(), items.size(), timeout_);
 }
