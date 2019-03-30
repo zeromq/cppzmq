@@ -1,5 +1,8 @@
 #include <catch.hpp>
 #include <zmq.hpp>
+#ifdef ZMQ_CPP11
+#include <future>
+#endif
 
 TEST_CASE("socket create destroy", "[socket]")
 {
@@ -27,3 +30,59 @@ TEST_CASE("socket sends and receives const buffer", "[socket]")
     CHECK(2 == receiver.recv(buf, 2));
     CHECK(0 == memcmp(buf, "Hi", 2));
 }
+
+#ifdef ZMQ_CPP11
+TEST_CASE("socket proxy", "[socket]")
+{
+    zmq::context_t context;
+    zmq::socket_t front(context, ZMQ_ROUTER);
+    zmq::socket_t back(context, ZMQ_ROUTER);
+    zmq::socket_t capture(context, ZMQ_DEALER);
+    front.bind("inproc://test1");
+    back.bind("inproc://test2");
+    capture.bind("inproc://test3");
+    auto f = std::async(std::launch::async, [&]() {
+        auto s1 = std::move(front);
+        auto s2 = std::move(back);
+        auto s3 = std::move(capture);
+        try
+        {
+            zmq::proxy(s1, s2, &s3);
+        }
+        catch (const zmq::error_t& e)
+        {
+            return e.num() == ETERM;
+        }
+        return false;
+    });
+    context.close();
+    CHECK(f.get());
+}
+
+TEST_CASE("socket proxy steerable", "[socket]")
+{
+    zmq::context_t context;
+    zmq::socket_t front(context, ZMQ_ROUTER);
+    zmq::socket_t back(context, ZMQ_ROUTER);
+    zmq::socket_t control(context, ZMQ_SUB);
+    front.bind("inproc://test1");
+    back.bind("inproc://test2");
+    control.connect("inproc://test3");
+    auto f = std::async(std::launch::async, [&]() {
+        auto s1 = std::move(front);
+        auto s2 = std::move(back);
+        auto s3 = std::move(control);
+        try
+        {
+            zmq::proxy_steerable(s1, s2, ZMQ_NULLPTR, &s3);
+        }
+        catch (const zmq::error_t& e)
+        {
+            return e.num() == ETERM;
+        }
+        return false;
+    });
+    context.close();
+    CHECK(f.get());
+}
+#endif
