@@ -201,23 +201,6 @@ inline int poll(std::vector<zmq_pollitem_t> &items, long timeout_ = -1)
 #endif
 
 
-inline void proxy(void *frontend, void *backend, void *capture)
-{
-    int rc = zmq_proxy(frontend, backend, capture);
-    if (rc != 0)
-        throw error_t();
-}
-
-#ifdef ZMQ_HAS_PROXY_STEERABLE
-inline void
-proxy_steerable(void *frontend, void *backend, void *capture, void *control)
-{
-    int rc = zmq_proxy_steerable(frontend, backend, capture, control);
-    if (rc != 0)
-        throw error_t();
-}
-#endif
-
 inline void version(int *major_, int *minor_, int *patch_)
 {
     zmq_version(major_, minor_, patch_);
@@ -791,6 +774,45 @@ class socket_t
     socket_t(const socket_t &) ZMQ_DELETED_FUNCTION;
     void operator=(const socket_t &) ZMQ_DELETED_FUNCTION;
 };
+
+ZMQ_DEPRECATED("from 4.3.1, use proxy taking socket_t objects")
+inline void proxy(void *frontend, void *backend, void *capture)
+{
+    int rc = zmq_proxy(frontend, backend, capture);
+    if (rc != 0)
+        throw error_t();
+}
+
+inline void proxy(socket_t &frontend, socket_t &backend, socket_t *capture = ZMQ_NULLPTR)
+{
+    int rc = zmq_proxy(static_cast<void *>(frontend),
+                       static_cast<void *>(backend),
+                       capture ? static_cast<void *>(*capture) : ZMQ_NULLPTR);
+    if (rc != 0)
+       throw error_t();
+}
+
+#ifdef ZMQ_HAS_PROXY_STEERABLE
+ZMQ_DEPRECATED("from 4.3.1, use proxy_steerable taking socket_t objects")
+inline void
+proxy_steerable(void *frontend, void *backend, void *capture, void *control)
+{
+    int rc = zmq_proxy_steerable(frontend, backend, capture, control);
+    if (rc != 0)
+        throw error_t();
+}
+
+inline void
+proxy_steerable(socket_t &frontend, socket_t &backend, socket_t *capture, socket_t *control)
+{
+    int rc = zmq_proxy_steerable(static_cast<void *>(frontend),
+                                 static_cast<void *>(backend),
+                                 capture ? static_cast<void *>(*capture) : ZMQ_NULLPTR,
+                                 control ? static_cast<void *>(*control) : ZMQ_NULLPTR);
+    if (rc != 0)
+        throw error_t();
+}
+#endif
 
 class monitor_t
 {
