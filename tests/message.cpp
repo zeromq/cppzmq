@@ -8,12 +8,32 @@ static_assert(!std::is_copy_constructible<zmq::message_t>::value,
 static_assert(!std::is_copy_assignable<zmq::message_t>::value,
               "message_t should not be copy-assignable");
 #endif
+#if (__cplusplus >= 201703L)
+static_assert(std::is_nothrow_swappable<zmq::message_t>::value,
+              "message_t should be nothrow swappable");
+#endif
 
 TEST_CASE("message default constructed", "[message]")
 {
     const zmq::message_t message;
     CHECK(0u == message.size());
 }
+
+#ifdef ZMQ_CPP11
+TEST_CASE("message swap", "[message]")
+{
+    const std::string data = "foo";
+    zmq::message_t message1;
+    zmq::message_t message2(data.data(), data.size());
+    using std::swap;
+    swap(message1, message2);
+    CHECK(message1.size() == data.size());
+    CHECK(message2.size() == 0);
+    swap(message1, message2);
+    CHECK(message1.size() == 0);
+    CHECK(message2.size() == data.size());
+}
+#endif
 
 namespace {
 const char *const data = "Hi";

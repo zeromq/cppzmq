@@ -4,6 +4,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <functional>
 
 class mock_monitor_t : public zmq::monitor_t
 {

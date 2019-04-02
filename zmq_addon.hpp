@@ -30,6 +30,10 @@
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
+#ifdef ZMQ_CPP11
+#include <functional>
+#include <unordered_map>
+#endif
 
 namespace zmq
 {
@@ -245,7 +249,7 @@ class multipart_t
         m_parts.pop_back();
         return message;
     }
-    
+
     // get message part from front
     const message_t &front()
     {
