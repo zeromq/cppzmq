@@ -434,7 +434,7 @@ class active_poller_t
   private:
     bool need_rebuild{false};
 
-    poller_t<handler_t> base_poller{};
+    poller_t base_poller{};
     std::unordered_map<void *, std::shared_ptr<handler_t>> handlers{};
     std::vector<zmq_poller_event_t> poller_events{};
     std::vector<std::shared_ptr<handler_t>> poller_handlers{};

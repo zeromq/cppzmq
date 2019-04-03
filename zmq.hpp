@@ -1187,18 +1187,24 @@ class monitor_t
 };
 
 #if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && defined(ZMQ_HAVE_POLLER)
-template<typename T = void> class poller_t
+class poller_t
 {
   public:
     poller_t() = default;
 
-    void add(zmq::socket_t &socket, short events, T *user_data)
+    template<typename T = void>
+    void add(zmq::socket_t &socket, short events, T *user_data = nullptr)
     {
         if (0
             != zmq_poller_add(poller_ptr.get(), static_cast<void *>(socket),
                               user_data, events)) {
             throw error_t();
         }
+    }
+
+    void add(zmq::socket_t &socket, short events, std::nullptr_t)
+    {
+        add(socket, events);
     }
 
     void remove(zmq::socket_t &socket)
