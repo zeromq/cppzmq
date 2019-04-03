@@ -150,7 +150,22 @@ TEST_CASE("message is shared", "[message]")
     size_t msg_sz = 1024; // large enough to be a type_lmsg
     zmq::message_t msg1(msg_sz);
     zmq::message_t msg2;
-    msg2.copy(&msg1);
+    msg2.copy(msg1);
+    CHECK(msg1.get(ZMQ_SHARED) == 1);
     CHECK(msg2.get(ZMQ_SHARED) == 1);
+    CHECK(msg1.size() == msg_sz);
+    CHECK(msg2.size() == msg_sz);
+}
+
+TEST_CASE("message move is not shared", "[message]")
+{
+    size_t msg_sz = 1024; // large enough to be a type_lmsg
+    zmq::message_t msg1(msg_sz);
+    zmq::message_t msg2;
+    msg2.move(msg1);
+    CHECK(msg1.get(ZMQ_SHARED) == 0);
+    CHECK(msg2.get(ZMQ_SHARED) == 0);
+    CHECK(msg2.size() == msg_sz);
+    CHECK(msg1.size() == 0);
 }
 #endif
