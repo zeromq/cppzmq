@@ -335,6 +335,7 @@ class message_t
             throw error_t();
     }
 
+    ZMQ_DEPRECATED("from 4.3.1, use move taking non-const reference instead")
     void move(message_t const *msg_)
     {
         int rc = zmq_msg_move(&msg, const_cast<zmq_msg_t *>(&(msg_->msg)));
@@ -342,9 +343,24 @@ class message_t
             throw error_t();
     }
 
+    void move(message_t &msg_)
+    {
+        int rc = zmq_msg_move(&msg, &msg_.msg);
+        if (rc != 0)
+            throw error_t();
+    }
+
+    ZMQ_DEPRECATED("from 4.3.1, use copy taking non-const reference instead")
     void copy(message_t const *msg_)
     {
         int rc = zmq_msg_copy(&msg, const_cast<zmq_msg_t *>(&(msg_->msg)));
+        if (rc != 0)
+            throw error_t();
+    }
+
+    void copy(message_t &msg_)
+    {
+        int rc = zmq_msg_copy(&msg, &msg_.msg);
         if (rc != 0)
             throw error_t();
     }
