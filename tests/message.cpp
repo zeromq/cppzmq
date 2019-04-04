@@ -17,6 +17,7 @@ TEST_CASE("message default constructed", "[message]")
 {
     const zmq::message_t message;
     CHECK(0u == message.size());
+    CHECK(message.empty());
 }
 
 #ifdef ZMQ_CPP11
@@ -89,8 +90,10 @@ TEST_CASE("message assign move empty before", "[message]")
 TEST_CASE("message assign move empty after", "[message]")
 {
     zmq::message_t hi_msg(data, strlen(data));
+    CHECK(!hi_msg.empty());
     hi_msg = zmq::message_t();
     CHECK(0u == hi_msg.size());
+    CHECK(hi_msg.empty());
 }
 
 TEST_CASE("message assign move empty before and after", "[message]")

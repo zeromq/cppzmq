@@ -396,6 +396,11 @@ class message_t
         return zmq_msg_size(const_cast<zmq_msg_t *>(&msg));
     }
 
+    ZMQ_NODISCARD bool empty() const ZMQ_NOTHROW
+    {
+        return size() == 0u;
+    }
+
     template<typename T> T *data() ZMQ_NOTHROW { return static_cast<T *>(data()); }
 
     template<typename T> T const *data() const ZMQ_NOTHROW
