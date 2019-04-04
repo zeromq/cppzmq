@@ -4,6 +4,11 @@
 #include <future>
 #endif
 
+#if (__cplusplus >= 201703L)
+static_assert(std::is_nothrow_swappable<zmq::socket_t>::value,
+              "socket_t should be nothrow swappable");
+#endif
+
 TEST_CASE("socket create destroy", "[socket]")
 {
     zmq::context_t context;
@@ -15,6 +20,15 @@ TEST_CASE("socket create by enum and destroy", "[socket]")
 {
     zmq::context_t context;
     zmq::socket_t socket(context, zmq::socket_type::router);
+}
+
+TEST_CASE("socket swap", "[socket]")
+{
+    zmq::context_t context;
+    zmq::socket_t socket1(context, zmq::socket_type::router);
+    zmq::socket_t socket2(context, zmq::socket_type::dealer);
+    using std::swap;
+    swap(socket1, socket2);
 }
 #endif
 

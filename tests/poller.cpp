@@ -5,6 +5,11 @@
 #include <array>
 #include <memory>
 
+#if (__cplusplus >= 201703L)
+static_assert(std::is_nothrow_swappable<zmq::poller_t<>>::value,
+              "poller_t should be nothrow swappable");
+#endif
+
 TEST_CASE("poller create destroy", "[poller]")
 {
     zmq::poller_t<> poller;
@@ -26,6 +31,14 @@ TEST_CASE("poller move assign empty", "[poller]")
     zmq::poller_t<> a;
     zmq::poller_t<> b;
     b = std::move(a);
+}
+
+TEST_CASE("poller swap", "[poller]")
+{
+    zmq::poller_t<> a;
+    zmq::poller_t<> b;
+    using std::swap;
+    swap(a, b);
 }
 
 TEST_CASE("poller move construct non empty", "[poller]")

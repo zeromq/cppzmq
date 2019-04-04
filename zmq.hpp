@@ -73,8 +73,6 @@
 #ifdef ZMQ_CPP11
 #include <chrono>
 #include <tuple>
-#include <functional>
-#include <unordered_map>
 #include <memory>
 #endif
 
@@ -492,6 +490,12 @@ class message_t
         return os.str();
     }
 
+    void swap(message_t &other) ZMQ_NOTHROW
+    {
+        // this assumes zmq::msg_t from libzmq is trivially relocatable
+        std::swap(msg, other.msg);
+    }
+
   private:
     //  The underlying message
     zmq_msg_t msg;
@@ -501,6 +505,11 @@ class message_t
     message_t(const message_t &) ZMQ_DELETED_FUNCTION;
     void operator=(const message_t &) ZMQ_DELETED_FUNCTION;
 };
+
+inline void swap(message_t &a, message_t &b) ZMQ_NOTHROW
+{
+    a.swap(b);
+}
 
 class context_t
 {
@@ -570,12 +579,21 @@ class context_t
 
     operator bool() const ZMQ_NOTHROW { return ptr != ZMQ_NULLPTR; }
 
+    void swap(context_t &other) ZMQ_NOTHROW
+    {
+        std::swap(ptr, other.ptr);
+    }
+
   private:
     void *ptr;
 
     context_t(const context_t &) ZMQ_DELETED_FUNCTION;
     void operator=(const context_t &) ZMQ_DELETED_FUNCTION;
 };
+
+inline void swap(context_t &a, context_t &b) ZMQ_NOTHROW {
+    a.swap(b);
+}
 
 #ifdef ZMQ_CPP11
 enum class socket_type : int
@@ -783,6 +801,12 @@ class socket_t
     }
 #endif
 
+    void swap(socket_t &other) ZMQ_NOTHROW
+    {
+        std::swap(ptr, other.ptr);
+        std::swap(ctxptr, other.ctxptr);
+    }
+
   private:
     void *ptr;
     void *ctxptr;
@@ -790,6 +814,10 @@ class socket_t
     socket_t(const socket_t &) ZMQ_DELETED_FUNCTION;
     void operator=(const socket_t &) ZMQ_DELETED_FUNCTION;
 };
+
+inline void swap(socket_t &a, socket_t &b) ZMQ_NOTHROW {
+    a.swap(b);
+}
 
 ZMQ_DEPRECATED("from 4.3.1, use proxy taking socket_t objects")
 inline void proxy(void *frontend, void *backend, void *capture)
@@ -1147,6 +1175,8 @@ class monitor_t
 template<typename T = void> class poller_t
 {
   public:
+    poller_t() = default;
+
     void add(zmq::socket_t &socket, short events, T *user_data)
     {
         if (0
@@ -1192,17 +1222,19 @@ template<typename T = void> class poller_t
     }
 
   private:
-    std::unique_ptr<void, std::function<void(void *)>> poller_ptr{
+    std::unique_ptr<void, void(*)(void *)> poller_ptr{
       []() {
           auto poller_new = zmq_poller_new();
           if (poller_new)
               return poller_new;
           throw error_t();
-      }(),
-      [](void *ptr) {
-          int rc = zmq_poller_destroy(&ptr);
-          ZMQ_ASSERT(rc == 0);
-      }};
+      }(), &destroy_poller};
+
+    static void destroy_poller(void *ptr)
+    {
+        int rc = zmq_poller_destroy(&ptr);
+        ZMQ_ASSERT(rc == 0);
+    }
 };
 #endif //  defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && defined(ZMQ_HAVE_POLLER)
 
