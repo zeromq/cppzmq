@@ -26,7 +26,18 @@
 #ifndef __ZMQ_HPP_INCLUDED__
 #define __ZMQ_HPP_INCLUDED__
 
-#if (__cplusplus >= 201402L)
+// macros defined if has a specific standard or greater
+#if (defined(__cplusplus) && __cplusplus >= 201103L) || (defined(_MSC_VER) && _MSC_VER >= 1900)
+    #define ZMQ_CPP11
+#endif
+#if (defined(__cplusplus) && __cplusplus >= 201402L) || (defined(_HAS_CXX14) && _HAS_CXX14 == 1)
+    #define ZMQ_CPP14
+#endif
+#if (defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_HAS_CXX17) && _HAS_CXX17 == 1)
+    #define ZMQ_CPP17
+#endif
+
+#if defined(ZMQ_CPP14)
 #define ZMQ_DEPRECATED(msg) [[deprecated(msg)]]
 #elif defined(_MSC_VER)
 #define ZMQ_DEPRECATED(msg) __declspec(deprecated(msg))
@@ -34,14 +45,18 @@
 #define ZMQ_DEPRECATED(msg) __attribute__((deprecated(msg)))
 #endif
 
-#if (__cplusplus >= 201103L) || (defined(_MSC_VER) && (_MSC_VER >= 1900))
-#define ZMQ_CPP11
+#if defined(ZMQ_CPP17)
+#define ZMQ_NODISCARD [[nodiscard]]
+#else
+#define ZMQ_NODISCARD
+#endif
+
+#if defined(ZMQ_CPP11)
 #define ZMQ_NOTHROW noexcept
 #define ZMQ_EXPLICIT explicit
 #define ZMQ_OVERRIDE override
 #define ZMQ_NULLPTR nullptr
 #else
-#define ZMQ_CPP03
 #define ZMQ_NOTHROW throw()
 #define ZMQ_EXPLICIT
 #define ZMQ_OVERRIDE
