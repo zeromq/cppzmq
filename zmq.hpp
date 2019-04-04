@@ -837,13 +837,8 @@ class monitor_t
 
     virtual ~monitor_t()
     {
-        if (socketPtr)
-            zmq_socket_monitor(socketPtr, ZMQ_NULLPTR, 0);
-
-        if (monitor_socket)
-            zmq_close(monitor_socket);
+        close();
     }
-
 
 #ifdef ZMQ_HAS_RVALUE_REFS
     monitor_t(monitor_t &&rhs) ZMQ_NOTHROW : socketPtr(rhs.socketPtr),
@@ -853,7 +848,15 @@ class monitor_t
         rhs.monitor_socket = ZMQ_NULLPTR;
     }
 
-    socket_t &operator=(socket_t &&rhs) ZMQ_DELETED_FUNCTION;
+    monitor_t &operator=(monitor_t &&rhs) ZMQ_NOTHROW
+    {
+        close();
+        socketPtr = ZMQ_NULLPTR;
+        monitor_socket = ZMQ_NULLPTR;
+        std::swap(socketPtr, rhs.socketPtr);
+        std::swap(monitor_socket, rhs.monitor_socket);
+        return *this;
+    }
 #endif
 
 
@@ -1129,6 +1132,15 @@ class monitor_t
 
     void *socketPtr;
     void *monitor_socket;
+
+    void close() ZMQ_NOTHROW
+    {
+        if (socketPtr)
+            zmq_socket_monitor(socketPtr, ZMQ_NULLPTR, 0);
+
+        if (monitor_socket)
+            zmq_close(monitor_socket);
+    }
 };
 
 #if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && defined(ZMQ_HAVE_POLLER)

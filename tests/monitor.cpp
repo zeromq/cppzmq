@@ -33,6 +33,51 @@ TEST_CASE("monitor create destroy", "[monitor]")
 }
 
 #if defined(ZMQ_CPP11)
+TEST_CASE("monitor move construct", "[monitor]")
+{
+    zmq::context_t ctx;
+    zmq::socket_t sock(ctx, ZMQ_DEALER);
+    SECTION("move ctor empty")
+    {
+        zmq::monitor_t monitor1;
+        zmq::monitor_t monitor2 = std::move(monitor1);
+    }
+    SECTION("move ctor init")
+    {
+        zmq::monitor_t monitor1;
+        monitor1.init(sock, "inproc://monitor-client");
+        zmq::monitor_t monitor2 = std::move(monitor1);
+    }
+}
+
+TEST_CASE("monitor move assign", "[monitor]")
+{
+    zmq::context_t ctx;
+    zmq::socket_t sock(ctx, ZMQ_DEALER);
+    SECTION("move assign empty")
+    {
+      zmq::monitor_t monitor1;
+      zmq::monitor_t monitor2;
+      monitor1 = std::move(monitor2);
+    }
+    SECTION("move assign init")
+    {
+        zmq::monitor_t monitor1;
+        monitor1.init(sock, "inproc://monitor-client");
+        zmq::monitor_t monitor2;
+        monitor2 = std::move(monitor1);
+    }
+    SECTION("move assign init both")
+    {
+        zmq::monitor_t monitor1;
+        monitor1.init(sock, "inproc://monitor-client");
+        zmq::monitor_t monitor2;
+        zmq::socket_t sock2(ctx, ZMQ_DEALER);
+        monitor2.init(sock2, "inproc://monitor-client2");
+        monitor2 = std::move(monitor1);
+    }
+}
+
 TEST_CASE("monitor init event count", "[monitor]")
 {
     common_server_client_setup s{false};
