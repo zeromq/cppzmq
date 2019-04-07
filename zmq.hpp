@@ -1218,7 +1218,7 @@ template<typename T = void> class poller_t
     }
 
     size_t wait_all(std::vector<zmq_poller_event_t> &poller_events,
-                    const std::chrono::microseconds timeout)
+                    const std::chrono::milliseconds timeout)
     {
         int rc = zmq_poller_wait_all(poller_ptr.get(), poller_events.data(),
                                      static_cast<int>(poller_events.size()),
