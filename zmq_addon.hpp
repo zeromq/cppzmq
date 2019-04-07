@@ -373,12 +373,12 @@ class active_poller_t
 
     using handler_t = std::function<void(short)>;
 
-    void add(zmq::socket_t &socket, short events, handler_t handler)
+    void add(zmq::socket_ref socket, short events, handler_t handler)
     {
         auto it = decltype(handlers)::iterator{};
         auto inserted = bool{};
         std::tie(it, inserted) =
-          handlers.emplace(static_cast<void *>(socket),
+          handlers.emplace(socket,
                            std::make_shared<handler_t>(std::move(handler)));
         try {
             base_poller.add(socket, events,
@@ -388,20 +388,20 @@ class active_poller_t
         catch (const zmq::error_t &) {
             // rollback
             if (inserted) {
-                handlers.erase(static_cast<void *>(socket));
+                handlers.erase(socket);
             }
             throw;
         }
     }
 
-    void remove(zmq::socket_t &socket)
+    void remove(zmq::socket_ref socket)
     {
         base_poller.remove(socket);
-        handlers.erase(static_cast<void *>(socket));
+        handlers.erase(socket);
         need_rebuild = true;
     }
 
-    void modify(zmq::socket_t &socket, short events)
+    void modify(zmq::socket_ref socket, short events)
     {
         base_poller.modify(socket, events);
     }
@@ -435,7 +435,7 @@ class active_poller_t
     bool need_rebuild{false};
 
     poller_t<handler_t> base_poller{};
-    std::unordered_map<void *, std::shared_ptr<handler_t>> handlers{};
+    std::unordered_map<socket_ref, std::shared_ptr<handler_t>> handlers{};
     std::vector<zmq_poller_event_t> poller_events{};
     std::vector<std::shared_ptr<handler_t>> poller_handlers{};
 };     // class active_poller_t

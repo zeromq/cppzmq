@@ -25,9 +25,11 @@ TEST_CASE("socket create assign", "[socket]")
 {
     zmq::context_t context;
     zmq::socket_t socket(context, ZMQ_ROUTER);
-    CHECK(static_cast<void*>(socket));
+    CHECK(static_cast<bool>(socket));
+    CHECK(socket.handle() != nullptr);
     socket = {};
-    CHECK(!static_cast<void*>(socket));
+    CHECK(!static_cast<bool>(socket));
+    CHECK(socket.handle() == nullptr);
 }
 
 TEST_CASE("socket create by enum and destroy", "[socket]")
@@ -75,7 +77,7 @@ TEST_CASE("socket proxy", "[socket]")
         auto s3 = std::move(capture);
         try
         {
-            zmq::proxy(s1, s2, &s3);
+            zmq::proxy(s1, s2, zmq::socket_ref(s3));
         }
         catch (const zmq::error_t& e)
         {
@@ -102,7 +104,7 @@ TEST_CASE("socket proxy steerable", "[socket]")
         auto s3 = std::move(control);
         try
         {
-            zmq::proxy_steerable(s1, s2, ZMQ_NULLPTR, &s3);
+            zmq::proxy_steerable(s1, s2, zmq::socket_ref(), s3);
         }
         catch (const zmq::error_t& e)
         {
