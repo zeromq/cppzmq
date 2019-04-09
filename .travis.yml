@@ -36,7 +36,7 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" ENABLE_DRAFTS=ON COVERAGE=ON
       after_success:
-        - coveralls -r . -E ".*external.*" -E ".*CMakeFiles.*" -E ".*tests/" -E ".*demo/" -E ".*libzmq.*/" -b cppzmq-build --gcov-options '\-lp'
+        - coveralls -r . -E ".*external.*" -E ".*CMakeFiles.*" -E ".*tests/" -E ".*demo/" -E "*catch.hpp" -E ".*libzmq.*/" -b cppzmq-build --gcov-options '\-lp'
 
     # GCC default, draft disabled,  older libzmq with pkg-config
     - os: linux
