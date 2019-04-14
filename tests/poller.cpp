@@ -87,7 +87,7 @@ TEST_CASE("poller add handler invalid events type", "[poller]")
     zmq::socket_t socket{context, zmq::socket_type::router};
     zmq::poller_t<> poller;
     short invalid_events_type = 2 << 10;
-    CHECK_THROWS_AS(poller.add(socket, invalid_events_type, nullptr), zmq::error_t);
+    CHECK_THROWS_AS(poller.add(socket, invalid_events_type, nullptr), const zmq::error_t&);
 }
 #endif
 
@@ -98,7 +98,7 @@ TEST_CASE("poller add handler twice throws", "[poller]")
     zmq::poller_t<> poller;
     poller.add(socket, ZMQ_POLLIN, nullptr);
     /// \todo the actual error code should be checked
-    CHECK_THROWS_AS(poller.add(socket, ZMQ_POLLIN, nullptr), zmq::error_t);
+    CHECK_THROWS_AS(poller.add(socket, ZMQ_POLLIN, nullptr), const zmq::error_t&);
 }
 
 TEST_CASE("poller wait with no handlers throws", "[poller]")
@@ -107,7 +107,7 @@ TEST_CASE("poller wait with no handlers throws", "[poller]")
     std::vector<zmq_poller_event_t> events;
     /// \todo the actual error code should be checked
     CHECK_THROWS_AS(poller.wait_all(events, std::chrono::milliseconds{10}),
-                 zmq::error_t);
+                 const zmq::error_t&);
 }
 
 TEST_CASE("poller remove unregistered throws", "[poller]")
@@ -116,7 +116,7 @@ TEST_CASE("poller remove unregistered throws", "[poller]")
     zmq::socket_t socket{context, zmq::socket_type::router};
     zmq::poller_t<> poller;
     /// \todo the actual error code should be checked
-    CHECK_THROWS_AS(poller.remove(socket), zmq::error_t);
+    CHECK_THROWS_AS(poller.remove(socket), const zmq::error_t&);
 }
 
 TEST_CASE("poller remove registered empty", "[poller]")
@@ -159,7 +159,7 @@ TEST_CASE("poller add invalid socket throws", "[poller]")
     zmq::poller_t<> poller;
     zmq::socket_t a{context, zmq::socket_type::router};
     zmq::socket_t b{std::move(a)};
-    CHECK_THROWS_AS(poller.add(a, ZMQ_POLLIN, nullptr), zmq::error_t);
+    CHECK_THROWS_AS(poller.add(a, ZMQ_POLLIN, nullptr), const zmq::error_t&);
 }
 
 TEST_CASE("poller remove invalid socket throws", "[poller]")
@@ -170,7 +170,7 @@ TEST_CASE("poller remove invalid socket throws", "[poller]")
     CHECK_NOTHROW(poller.add(socket, ZMQ_POLLIN, nullptr));
     std::vector<zmq::socket_t> sockets;
     sockets.emplace_back(std::move(socket));
-    CHECK_THROWS_AS(poller.remove(socket), zmq::error_t);
+    CHECK_THROWS_AS(poller.remove(socket), const zmq::error_t&);
     CHECK_NOTHROW(poller.remove(sockets[0]));
 }
 
@@ -179,7 +179,7 @@ TEST_CASE("poller modify empty throws", "[poller]")
     zmq::context_t context;
     zmq::socket_t socket{context, zmq::socket_type::push};
     zmq::poller_t<> poller;
-    CHECK_THROWS_AS(poller.modify(socket, ZMQ_POLLIN), zmq::error_t);
+    CHECK_THROWS_AS(poller.modify(socket, ZMQ_POLLIN), const zmq::error_t&);
 }
 
 TEST_CASE("poller modify invalid socket throws", "[poller]")
@@ -188,7 +188,7 @@ TEST_CASE("poller modify invalid socket throws", "[poller]")
     zmq::socket_t a{context, zmq::socket_type::push};
     zmq::socket_t b{std::move(a)};
     zmq::poller_t<> poller;
-    CHECK_THROWS_AS(poller.modify(a, ZMQ_POLLIN), zmq::error_t);
+    CHECK_THROWS_AS(poller.modify(a, ZMQ_POLLIN), const zmq::error_t&);
 }
 
 TEST_CASE("poller modify not added throws", "[poller]")
@@ -198,7 +198,7 @@ TEST_CASE("poller modify not added throws", "[poller]")
     zmq::socket_t b{context, zmq::socket_type::push};
     zmq::poller_t<> poller;
     CHECK_NOTHROW(poller.add(a, ZMQ_POLLIN, nullptr));
-    CHECK_THROWS_AS(poller.modify(b, ZMQ_POLLIN), zmq::error_t);
+    CHECK_THROWS_AS(poller.modify(b, ZMQ_POLLIN), const zmq::error_t&);
 }
 
 TEST_CASE("poller modify simple", "[poller]")
@@ -259,7 +259,7 @@ TEST_CASE("poller wait on move constructed", "[poller]")
     zmq::poller_t<> b{std::move(a)};
     std::vector<zmq_poller_event_t> events(1);
     /// \todo the actual error code should be checked
-    CHECK_THROWS_AS(a.wait_all(events, std::chrono::milliseconds{10}), zmq::error_t);
+    CHECK_THROWS_AS(a.wait_all(events, std::chrono::milliseconds{10}), const zmq::error_t&);
     CHECK(1 == b.wait_all(events, std::chrono::milliseconds{-1}));
 }
 
@@ -273,22 +273,22 @@ TEST_CASE("poller wait on move assigned", "[poller]")
     b = {std::move(a)};
     /// \todo the TEST_CASE error code should be checked
     std::vector<zmq_poller_event_t> events(1);
-    CHECK_THROWS_AS(a.wait_all(events, std::chrono::milliseconds{10}), zmq::error_t);
+    CHECK_THROWS_AS(a.wait_all(events, std::chrono::milliseconds{10}), const zmq::error_t&);
     CHECK(1 == b.wait_all(events, std::chrono::milliseconds{-1}));
 }
 
 TEST_CASE("poller remove from handler", "[poller]")
 {
-    constexpr auto ITER_NO = 10;
+    constexpr size_t ITER_NO = 10;
 
     // Setup servers and clients
     std::vector<common_server_client_setup> setup_list;
-    for (auto i = 0; i < ITER_NO; ++i)
+    for (size_t i = 0; i < ITER_NO; ++i)
         setup_list.emplace_back(common_server_client_setup{});
 
     // Setup poller
     zmq::poller_t<> poller;
-    for (auto i = 0; i < ITER_NO; ++i) {
+    for (size_t i = 0; i < ITER_NO; ++i) {
         CHECK_NOTHROW(poller.add(setup_list[i].server, ZMQ_POLLIN, nullptr));
     }
     // Clients send messages
