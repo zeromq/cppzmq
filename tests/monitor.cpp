@@ -85,11 +85,6 @@ TEST_CASE("monitor init event count", "[monitor]")
     mock_monitor_t monitor;
 
     const int expected_event_count = 2;
-    int event_count = 0;
-    auto count_event = [&event_count](const zmq_event_t &, const char *) {
-        ++event_count;
-    };
-
     monitor.init(s.client, "inproc://foo");
 
     CHECK_FALSE(monitor.check_event(0));
@@ -99,6 +94,7 @@ TEST_CASE("monitor init event count", "[monitor]")
     }
     CHECK(monitor.connect_delayed == 1);
     CHECK(monitor.connected == 1);
+    CHECK(monitor.total == expected_event_count);
 }
 
 TEST_CASE("monitor init abort", "[monitor]")
