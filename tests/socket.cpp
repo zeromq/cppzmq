@@ -9,6 +9,11 @@ static_assert(std::is_nothrow_swappable<zmq::socket_t>::value,
               "socket_t should be nothrow swappable");
 #endif
 
+TEST_CASE("socket default ctor", "[socket]")
+{
+    zmq::socket_t socket;
+}
+
 TEST_CASE("socket create destroy", "[socket]")
 {
     zmq::context_t context;
@@ -16,6 +21,15 @@ TEST_CASE("socket create destroy", "[socket]")
 }
 
 #ifdef ZMQ_CPP11
+TEST_CASE("socket create assign", "[socket]")
+{
+    zmq::context_t context;
+    zmq::socket_t socket(context, ZMQ_ROUTER);
+    CHECK(static_cast<void*>(socket));
+    socket = {};
+    CHECK(!static_cast<void*>(socket));
+}
+
 TEST_CASE("socket create by enum and destroy", "[socket]")
 {
     zmq::context_t context;

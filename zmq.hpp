@@ -646,6 +646,12 @@ class socket_t
     friend class monitor_t;
 
   public:
+    socket_t() ZMQ_NOTHROW
+      : ptr(ZMQ_NULLPTR)
+      , ctxptr(ZMQ_NULLPTR)
+    {
+    }
+
     socket_t(context_t &context_, int type_)
         : ptr(zmq_socket(static_cast<void*>(context_), type_))
         , ctxptr(static_cast<void*>(context_))
