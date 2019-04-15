@@ -249,19 +249,14 @@ class message_t
 
     template<typename T> message_t(T first, T last) : msg()
     {
-        typedef typename std::iterator_traits<T>::difference_type size_type;
         typedef typename std::iterator_traits<T>::value_type value_t;
 
-        size_type const size_ = std::distance(first, last) * sizeof(value_t);
+        assert(std::distance(first, last) >= 0);
+        size_t const size_ = static_cast<size_t>(std::distance(first, last)) * sizeof(value_t);
         int const rc = zmq_msg_init_size(&msg, size_);
         if (rc != 0)
             throw error_t();
-        value_t *dest = data<value_t>();
-        while (first != last) {
-            *dest = *first;
-            ++dest;
-            ++first;
-        }
+        std::copy(first, last, data<value_t>());
     }
 
     message_t(const void *data_, size_t size_)
