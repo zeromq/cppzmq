@@ -142,7 +142,7 @@ TEST_CASE("poller poll basic", "[poller]")
 {
     common_server_client_setup s;
 
-    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}));
+    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}, zmq::send_flags::none));
 
     zmq::poller_t<int> poller;
     std::vector<zmq_poller_event_t> events{1};
@@ -220,7 +220,7 @@ TEST_CASE("poller poll client server", "[poller]")
     CHECK_NOTHROW(poller.add(s.server, ZMQ_POLLIN, s.server));
 
     // client sends message
-    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}));
+    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}, zmq::send_flags::none));
 
     // wait for message and verify events
     std::vector<zmq_poller_event_t> events(1);
@@ -243,7 +243,7 @@ TEST_CASE("poller wait one return", "[poller]")
     CHECK_NOTHROW(poller.add(s.server, ZMQ_POLLIN, nullptr));
 
     // client sends message
-    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}));
+    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}, zmq::send_flags::none));
 
     // wait for message and verify events
     std::vector<zmq_poller_event_t> events(1);
@@ -253,7 +253,7 @@ TEST_CASE("poller wait one return", "[poller]")
 TEST_CASE("poller wait on move constructed", "[poller]")
 {
     common_server_client_setup s;
-    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}));
+    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}, zmq::send_flags::none));
     zmq::poller_t<> a;
     CHECK_NOTHROW(a.add(s.server, ZMQ_POLLIN, nullptr));
     zmq::poller_t<> b{std::move(a)};
@@ -266,7 +266,7 @@ TEST_CASE("poller wait on move constructed", "[poller]")
 TEST_CASE("poller wait on move assigned", "[poller]")
 {
     common_server_client_setup s;
-    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}));
+    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}, zmq::send_flags::none));
     zmq::poller_t<> a;
     CHECK_NOTHROW(a.add(s.server, ZMQ_POLLIN, nullptr));
     zmq::poller_t<> b;
@@ -293,7 +293,7 @@ TEST_CASE("poller remove from handler", "[poller]")
     }
     // Clients send messages
     for (auto &s : setup_list) {
-        CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}));
+        CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}, zmq::send_flags::none));
     }
 
     // Wait for all servers to receive a message

@@ -17,6 +17,7 @@ find_package(Threads)
 
 add_executable(
     unit_tests
+    buffer.cpp
     message.cpp
     context.cpp
     socket.cpp

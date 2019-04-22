@@ -46,6 +46,14 @@ TEST_CASE("socket swap", "[socket]")
     using std::swap;
     swap(socket1, socket2);
 }
+TEST_CASE("rass", "[socket]")
+{
+zmq::context_t ctx;
+    zmq::socket_t sock(ctx, zmq::socket_type::push);
+    sock.bind("inproc://test");
+    const std::string m = "Hello, world";
+    sock.send(zmq::buffer(m), zmq::send_flags::dontwait);
+}
 #endif
 
 TEST_CASE("socket sends and receives const buffer", "[socket]")
@@ -55,13 +63,150 @@ TEST_CASE("socket sends and receives const buffer", "[socket]")
     zmq::socket_t receiver(context, ZMQ_PAIR);
     receiver.bind("inproc://test");
     sender.connect("inproc://test");
-    CHECK(2 == sender.send("Hi", 2));
+    const char* str = "Hi";
+
+    #ifdef ZMQ_CPP11
+    CHECK(2 == sender.send(zmq::buffer(str, 2)).size);
+    char buf[2];
+    const auto res = receiver.recv(zmq::buffer(buf));
+    CHECK(!res.truncated());
+    CHECK(2 == res.size);
+    #else
+    CHECK(2 == sender.send(str, 2));
     char buf[2];
     CHECK(2 == receiver.recv(buf, 2));
-    CHECK(0 == memcmp(buf, "Hi", 2));
+    #endif
+    CHECK(0 == memcmp(buf, str, 2));
 }
 
 #ifdef ZMQ_CPP11
+
+TEST_CASE("socket send none sndmore", "[socket]")
+{
+    zmq::context_t context;
+    zmq::socket_t s(context, zmq::socket_type::router);
+    s.bind("inproc://test");
+
+    std::vector<char> buf(4);
+    auto res = s.send(zmq::buffer(buf), zmq::send_flags::sndmore);
+    CHECK(res.size == buf.size());
+    CHECK(res.success);
+    res = s.send(zmq::buffer(buf));
+    CHECK(res.size == buf.size());
+    CHECK(res.success);
+}
+
+TEST_CASE("socket send dontwait", "[socket]")
+{
+    zmq::context_t context;
+    zmq::socket_t s(context, zmq::socket_type::push);
+    s.bind("inproc://test");
+
+    std::vector<char> buf(4);
+    auto res = s.send(zmq::buffer(buf), zmq::send_flags::dontwait);
+    CHECK(!res.success);
+    CHECK(res.size == 0);
+    res = s.send(zmq::buffer(buf),
+                  zmq::send_flags::dontwait | zmq::send_flags::sndmore);
+    CHECK(!res.success);
+    CHECK(res.size == 0);
+
+    zmq::message_t msg;
+    auto resm = s.send(msg, zmq::send_flags::dontwait);
+    CHECK(!resm.success);
+    CHECK(resm.size == 0);
+    CHECK(msg.size() == 0);
+}
+
+TEST_CASE("socket send exception", "[socket]")
+{
+    zmq::context_t context;
+    zmq::socket_t s(context, zmq::socket_type::pull);
+    s.bind("inproc://test");
+
+    std::vector<char> buf(4);
+    CHECK_THROWS_AS(s.send(zmq::buffer(buf)), const zmq::error_t &);
+}
+
+TEST_CASE("socket recv none", "[socket]")
+{
+    zmq::context_t context;
+    zmq::socket_t s(context, zmq::socket_type::pair);
+    zmq::socket_t s2(context, zmq::socket_type::pair);
+    s2.bind("inproc://test");
+    s.connect("inproc://test");
+
+    std::vector<char> sbuf(4);
+    const auto res_send = s2.send(zmq::buffer(sbuf));
+    CHECK(res_send.success);
+
+    std::vector<char> buf(2);
+    const auto res = s.recv(zmq::buffer(buf));
+    CHECK(res.success);
+    CHECK(res.truncated());
+    CHECK(res.untruncated_size == sbuf.size());
+    CHECK(res.size == buf.size());
+
+    const auto res_send2 = s2.send(zmq::buffer(sbuf));
+    CHECK(res_send2.success);
+    std::vector<char> buf2(10);
+    const auto res2 = s.recv(zmq::buffer(buf2));
+    CHECK(res2.success);
+    CHECK(!res2.truncated());
+    CHECK(res2.untruncated_size == sbuf.size());
+    CHECK(res2.size == sbuf.size());
+}
+
+TEST_CASE("socket send recv message_t", "[socket]")
+{
+    zmq::context_t context;
+    zmq::socket_t s(context, zmq::socket_type::pair);
+    zmq::socket_t s2(context, zmq::socket_type::pair);
+    s2.bind("inproc://test");
+    s.connect("inproc://test");
+
+    zmq::message_t smsg(size_t{10});
+    const auto res_send = s2.send(smsg, zmq::send_flags::none);
+    CHECK(res_send.success);
+    CHECK(res_send.size == 10);
+    CHECK(smsg.size() == 0);
+
+    zmq::message_t rmsg;
+    const auto res = s.recv(rmsg);
+    CHECK(res.success);
+    CHECK(res.size == 10);
+    CHECK(rmsg.size() == res.size);
+}
+
+TEST_CASE("socket recv dontwait", "[socket]")
+{
+    zmq::context_t context;
+    zmq::socket_t s(context, zmq::socket_type::pull);
+    s.bind("inproc://test");
+
+    std::vector<char> buf(4);
+    constexpr auto flags = zmq::recv_flags::none | zmq::recv_flags::dontwait;
+    auto res = s.recv(zmq::buffer(buf), flags);
+    CHECK(!res.success);
+    CHECK(res.size == 0);
+
+    zmq::message_t msg;
+    auto resm = s.recv(msg, flags);
+    CHECK(!resm.success);
+    CHECK(resm.size == 0);
+    CHECK(msg.size() == 0);
+}
+
+TEST_CASE("socket recv exception", "[socket]")
+{
+    zmq::context_t context;
+    zmq::socket_t s(context, zmq::socket_type::push);
+    s.bind("inproc://test");
+
+    std::vector<char> buf(4);
+    CHECK_THROWS_AS(s.recv(zmq::buffer(buf)), const zmq::error_t &);
+}
+
 TEST_CASE("socket proxy", "[socket]")
 {
     zmq::context_t context;
