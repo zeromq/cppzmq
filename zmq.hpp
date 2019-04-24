@@ -760,7 +760,7 @@ class socket_t
     {
         int nbytes = zmq_send(ptr, buf_, len_, flags_);
         if (nbytes >= 0)
-            return (size_t) nbytes;
+            return static_cast<size_t>(nbytes);
         if (zmq_errno() == EAGAIN)
             return 0;
         throw error_t();
@@ -790,7 +790,7 @@ class socket_t
     {
         int nbytes = zmq_recv(ptr, buf_, len_, flags_);
         if (nbytes >= 0)
-            return (size_t) nbytes;
+            return static_cast<size_t>(nbytes);
         if (zmq_errno() == EAGAIN)
             return 0;
         throw error_t();
