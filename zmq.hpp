@@ -1308,18 +1308,65 @@ class monitor_t
 };
 
 #if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && defined(ZMQ_HAVE_POLLER)
-template<typename T = void> class poller_t
+
+// polling events
+enum class event_flags : short
+{
+    none = 0,
+    pollin = ZMQ_POLLIN,
+    pollout = ZMQ_POLLOUT,
+    pollerr = ZMQ_POLLERR,
+    pollpri = ZMQ_POLLPRI
+};
+
+constexpr event_flags operator|(event_flags a, event_flags b) noexcept
+{
+    return static_cast<event_flags>(static_cast<short>(a) | static_cast<short>(b));
+}
+constexpr event_flags operator&(event_flags a, event_flags b) noexcept
+{
+    return static_cast<event_flags>(static_cast<short>(a) & static_cast<short>(b));
+}
+constexpr event_flags operator~(event_flags a) noexcept
+{
+    return static_cast<event_flags>(~static_cast<short>(a));
+}
+
+struct no_user_data;
+
+// layout compatible with zmq__poller_event_t
+template<class T = no_user_data>
+struct poller_event
+{
+    socket_ref socket;
+#ifdef _WIN32
+    SOCKET fd;
+#else
+    int fd;
+#endif
+    T *user_data;
+    event_flags events;
+};
+
+template<typename T = no_user_data> class poller_t
 {
   public:
+    using event_type = poller_event<T>;
+
     poller_t() = default;
 
-    void add(zmq::socket_ref socket, short events, T *user_data)
+    template<
+      typename Dummy = void,
+      typename =
+        typename std::enable_if<!std::is_same<T, no_user_data>::value, Dummy>::type>
+    void add(zmq::socket_ref socket, event_flags events, T *user_data)
     {
-        if (0
-            != zmq_poller_add(poller_ptr.get(), socket.handle(),
-                              user_data, events)) {
-            throw error_t();
-        }
+        add_impl(socket, events, user_data);
+    }
+
+    void add(zmq::socket_ref socket, event_flags events)
+    {
+        add_impl(socket, events, nullptr);
     }
 
     void remove(zmq::socket_ref socket)
@@ -1329,21 +1376,23 @@ template<typename T = void> class poller_t
         }
     }
 
-    void modify(zmq::socket_ref socket, short events)
+    void modify(zmq::socket_ref socket, event_flags events)
     {
         if (0
             != zmq_poller_modify(poller_ptr.get(), socket.handle(),
-                                 events)) {
+                                 static_cast<short>(events))) {
             throw error_t();
         }
     }
 
-    size_t wait_all(std::vector<zmq_poller_event_t> &poller_events,
+    size_t wait_all(std::vector<event_type> &poller_events,
                     const std::chrono::milliseconds timeout)
     {
-        int rc = zmq_poller_wait_all(poller_ptr.get(), poller_events.data(),
-                                     static_cast<int>(poller_events.size()),
-                                     static_cast<long>(timeout.count()));
+        int rc = zmq_poller_wait_all(
+          poller_ptr.get(),
+          reinterpret_cast<zmq_poller_event_t *>(poller_events.data()),
+          static_cast<int>(poller_events.size()),
+          static_cast<long>(timeout.count()));
         if (rc > 0)
             return static_cast<size_t>(rc);
 
@@ -1358,18 +1407,30 @@ template<typename T = void> class poller_t
     }
 
   private:
-    std::unique_ptr<void, void(*)(void *)> poller_ptr{
+    struct destroy_poller_t
+    {
+        void operator()(void *ptr) noexcept
+        {
+            int rc = zmq_poller_destroy(&ptr);
+            ZMQ_ASSERT(rc == 0);
+        }
+    };
+
+    std::unique_ptr<void, destroy_poller_t> poller_ptr{
       []() {
           auto poller_new = zmq_poller_new();
           if (poller_new)
               return poller_new;
           throw error_t();
-      }(), &destroy_poller};
+      }()};
 
-    static void destroy_poller(void *ptr)
+    void add_impl(zmq::socket_ref socket, event_flags events, T *user_data)
     {
-        int rc = zmq_poller_destroy(&ptr);
-        ZMQ_ASSERT(rc == 0);
+        if (0
+            != zmq_poller_add(poller_ptr.get(), socket.handle(),
+                              user_data, static_cast<short>(events))) {
+            throw error_t();
+        }
     }
 };
 #endif //  defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && defined(ZMQ_HAVE_POLLER)
