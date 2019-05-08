@@ -48,7 +48,7 @@ TEST_CASE("socket swap", "[socket]")
 }
 TEST_CASE("rass", "[socket]")
 {
-zmq::context_t ctx;
+    zmq::context_t ctx;
     zmq::socket_t sock(ctx, zmq::socket_type::push);
     sock.bind("inproc://test");
     const std::string m = "Hello, world";

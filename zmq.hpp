@@ -280,7 +280,7 @@ class message_t
     }
 
 #if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11)
-    // this function is too greedy, must add
+    // TODO: this function is too greedy, must add
     // SFINAE for begin and end support.
     template<typename T>
     explicit message_t(const T &msg_) : message_t(std::begin(msg_), std::end(msg_))
@@ -654,7 +654,8 @@ enum class send_flags : int
 
 constexpr send_flags operator|(send_flags a, send_flags b) noexcept
 {
-    return static_cast<send_flags>(static_cast<int>(a) | static_cast<int>(b));
+    return static_cast<send_flags>(static_cast<std::underlying_type<send_flags>::type>(a)
+        | static_cast<<std::underlying_type<send_flags>::type>(b));
 }
 
 enum class recv_flags : int
