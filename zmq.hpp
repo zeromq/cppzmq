@@ -235,11 +235,10 @@ inline std::tuple<int, int, int> version()
 class message_t
 {
   public:
-    message_t()
+    message_t() ZMQ_NOTHROW
     {
         int rc = zmq_msg_init(&msg);
-        if (rc != 0)
-            throw error_t();
+        ZMQ_ASSERT(rc == 0);
     }
 
     explicit message_t(size_t size_)
@@ -284,11 +283,10 @@ class message_t
 #endif
 
 #ifdef ZMQ_HAS_RVALUE_REFS
-    message_t(message_t &&rhs) : msg(rhs.msg)
+    message_t(message_t &&rhs) ZMQ_NOTHROW : msg(rhs.msg)
     {
         int rc = zmq_msg_init(&rhs.msg);
-        if (rc != 0)
-            throw error_t();
+        ZMQ_ASSERT(rc == 0);
     }
 
     message_t &operator=(message_t &&rhs) ZMQ_NOTHROW
@@ -310,8 +308,7 @@ class message_t
         if (rc != 0)
             throw error_t();
         rc = zmq_msg_init(&msg);
-        if (rc != 0)
-            throw error_t();
+        ZMQ_ASSERT(rc == 0);
     }
 
     void rebuild(size_t size_)
