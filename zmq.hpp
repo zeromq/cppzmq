@@ -1334,7 +1334,7 @@ constexpr event_flags operator~(event_flags a) noexcept
 
 struct no_user_data;
 
-// layout compatible with zmq__poller_event_t
+// layout compatible with zmq_poller_event_t
 template<class T = no_user_data>
 struct poller_event
 {
