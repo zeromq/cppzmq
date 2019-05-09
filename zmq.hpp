@@ -645,6 +645,39 @@ struct recv_buffer_result
     }
 };
 
+namespace detail
+{
+template<class T>
+constexpr T enum_bit_or(T a, T b) noexcept
+{
+    static_assert(std::is_enum<T>::value, "must be enum");
+    using U = typename std::underlying_type<T>::type;
+    return static_cast<T>(static_cast<U>(a) | static_cast<U>(b));
+}
+template<class T>
+constexpr T enum_bit_and(T a, T b) noexcept
+{
+    static_assert(std::is_enum<T>::value, "must be enum");
+    using U = typename std::underlying_type<T>::type;
+    return static_cast<T>(static_cast<U>(a) & static_cast<U>(b));
+}
+template<class T>
+constexpr T enum_bit_xor(T a, T b) noexcept
+{
+    static_assert(std::is_enum<T>::value, "must be enum");
+    using U = typename std::underlying_type<T>::type;
+    return static_cast<T>(static_cast<U>(a) ^ static_cast<U>(b));
+}
+template<class T>
+constexpr T enum_bit_not(T a) noexcept
+{
+    static_assert(std::is_enum<T>::value, "must be enum");
+    using U = typename std::underlying_type<T>::type;
+    return static_cast<T>(~static_cast<U>(a));
+}
+} // namespace detail
+
+// partially satisfies named requirement BitmaskType
 enum class send_flags : int
 {
     none = 0,
@@ -654,10 +687,22 @@ enum class send_flags : int
 
 constexpr send_flags operator|(send_flags a, send_flags b) noexcept
 {
-    return static_cast<send_flags>(static_cast<std::underlying_type<send_flags>::type>(a)
-        | static_cast<<std::underlying_type<send_flags>::type>(b));
+    return detail::enum_bit_or(a, b);
+}
+constexpr send_flags operator&(send_flags a, send_flags b) noexcept
+{
+    return detail::enum_bit_and(a, b);
+}
+constexpr send_flags operator^(send_flags a, send_flags b) noexcept
+{
+    return detail::enum_bit_xor(a, b);
+}
+constexpr send_flags operator~(send_flags a) noexcept
+{
+    return detail::enum_bit_not(a);
 }
 
+// partially satisfies named requirement BitmaskType
 enum class recv_flags : int
 {
     none = 0,
@@ -666,8 +711,21 @@ enum class recv_flags : int
 
 constexpr recv_flags operator|(recv_flags a, recv_flags b) noexcept
 {
-    return static_cast<recv_flags>(static_cast<int>(a) | static_cast<int>(b));
+    return detail::enum_bit_or(a, b);
 }
+constexpr recv_flags operator&(recv_flags a, recv_flags b) noexcept
+{
+    return detail::enum_bit_and(a, b);
+}
+constexpr recv_flags operator^(recv_flags a, recv_flags b) noexcept
+{
+    return detail::enum_bit_xor(a, b);
+}
+constexpr recv_flags operator~(recv_flags a) noexcept
+{
+    return detail::enum_bit_not(a);
+}
+
 
 // mutable_buffer, const_buffer and buffer are based on
 // the Networking TS specification, draft:

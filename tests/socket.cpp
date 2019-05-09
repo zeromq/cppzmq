@@ -46,7 +46,27 @@ TEST_CASE("socket swap", "[socket]")
     using std::swap;
     swap(socket1, socket2);
 }
-TEST_CASE("rass", "[socket]")
+
+TEST_CASE("socket flags", "[socket]")
+{
+    CHECK((zmq::recv_flags::dontwait | zmq::recv_flags::none)
+          == static_cast<zmq::recv_flags>(ZMQ_DONTWAIT | 0));
+    CHECK((zmq::recv_flags::dontwait & zmq::recv_flags::none)
+          == static_cast<zmq::recv_flags>(ZMQ_DONTWAIT & 0));
+    CHECK((zmq::recv_flags::dontwait ^ zmq::recv_flags::none)
+          == static_cast<zmq::recv_flags>(ZMQ_DONTWAIT ^ 0));
+    CHECK(~zmq::recv_flags::dontwait == static_cast<zmq::recv_flags>(~ZMQ_DONTWAIT));
+
+    CHECK((zmq::send_flags::dontwait | zmq::send_flags::sndmore)
+          == static_cast<zmq::send_flags>(ZMQ_DONTWAIT | ZMQ_SNDMORE));
+    CHECK((zmq::send_flags::dontwait & zmq::send_flags::sndmore)
+          == static_cast<zmq::send_flags>(ZMQ_DONTWAIT & ZMQ_SNDMORE));
+    CHECK((zmq::send_flags::dontwait ^ zmq::send_flags::sndmore)
+          == static_cast<zmq::send_flags>(ZMQ_DONTWAIT ^ ZMQ_SNDMORE));
+    CHECK(~zmq::send_flags::dontwait == static_cast<zmq::send_flags>(~ZMQ_DONTWAIT));
+}
+
+TEST_CASE("socket readme example", "[socket]")
 {
     zmq::context_t ctx;
     zmq::socket_t sock(ctx, zmq::socket_type::push);
