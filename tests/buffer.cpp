@@ -14,8 +14,8 @@ using BT = int16_t;
 
 TEST_CASE("buffer default ctor", "[buffer]")
 {
-    zmq::mutable_buffer mb;
-    zmq::const_buffer cb;
+    constexpr zmq::mutable_buffer mb;
+    constexpr zmq::const_buffer cb;
     CHECK(mb.size() == 0);
     CHECK(mb.data() == nullptr);
     CHECK(cb.size() == 0);
@@ -36,6 +36,13 @@ TEST_CASE("buffer data ctor", "[buffer]")
     CHECK(mb.data() == from_mut.data());
     const auto cmb = mb;
     static_assert(std::is_same<decltype(cmb.data()), void*>::value, "");
+
+    constexpr const void* cp = nullptr;
+    constexpr void* p = nullptr;
+    constexpr zmq::const_buffer cecb = zmq::buffer(p, 0);
+    constexpr zmq::mutable_buffer cemb = zmq::buffer(p, 0);
+    CHECK(cecb.data() == nullptr);
+    CHECK(cemb.data() == nullptr);
 }
 
 TEST_CASE("const_buffer operator+", "[buffer]")

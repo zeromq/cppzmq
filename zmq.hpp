@@ -734,14 +734,14 @@ constexpr recv_flags operator~(recv_flags a) noexcept
 class mutable_buffer
 {
   public:
-    mutable_buffer() noexcept : _data(nullptr), _size(0) {}
-    mutable_buffer(void *p, size_t n) noexcept : _data(p), _size(n)
+    constexpr mutable_buffer() noexcept : _data(nullptr), _size(0) {}
+    constexpr mutable_buffer(void *p, size_t n) noexcept : _data(p), _size(n)
     {
         assert(p != nullptr || n == 0);
     }
 
-    void *data() const noexcept { return _data; }
-    size_t size() const noexcept { return _size; }
+    constexpr void *data() const noexcept { return _data; }
+    constexpr size_t size() const noexcept { return _size; }
     mutable_buffer &operator+=(size_t n) noexcept
     {
         // (std::min) is a workaround for when a min macro is defined
@@ -769,16 +769,16 @@ inline mutable_buffer operator+(size_t n, const mutable_buffer &mb) noexcept
 class const_buffer
 {
   public:
-    const_buffer() noexcept : _data(nullptr), _size(0) {}
-    const_buffer(const void *p, size_t n) noexcept : _data(p), _size(n) {}
-    const_buffer(const mutable_buffer &mb) noexcept :
+    constexpr const_buffer() noexcept : _data(nullptr), _size(0) {}
+    constexpr const_buffer(const void *p, size_t n) noexcept : _data(p), _size(n) {}
+    constexpr const_buffer(const mutable_buffer &mb) noexcept :
         _data(mb.data()),
         _size(mb.size())
     {
     }
 
-    const void *data() const noexcept { return _data; }
-    size_t size() const noexcept { return _size; }
+    constexpr const void *data() const noexcept { return _data; }
+    constexpr size_t size() const noexcept { return _size; }
     const_buffer &operator+=(size_t n) noexcept
     {
         const auto shift = (std::min)(n, _size);
@@ -805,27 +805,27 @@ inline const_buffer operator+(size_t n, const const_buffer &cb) noexcept
 
 // buffer creation
 
-inline mutable_buffer buffer(void* p, size_t n) noexcept
+constexpr mutable_buffer buffer(void* p, size_t n) noexcept
 {
     return mutable_buffer(p, n);
 }
-inline const_buffer buffer(const void* p, size_t n) noexcept
+constexpr const_buffer buffer(const void* p, size_t n) noexcept
 {
     return const_buffer(p, n);
 }
-inline mutable_buffer buffer(const mutable_buffer& mb) noexcept
+constexpr mutable_buffer buffer(const mutable_buffer& mb) noexcept
 {
     return mb;
 }
-inline mutable_buffer buffer(const mutable_buffer& mb, size_t n) noexcept
+constexpr mutable_buffer buffer(const mutable_buffer& mb, size_t n) noexcept
 {
     return mutable_buffer(mb.data(), (std::min)(mb.size(), n));
 }
-inline const_buffer buffer(const const_buffer& cb) noexcept
+constexpr const_buffer buffer(const const_buffer& cb) noexcept
 {
     return cb;
 }
-inline const_buffer buffer(const const_buffer& cb, size_t n) noexcept
+constexpr const_buffer buffer(const const_buffer& cb, size_t n) noexcept
 {
     return const_buffer(cb.data(), (std::min)(cb.size(), n));
 }
