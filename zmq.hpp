@@ -737,7 +737,9 @@ class mutable_buffer
     constexpr mutable_buffer() noexcept : _data(nullptr), _size(0) {}
     constexpr mutable_buffer(void *p, size_t n) noexcept : _data(p), _size(n)
     {
+#ifdef ZMQ_CPP14
         assert(p != nullptr || n == 0);
+#endif
     }
 
     constexpr void *data() const noexcept { return _data; }
@@ -770,7 +772,12 @@ class const_buffer
 {
   public:
     constexpr const_buffer() noexcept : _data(nullptr), _size(0) {}
-    constexpr const_buffer(const void *p, size_t n) noexcept : _data(p), _size(n) {}
+    constexpr const_buffer(const void *p, size_t n) noexcept : _data(p), _size(n)
+    {
+#ifdef ZMQ_CPP14
+        assert(p != nullptr || n == 0);
+#endif
+    }
     constexpr const_buffer(const mutable_buffer &mb) noexcept :
         _data(mb.data()),
         _size(mb.size())
@@ -817,7 +824,7 @@ constexpr mutable_buffer buffer(const mutable_buffer& mb) noexcept
 {
     return mb;
 }
-constexpr mutable_buffer buffer(const mutable_buffer& mb, size_t n) noexcept
+inline mutable_buffer buffer(const mutable_buffer& mb, size_t n) noexcept
 {
     return mutable_buffer(mb.data(), (std::min)(mb.size(), n));
 }
@@ -825,35 +832,13 @@ constexpr const_buffer buffer(const const_buffer& cb) noexcept
 {
     return cb;
 }
-constexpr const_buffer buffer(const const_buffer& cb, size_t n) noexcept
+inline const_buffer buffer(const const_buffer& cb, size_t n) noexcept
 {
     return const_buffer(cb.data(), (std::min)(cb.size(), n));
 }
 
 namespace detail
 {
-// utility functions for containers with data and size
-// data is nullptr if the container is empty
-template<class T> mutable_buffer buffar_mut_ds(T &data) noexcept
-{
-    return mutable_buffer(data.size() != 0u ? data.data() : nullptr,
-                          data.size() * sizeof(*data.data()));
-}
-template<class T> mutable_buffer buffar_mut_ds(T &data, size_t n_bytes) noexcept
-{
-    return mutable_buffer(data.size() != 0u ? data.data() : nullptr,
-                          (std::min)(data.size() * sizeof(*data.data()), n_bytes));
-}
-template<class T> const_buffer buffar_const_ds(const T &data) noexcept
-{
-    return const_buffer(data.size() != 0u ? data.data() : nullptr,
-                        data.size() * sizeof(*data.data()));
-}
-template<class T> const_buffer buffar_const_ds(const T &data, size_t n_bytes) noexcept
-{
-    return const_buffer(data.size() != 0u ? data.data() : nullptr,
-                        (std::min)(data.size() * sizeof(*data.data()), n_bytes));
-}
 template<class T> struct is_pod_like
 {
     // NOTE: The networking draft N4771 section 16.11 requires
@@ -863,133 +848,136 @@ template<class T> struct is_pod_like
     static constexpr bool value =
       std::is_trivially_copyable<T>::value && std::is_standard_layout<T>::value;
 };
+
+template<class C> constexpr auto seq_size(const C &c) noexcept -> decltype(c.size())
+{
+    return c.size();
+}
+template<class T, size_t N>
+constexpr size_t seq_size(const T (&/*array*/)[N]) noexcept
+{
+    return N;
+}
+
+template<class Seq>
+auto buffer_contiguous_sequence(Seq &&seq) noexcept
+  -> decltype(buffer(std::addressof(*std::begin(seq)), size_t{}))
+{
+    using T = typename std::remove_cv<
+      typename std::remove_reference<decltype(*std::begin(seq))>::type>::type;
+    static_assert(detail::is_pod_like<T>::value, "T must be POD");
+
+    const auto size = seq_size(seq);
+    return buffer(size != 0u ? std::addressof(*std::begin(seq)) : nullptr,
+                  size * sizeof(T));
+}
+template<class Seq>
+auto buffer_contiguous_sequence(Seq &&seq, size_t n_bytes) noexcept
+  -> decltype(buffer_contiguous_sequence(seq))
+{
+    using T = typename std::remove_cv<
+      typename std::remove_reference<decltype(*std::begin(seq))>::type>::type;
+    static_assert(detail::is_pod_like<T>::value, "T must be POD");
+
+    const auto size = seq_size(seq);
+    return buffer(size != 0u ? std::addressof(*std::begin(seq)) : nullptr,
+                  (std::min)(size * sizeof(T), n_bytes));
+}
+
 } // namespace detail
 
 // C array
 template<class T, size_t N> mutable_buffer buffer(T (&data)[N]) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    static_assert(N > 0, "N > 0");
-    return mutable_buffer(static_cast<T *>(data), N * sizeof(T));
+    return detail::buffer_contiguous_sequence(data);
 }
 template<class T, size_t N>
 mutable_buffer buffer(T (&data)[N], size_t n_bytes) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    static_assert(N > 0, "N > 0");
-    return mutable_buffer(static_cast<T *>(data), (std::min)(N * sizeof(T), n_bytes));
+    return detail::buffer_contiguous_sequence(data, n_bytes);
 }
 template<class T, size_t N> const_buffer buffer(const T (&data)[N]) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    static_assert(N > 0, "N > 0");
-    return const_buffer(static_cast<const T *>(data), N * sizeof(T));
+    return detail::buffer_contiguous_sequence(data);
 }
 template<class T, size_t N>
 const_buffer buffer(const T (&data)[N], size_t n_bytes) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    static_assert(N > 0, "N > 0");
-    return const_buffer(static_cast<const T *>(data),
-                        (std::min)(N * sizeof(T), n_bytes));
+    return detail::buffer_contiguous_sequence(data, n_bytes);
 }
 // std::array
 template<class T, size_t N> mutable_buffer buffer(std::array<T, N> &data) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    static_assert(N > 0, "N > 0");
-    return mutable_buffer(data.data(), N * sizeof(T));
+    return detail::buffer_contiguous_sequence(data);
 }
 template<class T, size_t N>
 mutable_buffer buffer(std::array<T, N> &data, size_t n_bytes) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    static_assert(N > 0, "N > 0");
-    return mutable_buffer(data.data(), (std::min)(N * sizeof(T), n_bytes));
+    return detail::buffer_contiguous_sequence(data, n_bytes);
 }
 template<class T, size_t N>
 const_buffer buffer(std::array<const T, N> &data) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    static_assert(N > 0, "N > 0");
-    return const_buffer(data.data(), N * sizeof(T));
+    return detail::buffer_contiguous_sequence(data);
 }
 template<class T, size_t N>
 const_buffer buffer(std::array<const T, N> &data, size_t n_bytes) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    static_assert(N > 0, "N > 0");
-    return const_buffer(data.data(), (std::min)(N * sizeof(T), n_bytes));
+    return detail::buffer_contiguous_sequence(data, n_bytes);
 }
 template<class T, size_t N>
 const_buffer buffer(const std::array<T, N> &data) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    static_assert(N > 0, "N > 0");
-    return const_buffer(data.data(), N * sizeof(T));
+    return detail::buffer_contiguous_sequence(data);
 }
 template<class T, size_t N>
 const_buffer buffer(const std::array<T, N> &data, size_t n_bytes) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    static_assert(N > 0, "N > 0");
-    return const_buffer(data.data(), (std::min)(N * sizeof(T), n_bytes));
+    return detail::buffer_contiguous_sequence(data, n_bytes);
 }
 // std::vector
 template<class T, class Allocator>
 mutable_buffer buffer(std::vector<T, Allocator> &data) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    return detail::buffar_mut_ds(data);
+    return detail::buffer_contiguous_sequence(data);
 }
 template<class T, class Allocator>
 mutable_buffer buffer(std::vector<T, Allocator> &data, size_t n_bytes) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    return detail::buffar_mut_ds(data, n_bytes);
+    return detail::buffer_contiguous_sequence(data, n_bytes);
 }
 template<class T, class Allocator>
 const_buffer buffer(const std::vector<T, Allocator> &data) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    return detail::buffar_const_ds(data);
+    return detail::buffer_contiguous_sequence(data);
 }
 template<class T, class Allocator>
 const_buffer buffer(const std::vector<T, Allocator> &data, size_t n_bytes) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    return detail::buffar_const_ds(data, n_bytes);
+    return detail::buffer_contiguous_sequence(data, n_bytes);
 }
 // std::basic_string
 template<class T, class Traits, class Allocator>
 mutable_buffer buffer(std::basic_string<T, Traits, Allocator> &data) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    // before C++17 string::data() returned const char*
-    return mutable_buffer(data.size() != 0u ? &data[0] : nullptr,
-                          data.size() * sizeof(T));
+    return detail::buffer_contiguous_sequence(data);
 }
 template<class T, class Traits, class Allocator>
 mutable_buffer buffer(std::basic_string<T, Traits, Allocator> &data,
                       size_t n_bytes) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    // before C++17 string::data() returned const char*
-    return mutable_buffer(data.size() != 0u ? &data[0] : nullptr,
-                          (std::min)(data.size() * sizeof(T), n_bytes));
+    return detail::buffer_contiguous_sequence(data, n_bytes);
 }
 template<class T, class Traits, class Allocator>
 const_buffer buffer(const std::basic_string<T, Traits, Allocator> &data) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    return detail::buffar_const_ds(data);
+    return detail::buffer_contiguous_sequence(data);
 }
 template<class T, class Traits, class Allocator>
 const_buffer buffer(const std::basic_string<T, Traits, Allocator> &data,
                     size_t n_bytes) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    return detail::buffar_const_ds(data, n_bytes);
+    return detail::buffer_contiguous_sequence(data, n_bytes);
 }
 
 #ifdef ZMQ_CPP17
@@ -997,14 +985,12 @@ const_buffer buffer(const std::basic_string<T, Traits, Allocator> &data,
 template<class T, class Traits>
 const_buffer buffer(std::basic_string_view<T, Traits> data) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    return detail::buffar_const_ds(data);
+    return detail::buffer_contiguous_sequence(data);
 }
 template<class T, class Traits>
 const_buffer buffer(std::basic_string_view<T, Traits> data, size_t n_bytes) noexcept
 {
-    static_assert(detail::is_pod_like<T>::value, "T must be POD");
-    return detail::buffar_const_ds(data, n_bytes);
+    return detail::buffer_contiguous_sequence(data, n_bytes);
 }
 #endif
 
