@@ -86,11 +86,12 @@ TEST_CASE("socket sends and receives const buffer", "[socket]")
     const char* str = "Hi";
 
     #ifdef ZMQ_CPP11
-    CHECK(2 == sender.send(zmq::buffer(str, 2)).size);
+    CHECK(2 == *sender.send(zmq::buffer(str, 2)));
     char buf[2];
     const auto res = receiver.recv(zmq::buffer(buf));
-    CHECK(!res.truncated());
-    CHECK(2 == res.size);
+    CHECK(res);
+    CHECK(!res->truncated());
+    CHECK(2 == res->size);
     #else
     CHECK(2 == sender.send(str, 2));
     char buf[2];
@@ -109,11 +110,11 @@ TEST_CASE("socket send none sndmore", "[socket]")
 
     std::vector<char> buf(4);
     auto res = s.send(zmq::buffer(buf), zmq::send_flags::sndmore);
-    CHECK(res.size == buf.size());
-    CHECK(res.success);
+    CHECK(res);
+    CHECK(*res == buf.size());
     res = s.send(zmq::buffer(buf));
-    CHECK(res.size == buf.size());
-    CHECK(res.success);
+    CHECK(res);
+    CHECK(*res == buf.size());
 }
 
 TEST_CASE("socket send dontwait", "[socket]")
@@ -124,17 +125,14 @@ TEST_CASE("socket send dontwait", "[socket]")
 
     std::vector<char> buf(4);
     auto res = s.send(zmq::buffer(buf), zmq::send_flags::dontwait);
-    CHECK(!res.success);
-    CHECK(res.size == 0);
+    CHECK(!res);
     res = s.send(zmq::buffer(buf),
                   zmq::send_flags::dontwait | zmq::send_flags::sndmore);
-    CHECK(!res.success);
-    CHECK(res.size == 0);
+    CHECK(!res);
 
     zmq::message_t msg;
     auto resm = s.send(msg, zmq::send_flags::dontwait);
-    CHECK(!resm.success);
-    CHECK(resm.size == 0);
+    CHECK(!resm);
     CHECK(msg.size() == 0);
 }
 
@@ -158,23 +156,24 @@ TEST_CASE("socket recv none", "[socket]")
 
     std::vector<char> sbuf(4);
     const auto res_send = s2.send(zmq::buffer(sbuf));
-    CHECK(res_send.success);
+    CHECK(res_send);
+    CHECK(res_send.has_value());
 
     std::vector<char> buf(2);
     const auto res = s.recv(zmq::buffer(buf));
-    CHECK(res.success);
-    CHECK(res.truncated());
-    CHECK(res.untruncated_size == sbuf.size());
-    CHECK(res.size == buf.size());
+    CHECK(res.has_value());
+    CHECK(res->truncated());
+    CHECK(res->untruncated_size == sbuf.size());
+    CHECK(res->size == buf.size());
 
     const auto res_send2 = s2.send(zmq::buffer(sbuf));
-    CHECK(res_send2.success);
+    CHECK(res_send2.has_value());
     std::vector<char> buf2(10);
     const auto res2 = s.recv(zmq::buffer(buf2));
-    CHECK(res2.success);
-    CHECK(!res2.truncated());
-    CHECK(res2.untruncated_size == sbuf.size());
-    CHECK(res2.size == sbuf.size());
+    CHECK(res2.has_value());
+    CHECK(!res2->truncated());
+    CHECK(res2->untruncated_size == sbuf.size());
+    CHECK(res2->size == sbuf.size());
 }
 
 TEST_CASE("socket send recv message_t", "[socket]")
@@ -187,15 +186,16 @@ TEST_CASE("socket send recv message_t", "[socket]")
 
     zmq::message_t smsg(size_t{10});
     const auto res_send = s2.send(smsg, zmq::send_flags::none);
-    CHECK(res_send.success);
-    CHECK(res_send.size == 10);
+    CHECK(res_send);
+    CHECK(*res_send == 10);
     CHECK(smsg.size() == 0);
 
     zmq::message_t rmsg;
     const auto res = s.recv(rmsg);
-    CHECK(res.success);
-    CHECK(res.size == 10);
-    CHECK(rmsg.size() == res.size);
+    CHECK(res);
+    CHECK(*res == 10);
+    CHECK(res.value() == 10);
+    CHECK(rmsg.size() == *res);
 }
 
 TEST_CASE("socket recv dontwait", "[socket]")
@@ -207,13 +207,12 @@ TEST_CASE("socket recv dontwait", "[socket]")
     std::vector<char> buf(4);
     constexpr auto flags = zmq::recv_flags::none | zmq::recv_flags::dontwait;
     auto res = s.recv(zmq::buffer(buf), flags);
-    CHECK(!res.success);
-    CHECK(res.size == 0);
+    CHECK(!res);
 
     zmq::message_t msg;
     auto resm = s.recv(msg, flags);
-    CHECK(!resm.success);
-    CHECK(resm.size == 0);
+    CHECK(!resm);
+    CHECK_THROWS_AS(resm.value(), const std::exception &);
     CHECK(msg.size() == 0);
 }
 

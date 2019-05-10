@@ -131,7 +131,7 @@ class multipart_t
         while (more) {
             message_t message;
             #ifdef ZMQ_CPP11
-            if (!socket.recv(message, static_cast<recv_flags>(flags)).success)
+            if (!socket.recv(message, static_cast<recv_flags>(flags)))
                 return false;
             #else
             if (!socket.recv(&message, flags))
@@ -153,7 +153,7 @@ class multipart_t
             more = size() > 0;
             #ifdef ZMQ_CPP11
             if (!socket.send(message,
-                             static_cast<send_flags>((more ? ZMQ_SNDMORE : 0) | flags)).success)
+                             static_cast<send_flags>((more ? ZMQ_SNDMORE : 0) | flags)))
                 return false;
             #else
             if (!socket.send(message, (more ? ZMQ_SNDMORE : 0) | flags))

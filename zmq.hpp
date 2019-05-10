@@ -72,16 +72,21 @@
 #include <cassert>
 #include <cstring>
 
-#ifdef ZMQ_CPP11
-#include <array>
-#endif
 #include <algorithm>
 #include <exception>
 #include <iomanip>
-#include <iterator>
 #include <sstream>
 #include <string>
 #include <vector>
+#ifdef ZMQ_CPP11
+#include <array>
+#include <chrono>
+#include <tuple>
+#include <memory>
+#endif
+#ifdef ZMQ_CPP17
+#include <optional>
+#endif
 
 /*  Version macros for compile-time API version detection                     */
 #define CPPZMQ_VERSION_MAJOR 4
@@ -91,12 +96,6 @@
 #define CPPZMQ_VERSION                                                              \
     ZMQ_MAKE_VERSION(CPPZMQ_VERSION_MAJOR, CPPZMQ_VERSION_MINOR,                    \
                      CPPZMQ_VERSION_PATCH)
-
-#ifdef ZMQ_CPP11
-#include <chrono>
-#include <tuple>
-#include <memory>
-#endif
 
 //  Detect whether the compiler supports C++11 rvalue references.
 #if (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 2))   \
@@ -621,23 +620,11 @@ inline void swap(context_t &a, context_t &b) ZMQ_NOTHROW {
 }
 
 #ifdef ZMQ_CPP11
-struct send_result
-{
-    size_t size;    // message size in bytes
-    bool success;
-};
 
-struct recv_result
-{
-    size_t size;    // message size in bytes
-    bool success;
-};
-
-struct recv_buffer_result
+struct recv_buffer_size
 {
     size_t size;    // number of bytes written to buffer
     size_t untruncated_size;  // untruncated message size in bytes
-    bool success;
 
     ZMQ_NODISCARD bool truncated() const noexcept
     {
@@ -647,6 +634,71 @@ struct recv_buffer_result
 
 namespace detail
 {
+
+#ifdef ZMQ_CPP17
+using send_result_t = std::optional<size_t>;
+using recv_result_t = std::optional<size_t>;
+using recv_buffer_result_t = std::optional<recv_buffer_size>;
+#else
+// A C++11 type emulating the most basic
+// operations of std::optional for trivial types
+template<class T> class trivial_optional
+{
+  public:
+    static_assert(std::is_trivial<T>::value, "T must be trivial");
+    using value_type = T;
+
+    trivial_optional() = default;
+    trivial_optional(T value) noexcept : _value(value), _has_value(true) {}
+
+    const T *operator->() const noexcept
+    {
+        assert(_has_value);
+        return &_value;
+    }
+    T *operator->() noexcept
+    {
+        assert(_has_value);
+        return &_value;
+    }
+
+    const T &operator*() const noexcept
+    {
+        assert(_has_value);
+        return _value;
+    }
+    T &operator*() noexcept
+    {
+        assert(_has_value);
+        return _value;
+    }
+
+    T &value()
+    {
+        if (!_has_value)
+            throw std::exception();
+        return _value;
+    }
+    const T &value() const
+    {
+        if (!_has_value)
+            throw std::exception();
+        return _value;
+    }
+
+    explicit operator bool() const noexcept { return _has_value; }
+    bool has_value() const noexcept { return _has_value; }
+
+  private:
+    T _value{};
+    bool _has_value{false};
+};
+
+using send_result_t = trivial_optional<size_t>;
+using recv_result_t = trivial_optional<size_t>;
+using recv_buffer_result_t = trivial_optional<recv_buffer_size>;
+#endif
+
 template<class T>
 constexpr T enum_bit_or(T a, T b) noexcept
 {
@@ -1111,7 +1163,7 @@ public:
               int flags_ = 0) // default until removed
     {
         #ifdef ZMQ_CPP11
-        return send(msg_, static_cast<send_flags>(flags_)).success;
+        return send(msg_, static_cast<send_flags>(flags_)).has_value();
         #else
         return send(msg_, flags_);
         #endif
@@ -1119,28 +1171,28 @@ public:
 #endif
 
 #ifdef ZMQ_CPP11
-    send_result send(const_buffer buf, send_flags flags = send_flags::none)
+    detail::send_result_t send(const_buffer buf, send_flags flags = send_flags::none)
     {
         const int nbytes =
           zmq_send(_handle, buf.data(), buf.size(), static_cast<int>(flags));
         if (nbytes >= 0)
-            return {static_cast<size_t>(nbytes), true};
+            return static_cast<size_t>(nbytes);
         if (zmq_errno() == EAGAIN)
-            return {size_t{0}, false};
+            return {};
         throw error_t();
     }
 
-    send_result send(message_t &msg, send_flags flags)
+    detail::send_result_t send(message_t &msg, send_flags flags)
     {
         int nbytes = zmq_msg_send(msg.handle(), _handle, static_cast<int>(flags));
         if (nbytes >= 0)
-            return {static_cast<size_t>(nbytes), true};
+            return static_cast<size_t>(nbytes);
         if (zmq_errno() == EAGAIN)
-            return {size_t{0}, false};
+            return {};
         throw error_t();
     }
 
-    send_result send(message_t &&msg, send_flags flags)
+    detail::send_result_t send(message_t &&msg, send_flags flags)
     {
         return send(msg, flags);
     }
@@ -1177,27 +1229,29 @@ public:
     }
 
 #ifdef ZMQ_CPP11
-    recv_buffer_result recv(mutable_buffer buf, recv_flags flags = recv_flags::none)
+    detail::recv_buffer_result_t recv(mutable_buffer buf,
+                                      recv_flags flags = recv_flags::none)
     {
         const int nbytes =
           zmq_recv(_handle, buf.data(), buf.size(), static_cast<int>(flags));
-        if (nbytes >= 0)
-            return {(std::min)(static_cast<size_t>(nbytes), buf.size()),
-                    static_cast<size_t>(nbytes), true};
+        if (nbytes >= 0) {
+            return recv_buffer_size{(std::min)(static_cast<size_t>(nbytes), buf.size()),
+                                 static_cast<size_t>(nbytes)};
+        }
         if (zmq_errno() == EAGAIN)
-            return {size_t{0}, size_t{0}, false};
+            return {};
         throw error_t();
     }
 
-    recv_result recv(message_t &msg, recv_flags flags = recv_flags::none)
+    detail::recv_result_t recv(message_t &msg, recv_flags flags = recv_flags::none)
     {
         const int nbytes = zmq_msg_recv(msg.handle(), _handle, static_cast<int>(flags));
         if (nbytes >= 0) {
             assert(msg.size() == static_cast<size_t>(nbytes));
-            return {static_cast<size_t>(nbytes), true};
+            return static_cast<size_t>(nbytes);
         }
         if (zmq_errno() == EAGAIN)
-            return {size_t{0}, false};
+            return {};
         throw error_t();
     }
 #endif
