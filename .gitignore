@@ -2,4 +2,4 @@
 *.swp
 
 # Build directory
-build/
+*build/
