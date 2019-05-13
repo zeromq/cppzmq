@@ -248,7 +248,7 @@ class message_t
             throw error_t();
     }
 
-    template<typename T> message_t(T first, T last) : msg()
+    template<typename T> message_t(T first, T last)
     {
         typedef typename std::iterator_traits<T>::value_type value_t;
 
