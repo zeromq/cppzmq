@@ -75,10 +75,18 @@
 #include <algorithm>
 #include <exception>
 #include <iomanip>
-#include <iterator>
 #include <sstream>
 #include <string>
 #include <vector>
+#ifdef ZMQ_CPP11
+#include <array>
+#include <chrono>
+#include <tuple>
+#include <memory>
+#endif
+#ifdef ZMQ_CPP17
+#include <optional>
+#endif
 
 /*  Version macros for compile-time API version detection                     */
 #define CPPZMQ_VERSION_MAJOR 4
@@ -88,12 +96,6 @@
 #define CPPZMQ_VERSION                                                              \
     ZMQ_MAKE_VERSION(CPPZMQ_VERSION_MAJOR, CPPZMQ_VERSION_MINOR,                    \
                      CPPZMQ_VERSION_PATCH)
-
-#ifdef ZMQ_CPP11
-#include <chrono>
-#include <tuple>
-#include <memory>
-#endif
 
 //  Detect whether the compiler supports C++11 rvalue references.
 #if (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 2))   \
@@ -276,6 +278,8 @@ class message_t
     }
 
 #if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11)
+    // TODO: this function is too greedy, must add
+    // SFINAE for begin and end support.
     template<typename T>
     explicit message_t(const T &msg_) : message_t(std::begin(msg_), std::end(msg_))
     {
@@ -612,8 +616,438 @@ inline void swap(context_t &a, context_t &b) ZMQ_NOTHROW {
     a.swap(b);
 }
 
+#ifdef ZMQ_CPP11
+
+struct recv_buffer_size
+{
+    size_t size;    // number of bytes written to buffer
+    size_t untruncated_size;  // untruncated message size in bytes
+
+    ZMQ_NODISCARD bool truncated() const noexcept
+    {
+        return size != untruncated_size;
+    }
+};
+
 namespace detail
 {
+
+#ifdef ZMQ_CPP17
+using send_result_t = std::optional<size_t>;
+using recv_result_t = std::optional<size_t>;
+using recv_buffer_result_t = std::optional<recv_buffer_size>;
+#else
+// A C++11 type emulating the most basic
+// operations of std::optional for trivial types
+template<class T> class trivial_optional
+{
+  public:
+    static_assert(std::is_trivial<T>::value, "T must be trivial");
+    using value_type = T;
+
+    trivial_optional() = default;
+    trivial_optional(T value) noexcept : _value(value), _has_value(true) {}
+
+    const T *operator->() const noexcept
+    {
+        assert(_has_value);
+        return &_value;
+    }
+    T *operator->() noexcept
+    {
+        assert(_has_value);
+        return &_value;
+    }
+
+    const T &operator*() const noexcept
+    {
+        assert(_has_value);
+        return _value;
+    }
+    T &operator*() noexcept
+    {
+        assert(_has_value);
+        return _value;
+    }
+
+    T &value()
+    {
+        if (!_has_value)
+            throw std::exception();
+        return _value;
+    }
+    const T &value() const
+    {
+        if (!_has_value)
+            throw std::exception();
+        return _value;
+    }
+
+    explicit operator bool() const noexcept { return _has_value; }
+    bool has_value() const noexcept { return _has_value; }
+
+  private:
+    T _value{};
+    bool _has_value{false};
+};
+
+using send_result_t = trivial_optional<size_t>;
+using recv_result_t = trivial_optional<size_t>;
+using recv_buffer_result_t = trivial_optional<recv_buffer_size>;
+#endif
+
+template<class T>
+constexpr T enum_bit_or(T a, T b) noexcept
+{
+    static_assert(std::is_enum<T>::value, "must be enum");
+    using U = typename std::underlying_type<T>::type;
+    return static_cast<T>(static_cast<U>(a) | static_cast<U>(b));
+}
+template<class T>
+constexpr T enum_bit_and(T a, T b) noexcept
+{
+    static_assert(std::is_enum<T>::value, "must be enum");
+    using U = typename std::underlying_type<T>::type;
+    return static_cast<T>(static_cast<U>(a) & static_cast<U>(b));
+}
+template<class T>
+constexpr T enum_bit_xor(T a, T b) noexcept
+{
+    static_assert(std::is_enum<T>::value, "must be enum");
+    using U = typename std::underlying_type<T>::type;
+    return static_cast<T>(static_cast<U>(a) ^ static_cast<U>(b));
+}
+template<class T>
+constexpr T enum_bit_not(T a) noexcept
+{
+    static_assert(std::is_enum<T>::value, "must be enum");
+    using U = typename std::underlying_type<T>::type;
+    return static_cast<T>(~static_cast<U>(a));
+}
+} // namespace detail
+
+// partially satisfies named requirement BitmaskType
+enum class send_flags : int
+{
+    none = 0,
+    dontwait = ZMQ_DONTWAIT,
+    sndmore = ZMQ_SNDMORE
+};
+
+constexpr send_flags operator|(send_flags a, send_flags b) noexcept
+{
+    return detail::enum_bit_or(a, b);
+}
+constexpr send_flags operator&(send_flags a, send_flags b) noexcept
+{
+    return detail::enum_bit_and(a, b);
+}
+constexpr send_flags operator^(send_flags a, send_flags b) noexcept
+{
+    return detail::enum_bit_xor(a, b);
+}
+constexpr send_flags operator~(send_flags a) noexcept
+{
+    return detail::enum_bit_not(a);
+}
+
+// partially satisfies named requirement BitmaskType
+enum class recv_flags : int
+{
+    none = 0,
+    dontwait = ZMQ_DONTWAIT
+};
+
+constexpr recv_flags operator|(recv_flags a, recv_flags b) noexcept
+{
+    return detail::enum_bit_or(a, b);
+}
+constexpr recv_flags operator&(recv_flags a, recv_flags b) noexcept
+{
+    return detail::enum_bit_and(a, b);
+}
+constexpr recv_flags operator^(recv_flags a, recv_flags b) noexcept
+{
+    return detail::enum_bit_xor(a, b);
+}
+constexpr recv_flags operator~(recv_flags a) noexcept
+{
+    return detail::enum_bit_not(a);
+}
+
+
+// mutable_buffer, const_buffer and buffer are based on
+// the Networking TS specification, draft:
+// http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/n4771.pdf
+
+class mutable_buffer
+{
+  public:
+    constexpr mutable_buffer() noexcept : _data(nullptr), _size(0) {}
+    constexpr mutable_buffer(void *p, size_t n) noexcept : _data(p), _size(n)
+    {
+#ifdef ZMQ_CPP14
+        assert(p != nullptr || n == 0);
+#endif
+    }
+
+    constexpr void *data() const noexcept { return _data; }
+    constexpr size_t size() const noexcept { return _size; }
+    mutable_buffer &operator+=(size_t n) noexcept
+    {
+        // (std::min) is a workaround for when a min macro is defined
+        const auto shift = (std::min)(n, _size);
+        _data = static_cast<char *>(_data) + shift;
+        _size -= shift;
+        return *this;
+    }
+
+  private:
+    void *_data;
+    size_t _size;
+};
+
+inline mutable_buffer operator+(const mutable_buffer &mb, size_t n) noexcept
+{
+    return mutable_buffer(static_cast<char *>(mb.data()) + (std::min)(n, mb.size()),
+                          mb.size() - (std::min)(n, mb.size()));
+}
+inline mutable_buffer operator+(size_t n, const mutable_buffer &mb) noexcept
+{
+    return mb + n;
+}
+
+class const_buffer
+{
+  public:
+    constexpr const_buffer() noexcept : _data(nullptr), _size(0) {}
+    constexpr const_buffer(const void *p, size_t n) noexcept : _data(p), _size(n)
+    {
+#ifdef ZMQ_CPP14
+        assert(p != nullptr || n == 0);
+#endif
+    }
+    constexpr const_buffer(const mutable_buffer &mb) noexcept :
+        _data(mb.data()),
+        _size(mb.size())
+    {
+    }
+
+    constexpr const void *data() const noexcept { return _data; }
+    constexpr size_t size() const noexcept { return _size; }
+    const_buffer &operator+=(size_t n) noexcept
+    {
+        const auto shift = (std::min)(n, _size);
+        _data = static_cast<const char *>(_data) + shift;
+        _size -= shift;
+        return *this;
+    }
+
+  private:
+    const void *_data;
+    size_t _size;
+};
+
+inline const_buffer operator+(const const_buffer &cb, size_t n) noexcept
+{
+    return const_buffer(static_cast<const char *>(cb.data())
+                          + (std::min)(n, cb.size()),
+                        cb.size() - (std::min)(n, cb.size()));
+}
+inline const_buffer operator+(size_t n, const const_buffer &cb) noexcept
+{
+    return cb + n;
+}
+
+// buffer creation
+
+constexpr mutable_buffer buffer(void* p, size_t n) noexcept
+{
+    return mutable_buffer(p, n);
+}
+constexpr const_buffer buffer(const void* p, size_t n) noexcept
+{
+    return const_buffer(p, n);
+}
+constexpr mutable_buffer buffer(const mutable_buffer& mb) noexcept
+{
+    return mb;
+}
+inline mutable_buffer buffer(const mutable_buffer& mb, size_t n) noexcept
+{
+    return mutable_buffer(mb.data(), (std::min)(mb.size(), n));
+}
+constexpr const_buffer buffer(const const_buffer& cb) noexcept
+{
+    return cb;
+}
+inline const_buffer buffer(const const_buffer& cb, size_t n) noexcept
+{
+    return const_buffer(cb.data(), (std::min)(cb.size(), n));
+}
+
+namespace detail
+{
+template<class T> struct is_pod_like
+{
+    // NOTE: The networking draft N4771 section 16.11 requires
+    // T in the buffer functions below to be
+    // trivially copyable OR standard layout.
+    // Here we decide to be conservative and require both.
+    static constexpr bool value =
+      std::is_trivially_copyable<T>::value && std::is_standard_layout<T>::value;
+};
+
+template<class C> constexpr auto seq_size(const C &c) noexcept -> decltype(c.size())
+{
+    return c.size();
+}
+template<class T, size_t N>
+constexpr size_t seq_size(const T (&/*array*/)[N]) noexcept
+{
+    return N;
+}
+
+template<class Seq>
+auto buffer_contiguous_sequence(Seq &&seq) noexcept
+  -> decltype(buffer(std::addressof(*std::begin(seq)), size_t{}))
+{
+    using T = typename std::remove_cv<
+      typename std::remove_reference<decltype(*std::begin(seq))>::type>::type;
+    static_assert(detail::is_pod_like<T>::value, "T must be POD");
+
+    const auto size = seq_size(seq);
+    return buffer(size != 0u ? std::addressof(*std::begin(seq)) : nullptr,
+                  size * sizeof(T));
+}
+template<class Seq>
+auto buffer_contiguous_sequence(Seq &&seq, size_t n_bytes) noexcept
+  -> decltype(buffer_contiguous_sequence(seq))
+{
+    using T = typename std::remove_cv<
+      typename std::remove_reference<decltype(*std::begin(seq))>::type>::type;
+    static_assert(detail::is_pod_like<T>::value, "T must be POD");
+
+    const auto size = seq_size(seq);
+    return buffer(size != 0u ? std::addressof(*std::begin(seq)) : nullptr,
+                  (std::min)(size * sizeof(T), n_bytes));
+}
+
+} // namespace detail
+
+// C array
+template<class T, size_t N> mutable_buffer buffer(T (&data)[N]) noexcept
+{
+    return detail::buffer_contiguous_sequence(data);
+}
+template<class T, size_t N>
+mutable_buffer buffer(T (&data)[N], size_t n_bytes) noexcept
+{
+    return detail::buffer_contiguous_sequence(data, n_bytes);
+}
+template<class T, size_t N> const_buffer buffer(const T (&data)[N]) noexcept
+{
+    return detail::buffer_contiguous_sequence(data);
+}
+template<class T, size_t N>
+const_buffer buffer(const T (&data)[N], size_t n_bytes) noexcept
+{
+    return detail::buffer_contiguous_sequence(data, n_bytes);
+}
+// std::array
+template<class T, size_t N> mutable_buffer buffer(std::array<T, N> &data) noexcept
+{
+    return detail::buffer_contiguous_sequence(data);
+}
+template<class T, size_t N>
+mutable_buffer buffer(std::array<T, N> &data, size_t n_bytes) noexcept
+{
+    return detail::buffer_contiguous_sequence(data, n_bytes);
+}
+template<class T, size_t N>
+const_buffer buffer(std::array<const T, N> &data) noexcept
+{
+    return detail::buffer_contiguous_sequence(data);
+}
+template<class T, size_t N>
+const_buffer buffer(std::array<const T, N> &data, size_t n_bytes) noexcept
+{
+    return detail::buffer_contiguous_sequence(data, n_bytes);
+}
+template<class T, size_t N>
+const_buffer buffer(const std::array<T, N> &data) noexcept
+{
+    return detail::buffer_contiguous_sequence(data);
+}
+template<class T, size_t N>
+const_buffer buffer(const std::array<T, N> &data, size_t n_bytes) noexcept
+{
+    return detail::buffer_contiguous_sequence(data, n_bytes);
+}
+// std::vector
+template<class T, class Allocator>
+mutable_buffer buffer(std::vector<T, Allocator> &data) noexcept
+{
+    return detail::buffer_contiguous_sequence(data);
+}
+template<class T, class Allocator>
+mutable_buffer buffer(std::vector<T, Allocator> &data, size_t n_bytes) noexcept
+{
+    return detail::buffer_contiguous_sequence(data, n_bytes);
+}
+template<class T, class Allocator>
+const_buffer buffer(const std::vector<T, Allocator> &data) noexcept
+{
+    return detail::buffer_contiguous_sequence(data);
+}
+template<class T, class Allocator>
+const_buffer buffer(const std::vector<T, Allocator> &data, size_t n_bytes) noexcept
+{
+    return detail::buffer_contiguous_sequence(data, n_bytes);
+}
+// std::basic_string
+template<class T, class Traits, class Allocator>
+mutable_buffer buffer(std::basic_string<T, Traits, Allocator> &data) noexcept
+{
+    return detail::buffer_contiguous_sequence(data);
+}
+template<class T, class Traits, class Allocator>
+mutable_buffer buffer(std::basic_string<T, Traits, Allocator> &data,
+                      size_t n_bytes) noexcept
+{
+    return detail::buffer_contiguous_sequence(data, n_bytes);
+}
+template<class T, class Traits, class Allocator>
+const_buffer buffer(const std::basic_string<T, Traits, Allocator> &data) noexcept
+{
+    return detail::buffer_contiguous_sequence(data);
+}
+template<class T, class Traits, class Allocator>
+const_buffer buffer(const std::basic_string<T, Traits, Allocator> &data,
+                    size_t n_bytes) noexcept
+{
+    return detail::buffer_contiguous_sequence(data, n_bytes);
+}
+
+#ifdef ZMQ_CPP17
+// std::basic_string_view
+template<class T, class Traits>
+const_buffer buffer(std::basic_string_view<T, Traits> data) noexcept
+{
+    return detail::buffer_contiguous_sequence(data);
+}
+template<class T, class Traits>
+const_buffer buffer(std::basic_string_view<T, Traits> data, size_t n_bytes) noexcept
+{
+    return detail::buffer_contiguous_sequence(data, n_bytes);
+}
+#endif
+
+#endif // ZMQ_CPP11
+
+namespace detail
+{
+
 class socket_base
 {
 public:
@@ -685,6 +1119,9 @@ public:
 
     bool connected() const ZMQ_NOTHROW { return (_handle != ZMQ_NULLPTR); }
 
+#ifdef ZMQ_CPP11
+    ZMQ_DEPRECATED("from 4.3.1, use send taking a const_buffer and send_flags")
+#endif
     size_t send(const void *buf_, size_t len_, int flags_ = 0)
     {
         int nbytes = zmq_send(_handle, buf_, len_, flags_);
@@ -695,7 +1132,11 @@ public:
         throw error_t();
     }
 
-    bool send(message_t &msg_, int flags_ = 0)
+#ifdef ZMQ_CPP11
+    ZMQ_DEPRECATED("from 4.3.1, use send taking message_t and send_flags")
+#endif
+    bool send(message_t &msg_,
+              int flags_ = 0) // default until removed
     {
         int nbytes = zmq_msg_send(msg_.handle(), _handle, flags_);
         if (nbytes >= 0)
@@ -712,9 +1153,51 @@ public:
     }
 
 #ifdef ZMQ_HAS_RVALUE_REFS
-    bool send(message_t &&msg_, int flags_ = 0) { return send(msg_, flags_); }
+#ifdef ZMQ_CPP11
+    ZMQ_DEPRECATED("from 4.3.1, use send taking message_t and send_flags")
+#endif
+    bool send(message_t &&msg_,
+              int flags_ = 0) // default until removed
+    {
+        #ifdef ZMQ_CPP11
+        return send(msg_, static_cast<send_flags>(flags_)).has_value();
+        #else
+        return send(msg_, flags_);
+        #endif
+    }
 #endif
 
+#ifdef ZMQ_CPP11
+    detail::send_result_t send(const_buffer buf, send_flags flags = send_flags::none)
+    {
+        const int nbytes =
+          zmq_send(_handle, buf.data(), buf.size(), static_cast<int>(flags));
+        if (nbytes >= 0)
+            return static_cast<size_t>(nbytes);
+        if (zmq_errno() == EAGAIN)
+            return {};
+        throw error_t();
+    }
+
+    detail::send_result_t send(message_t &msg, send_flags flags)
+    {
+        int nbytes = zmq_msg_send(msg.handle(), _handle, static_cast<int>(flags));
+        if (nbytes >= 0)
+            return static_cast<size_t>(nbytes);
+        if (zmq_errno() == EAGAIN)
+            return {};
+        throw error_t();
+    }
+
+    detail::send_result_t send(message_t &&msg, send_flags flags)
+    {
+        return send(msg, flags);
+    }
+#endif
+
+#ifdef ZMQ_CPP11
+    ZMQ_DEPRECATED("from 4.3.1, use recv taking a mutable_buffer and recv_flags")
+#endif
     size_t recv(void *buf_, size_t len_, int flags_ = 0)
     {
         int nbytes = zmq_recv(_handle, buf_, len_, flags_);
@@ -725,7 +1208,14 @@ public:
         throw error_t();
     }
 
-    bool recv(message_t *msg_, int flags_ = 0)
+#ifdef ZMQ_CPP11
+    ZMQ_DEPRECATED("from 4.3.1, use recv taking a reference to message_t and recv_flags")
+#endif
+    bool recv(message_t *msg_, int flags_
+#ifndef ZMQ_CPP11
+              = 0
+#endif
+    )
     {
         int nbytes = zmq_msg_recv(msg_->handle(), _handle, flags_);
         if (nbytes >= 0)
@@ -734,6 +1224,34 @@ public:
             return false;
         throw error_t();
     }
+
+#ifdef ZMQ_CPP11
+    detail::recv_buffer_result_t recv(mutable_buffer buf,
+                                      recv_flags flags = recv_flags::none)
+    {
+        const int nbytes =
+          zmq_recv(_handle, buf.data(), buf.size(), static_cast<int>(flags));
+        if (nbytes >= 0) {
+            return recv_buffer_size{(std::min)(static_cast<size_t>(nbytes), buf.size()),
+                                 static_cast<size_t>(nbytes)};
+        }
+        if (zmq_errno() == EAGAIN)
+            return {};
+        throw error_t();
+    }
+
+    detail::recv_result_t recv(message_t &msg, recv_flags flags = recv_flags::none)
+    {
+        const int nbytes = zmq_msg_recv(msg.handle(), _handle, static_cast<int>(flags));
+        if (nbytes >= 0) {
+            assert(msg.size() == static_cast<size_t>(nbytes));
+            return static_cast<size_t>(nbytes);
+        }
+        if (zmq_errno() == EAGAIN)
+            return {};
+        throw error_t();
+    }
+#endif
 
 #if defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 0)
     void join(const char* group)

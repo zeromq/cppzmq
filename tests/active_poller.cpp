@@ -157,7 +157,7 @@ TEST_CASE("poll basic", "[active_poller]")
 {
     server_client_setup s;
 
-    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}));
+    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}, zmq::send_flags::none));
 
     zmq::active_poller_t active_poller;
     bool message_received = false;
@@ -184,7 +184,7 @@ TEST_CASE("client server", "[active_poller]")
     zmq::active_poller_t::handler_t handler = [&](short e) {
         if (0 != (e & ZMQ_POLLIN)) {
             zmq::message_t zmq_msg;
-            CHECK_NOTHROW(s.server.recv(&zmq_msg)); // get message
+            CHECK_NOTHROW(s.server.recv(zmq_msg)); // get message
             std::string recv_msg(zmq_msg.data<char>(), zmq_msg.size());
             CHECK(send_msg == recv_msg);
         } else if (0 != (e & ~ZMQ_POLLOUT)) {
@@ -197,7 +197,7 @@ TEST_CASE("client server", "[active_poller]")
     CHECK_NOTHROW(active_poller.add(s.server, ZMQ_POLLIN, handler));
 
     // client sends message
-    CHECK_NOTHROW(s.client.send(zmq::message_t{send_msg}));
+    CHECK_NOTHROW(s.client.send(zmq::message_t{send_msg}, zmq::send_flags::none));
 
     CHECK(1 == active_poller.wait(std::chrono::milliseconds{-1}));
     CHECK(events == ZMQ_POLLIN);
@@ -236,7 +236,7 @@ TEST_CASE("remove invalid socket throws", "[active_poller]")
 TEST_CASE("wait on added empty handler", "[active_poller]")
 {
     server_client_setup s;
-    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}));
+    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}, zmq::send_flags::none));
     zmq::active_poller_t active_poller;
     zmq::active_poller_t::handler_t handler;
     CHECK_NOTHROW(active_poller.add(s.server, ZMQ_POLLIN, handler));
@@ -291,7 +291,7 @@ TEST_CASE("poll client server", "[active_poller]")
     CHECK_NOTHROW(active_poller.add(s.server, ZMQ_POLLIN, s.handler));
 
     // client sends message
-    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}));
+    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}, zmq::send_flags::none));
 
     // wait for message and verify events
     CHECK_NOTHROW(active_poller.wait(std::chrono::milliseconds{500}));
@@ -316,7 +316,7 @@ TEST_CASE("wait one return", "[active_poller]")
       active_poller.add(s.server, ZMQ_POLLIN, [&count](short) { ++count; }));
 
     // client sends message
-    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}));
+    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}, zmq::send_flags::none));
 
     // wait for message and verify events
     CHECK(1 == active_poller.wait(std::chrono::milliseconds{500}));
@@ -326,7 +326,7 @@ TEST_CASE("wait one return", "[active_poller]")
 TEST_CASE("wait on move constructed active_poller", "[active_poller]")
 {
     server_client_setup s;
-    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}));
+    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}, zmq::send_flags::none));
     zmq::active_poller_t a;
     zmq::active_poller_t::handler_t handler;
     CHECK_NOTHROW(a.add(s.server, ZMQ_POLLIN, handler));
@@ -340,7 +340,7 @@ TEST_CASE("wait on move constructed active_poller", "[active_poller]")
 TEST_CASE("wait on move assigned active_poller", "[active_poller]")
 {
     server_client_setup s;
-    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}));
+    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}, zmq::send_flags::none));
     zmq::active_poller_t a;
     zmq::active_poller_t::handler_t handler;
     CHECK_NOTHROW(a.add(s.server, ZMQ_POLLIN, handler));
@@ -361,14 +361,14 @@ TEST_CASE("received on move constructed active_poller", "[active_poller]")
     zmq::active_poller_t a;
     CHECK_NOTHROW(a.add(s.server, ZMQ_POLLIN, [&count](short) { ++count; }));
     // client sends message
-    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}));
+    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}, zmq::send_flags::none));
     // wait for message and verify it is received
     CHECK(1 == a.wait(std::chrono::milliseconds{500}));
     CHECK(1u == count);
     // Move construct active_poller b
     zmq::active_poller_t b{std::move(a)};
     // client sends message again
-    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}));
+    CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}, zmq::send_flags::none));
     // wait for message and verify it is received
     CHECK(1 == b.wait(std::chrono::milliseconds{500}));
     CHECK(2u == count);
@@ -399,7 +399,7 @@ TEST_CASE("remove from handler", "[active_poller]")
     CHECK(ITER_NO == active_poller.size());
     // Clients send messages
     for (auto &s : setup_list) {
-        CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}));
+        CHECK_NOTHROW(s.client.send(zmq::message_t{"Hi"}, zmq::send_flags::none));
     }
 
     // Wait for all servers to receive a message

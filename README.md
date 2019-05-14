@@ -39,6 +39,21 @@ Supported platforms
    - Any platform supported by libzmq that provides a sufficiently recent gcc (4.8.1 or newer) or clang (3.3 or newer)
    - Visual Studio 2012+ x86/x64
 
+Examples
+========
+```c++
+#include <string>
+#include <zmq.hpp>
+int main()
+{
+   zmq::context_t ctx;
+   zmq::socket_t sock(ctx, zmq::socket_type::push);
+   sock.bind("inproc://test");
+   const std::string_view m = "Hello, world";
+   sock.send(zmq::buffer(m), zmq::send_flags::dontwait);
+}
+```
+
 Contribution policy
 ===================
 
@@ -74,5 +89,3 @@ cpp zmq (which will also include libzmq for you).
 find_package(cppzmq)
 target_link_libraries(*Your Project Name* cppzmq)
 ```
-
-
