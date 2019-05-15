@@ -248,12 +248,13 @@ class message_t
             throw error_t();
     }
 
-    template<typename T> message_t(T first, T last)
+    template<class ForwardIter> message_t(ForwardIter first, ForwardIter last)
     {
-        typedef typename std::iterator_traits<T>::value_type value_t;
+        typedef typename std::iterator_traits<ForwardIter>::value_type value_t;
 
         assert(std::distance(first, last) >= 0);
-        size_t const size_ = static_cast<size_t>(std::distance(first, last)) * sizeof(value_t);
+        size_t const size_ =
+          static_cast<size_t>(std::distance(first, last)) * sizeof(value_t);
         int const rc = zmq_msg_init_size(&msg, size_);
         if (rc != 0)
             throw error_t();
