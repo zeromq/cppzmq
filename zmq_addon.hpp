@@ -382,15 +382,15 @@ class active_poller_t
     active_poller_t(active_poller_t &&src) = default;
     active_poller_t &operator=(active_poller_t &&src) = default;
 
-    using handler_t = std::function<void(short)>;
+    using handler_type = std::function<void(event_flags)>;
 
-    void add(zmq::socket_ref socket, short events, handler_t handler)
+    void add(zmq::socket_ref socket, event_flags events, handler_type handler)
     {
         auto it = decltype(handlers)::iterator{};
         auto inserted = bool{};
         std::tie(it, inserted) =
           handlers.emplace(socket,
-                           std::make_shared<handler_t>(std::move(handler)));
+                           std::make_shared<handler_type>(std::move(handler)));
         try {
             base_poller.add(socket, events,
                             inserted && *(it->second) ? it->second.get() : nullptr);
@@ -412,7 +412,7 @@ class active_poller_t
         need_rebuild = true;
     }
 
-    void modify(zmq::socket_ref socket, short events)
+    void modify(zmq::socket_ref socket, event_flags events)
     {
         base_poller.modify(socket, events);
     }
@@ -429,26 +429,25 @@ class active_poller_t
             need_rebuild = false;
         }
         const auto count = base_poller.wait_all(poller_events, timeout);
-        std::for_each(poller_events.begin(), poller_events.begin() + count,
-                      [](zmq_poller_event_t &event) {
-                          if (event.user_data != NULL)
-                              (*reinterpret_cast<handler_t *>(event.user_data))(
-                                event.events);
+        std::for_each(poller_events.begin(), poller_events.begin() + static_cast<ptrdiff_t>(count),
+                      [](decltype(base_poller)::event_type &event) {
+                          if (event.user_data != nullptr)
+                              (*event.user_data)(event.events);
                       });
         return count;
     }
 
-    bool empty() const { return handlers.empty(); }
+    ZMQ_NODISCARD bool empty() const noexcept { return handlers.empty(); }
 
-    size_t size() const { return handlers.size(); }
+    size_t size() const noexcept { return handlers.size(); }
 
   private:
     bool need_rebuild{false};
 
-    poller_t<handler_t> base_poller{};
-    std::unordered_map<socket_ref, std::shared_ptr<handler_t>> handlers{};
-    std::vector<zmq_poller_event_t> poller_events{};
-    std::vector<std::shared_ptr<handler_t>> poller_handlers{};
+    poller_t<handler_type> base_poller{};
+    std::unordered_map<socket_ref, std::shared_ptr<handler_type>> handlers{};
+    std::vector<decltype(base_poller)::event_type> poller_events{};
+    std::vector<std::shared_ptr<handler_type>> poller_handlers{};
 };     // class active_poller_t
 #endif //  defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && defined(ZMQ_HAVE_POLLER)
 
