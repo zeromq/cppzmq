@@ -184,7 +184,7 @@ TEST_CASE("socket send recv message_t", "[socket]")
     s2.bind("inproc://test");
     s.connect("inproc://test");
 
-    zmq::message_t smsg(size_t{10});
+    zmq::message_t smsg(10);
     const auto res_send = s2.send(smsg, zmq::send_flags::none);
     CHECK(res_send);
     CHECK(*res_send == 10);

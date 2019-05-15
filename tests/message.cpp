@@ -13,6 +13,17 @@ static_assert(std::is_nothrow_swappable<zmq::message_t>::value,
               "message_t should be nothrow swappable");
 #endif
 
+#ifdef ZMQ_CPP11
+TEST_CASE("range SFINAE", "[message]")
+{
+    CHECK(!zmq::detail::is_range<int>::value);
+    CHECK(zmq::detail::is_range<std::string>::value);
+    CHECK(zmq::detail::is_range<std::string&>::value);
+    CHECK(zmq::detail::is_range<const std::string&>::value);
+    CHECK(zmq::detail::is_range<decltype("hello")>::value);
+}
+#endif
+
 TEST_CASE("message default constructed", "[message]")
 {
     const zmq::message_t message;
@@ -46,6 +57,12 @@ TEST_CASE("message constructor with iterators", "[message]")
     const zmq::message_t hi_msg(hi.begin(), hi.end());
     CHECK(2u == hi_msg.size());
     CHECK(0 == memcmp(data, hi_msg.data(), 2));
+}
+
+TEST_CASE("message constructor with size", "[message]")
+{
+    const zmq::message_t msg(5);
+    CHECK(msg.size() == 5);
 }
 
 TEST_CASE("message constructor with buffer and size", "[message]")

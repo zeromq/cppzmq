@@ -152,6 +152,39 @@ typedef struct
 
 namespace zmq
 {
+
+#ifdef ZMQ_CPP11
+namespace detail
+{
+template<class T> using void_t = void;
+
+template<class Iter>
+using iter_value_t = typename std::iterator_traits<Iter>::value_type;
+
+template<class Range>
+using range_iter_t = decltype(
+  std::begin(std::declval<typename std::remove_reference<Range>::type &>()));
+
+template<class Range>
+using range_value_t = iter_value_t<range_iter_t<Range>>;
+
+template<class T, class = void> struct is_range : std::false_type
+{
+};
+
+template<class T>
+struct is_range<
+  T,
+  void_t<decltype(
+    std::begin(std::declval<typename std::remove_reference<T>::type &>())
+    == std::end(std::declval<typename std::remove_reference<T>::type &>()))>>
+    : std::true_type
+{
+};
+
+} // namespace detail
+#endif
+
 typedef zmq_free_fn free_fn;
 typedef zmq_pollitem_t pollitem_t;
 
@@ -278,10 +311,12 @@ class message_t
     }
 
 #if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11)
-    // TODO: this function is too greedy, must add
-    // SFINAE for begin and end support.
-    template<typename T>
-    explicit message_t(const T &msg_) : message_t(std::begin(msg_), std::end(msg_))
+    template<class Range,
+             typename = typename std::enable_if<
+               detail::is_range<Range>::value
+               && std::is_trivially_copyable<detail::range_value_t<Range>>::value
+               && !std::is_same<Range, message_t>::value>::type>
+    explicit message_t(const Range &rng) : message_t(std::begin(rng), std::end(rng))
     {
     }
 #endif
