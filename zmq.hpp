@@ -310,7 +310,7 @@ class message_t
             throw error_t();
     }
 
-#if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11)
+#ifdef ZMQ_CPP11
     template<class Range,
              typename = typename std::enable_if<
                detail::is_range<Range>::value
