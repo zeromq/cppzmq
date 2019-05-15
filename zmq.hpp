@@ -1836,15 +1836,19 @@ enum class event_flags : short
 
 constexpr event_flags operator|(event_flags a, event_flags b) noexcept
 {
-    return static_cast<event_flags>(static_cast<short>(a) | static_cast<short>(b));
+    return detail::enum_bit_or(a, b);
 }
 constexpr event_flags operator&(event_flags a, event_flags b) noexcept
 {
-    return static_cast<event_flags>(static_cast<short>(a) & static_cast<short>(b));
+    return detail::enum_bit_and(a, b);
+}
+constexpr event_flags operator^(event_flags a, event_flags b) noexcept
+{
+    return detail::enum_bit_xor(a, b);
 }
 constexpr event_flags operator~(event_flags a) noexcept
 {
-    return static_cast<event_flags>(~static_cast<short>(a));
+    return detail::enum_bit_not(a);
 }
 
 struct no_user_data;
