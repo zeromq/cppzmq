@@ -1868,7 +1868,11 @@ template<typename T = no_user_data> class poller_t
   public:
     using event_type = poller_event<T>;
 
-    poller_t() = default;
+    poller_t() : poller_ptr(zmq_poller_new())
+    {
+        if (!poller_ptr)
+            throw error_t();
+    }
 
     template<
       typename Dummy = void,
@@ -1931,13 +1935,7 @@ template<typename T = no_user_data> class poller_t
         }
     };
 
-    std::unique_ptr<void, destroy_poller_t> poller_ptr{
-      []() {
-          auto poller_new = zmq_poller_new();
-          if (poller_new)
-              return poller_new;
-          throw error_t();
-      }()};
+    std::unique_ptr<void, destroy_poller_t> poller_ptr;
 
     void add_impl(zmq::socket_ref socket, event_flags events, T *user_data)
     {
