@@ -19,6 +19,17 @@ static_assert(!std::is_copy_constructible<zmq::poller_t<>>::value,
 static_assert(!std::is_copy_assignable<zmq::poller_t<>>::value,
               "poller_t should not be copy-assignable");
 
+TEST_CASE("event flags", "[poller]")
+{
+    CHECK((zmq::event_flags::pollin | zmq::event_flags::pollout)
+        == static_cast<zmq::event_flags>(ZMQ_POLLIN | ZMQ_POLLOUT));
+    CHECK((zmq::event_flags::pollin & zmq::event_flags::pollout)
+        == static_cast<zmq::event_flags>(ZMQ_POLLIN & ZMQ_POLLOUT));
+    CHECK((zmq::event_flags::pollin ^ zmq::event_flags::pollout)
+        == static_cast<zmq::event_flags>(ZMQ_POLLIN ^ ZMQ_POLLOUT));
+    CHECK(~zmq::event_flags::pollin == static_cast<zmq::event_flags>(~ZMQ_POLLIN));
+}
+
 TEST_CASE("poller create destroy", "[poller]")
 {
     zmq::poller_t<> a;
