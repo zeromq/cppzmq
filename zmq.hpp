@@ -1212,11 +1212,7 @@ public:
 #ifdef ZMQ_CPP11
     ZMQ_DEPRECATED("from 4.3.1, use recv taking a reference to message_t and recv_flags")
 #endif
-    bool recv(message_t *msg_, int flags_
-#ifndef ZMQ_CPP11
-              = 0
-#endif
-    )
+    bool recv(message_t *msg_, int flags_ = 0)
     {
         int nbytes = zmq_msg_recv(msg_->handle(), _handle, flags_);
         if (nbytes >= 0)
