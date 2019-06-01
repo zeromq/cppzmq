@@ -48,6 +48,12 @@ TEST_CASE("message constructor with iterators", "[message]")
     CHECK(0 == memcmp(data, hi_msg.data(), 2));
 }
 
+TEST_CASE("message constructor with size", "[message]")
+{
+    const zmq::message_t msg(5);
+    CHECK(msg.size() == 5);
+}
+
 TEST_CASE("message constructor with buffer and size", "[message]")
 {
     const std::string hi(data);

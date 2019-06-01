@@ -25,7 +25,8 @@ add_executable(
     poller.cpp
     active_poller.cpp
     multipart.cpp
-	monitor.cpp
+    monitor.cpp
+    utilities.cpp
 )
 
 add_dependencies(unit_tests catch)
