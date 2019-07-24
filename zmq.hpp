@@ -90,7 +90,7 @@
 
 /*  Version macros for compile-time API version detection                     */
 #define CPPZMQ_VERSION_MAJOR 4
-#define CPPZMQ_VERSION_MINOR 3
+#define CPPZMQ_VERSION_MINOR 4
 #define CPPZMQ_VERSION_PATCH 1
 
 #define CPPZMQ_VERSION                                                              \
