@@ -198,6 +198,25 @@ TEST_CASE("socket send recv message_t", "[socket]")
     CHECK(rmsg.size() == *res);
 }
 
+TEST_CASE("socket send recv message_t by pointer", "[socket]")
+{
+    zmq::context_t context;
+    zmq::socket_t s(context, zmq::socket_type::pair);
+    zmq::socket_t s2(context, zmq::socket_type::pair);
+    s2.bind("inproc://test");
+    s.connect("inproc://test");
+
+    zmq::message_t smsg(size_t{10});
+    const auto res_send = s2.send(smsg, zmq::send_flags::none);
+    CHECK(res_send);
+    CHECK(*res_send == 10);
+    CHECK(smsg.size() == 0);
+
+    zmq::message_t rmsg;
+    const bool res = s.recv(&rmsg);
+    CHECK(res);
+}
+
 TEST_CASE("socket recv dontwait", "[socket]")
 {
     zmq::context_t context;
