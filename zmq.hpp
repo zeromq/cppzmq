@@ -1146,10 +1146,19 @@ public:
         throw error_t();
     }
 
-    template<typename T> bool send(T first, T last, int flags_ = 0)
+    template<typename T>
+#ifdef ZMQ_CPP11
+    ZMQ_DEPRECATED("from 4.4.1, use send taking message_t or buffer (for contiguous ranges), and send_flags")
+#endif
+    bool send(T first, T last, int flags_ = 0)
     {
         zmq::message_t msg(first, last);
-        return send(msg, flags_);
+        int nbytes = zmq_msg_send(msg.handle(), _handle, flags_);
+        if (nbytes >= 0)
+            return true;
+        if (zmq_errno() == EAGAIN)
+            return false;
+        throw error_t();
     }
 
 #ifdef ZMQ_HAS_RVALUE_REFS
