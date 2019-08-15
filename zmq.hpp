@@ -30,7 +30,9 @@
 #if (defined(__cplusplus) && __cplusplus >= 201103L) || (defined(_MSC_VER) && _MSC_VER >= 1900)
     #define ZMQ_CPP11
 #endif
-#if (defined(__cplusplus) && __cplusplus >= 201402L) || (defined(_HAS_CXX14) && _HAS_CXX14 == 1)
+#if (defined(__cplusplus) && __cplusplus >= 201402L) || \
+    (defined(_HAS_CXX14) && _HAS_CXX14 == 1) || \
+    (defined(_HAS_CXX17) && _HAS_CXX17 == 1) // _HAS_CXX14 might not be defined when using C++17 on MSVC
     #define ZMQ_CPP14
 #endif
 #if (defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_HAS_CXX17) && _HAS_CXX17 == 1)
