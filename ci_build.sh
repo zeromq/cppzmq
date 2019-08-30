@@ -39,7 +39,8 @@ cppzmq_build() {
     pushd .
     CMAKE_PREFIX_PATH=${LIBZMQ} \
     cmake -H. -B${CPPZMQ} -DENABLE_DRAFTS=${ENABLE_DRAFTS} \
-                          -DCOVERAGE=${COVERAGE}
+                          -DCOVERAGE=${COVERAGE} \
+                          ${CMAKE_CPP_STD:-}
     cmake --build ${CPPZMQ} -- -j${JOBS}
     popd
 }

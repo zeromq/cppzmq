@@ -69,7 +69,7 @@ matrix:
           packages:
             - g++-4.9
       env:
-        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9" CMAKE_CPP_STD=-DCMAKE_CXX_STANDARD=11
 
     # GCC 7, draft enabled, latest libzmq (default)
     - os: linux
