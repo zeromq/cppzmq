@@ -544,7 +544,7 @@ class message_t
             while (size--) {
                 byte = *msg_data++;
 
-                is_ascii[1] = (byte >= 33 && byte < 127);
+                is_ascii[1] = (byte >= 32 && byte < 127);
                 if (is_ascii[1] != is_ascii[0])
                     os << " "; // Separate text/non text
 
