@@ -36,7 +36,7 @@ Supported platforms
  - Additional platforms that are known to work:
    - We have no current reports on additional platforms that are known to work yet. Please add your platform here. If CI can be provided for them with a cloud-based CI service working with GitHub, you are invited to add CI, and make it possible to be included in the list above.
  - Additional platforms that probably work:
-   - Any platform supported by libzmq that provides a sufficiently recent gcc (4.8.1 or newer) or clang (3.3 or newer)
+   - Any platform supported by libzmq that provides a sufficiently recent gcc (4.8.1 or newer) or clang (3.4.1 or newer)
    - Visual Studio 2012+ x86/x64
 
 Examples
