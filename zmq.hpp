@@ -122,8 +122,12 @@
 #define ZMQ_DELETED_FUNCTION
 #endif
 
+#if defined(ZMQ_CPP11) && defined(__GNUC__) && __GNUC__ < 5
+#define ZMQ_CPP11_PARTIAL
+#endif
+
 #ifdef ZMQ_CPP11
-#if defined(__GNUC__) && __GNUC__ < 5
+#ifdef ZMQ_CPP11_PARTIAL
 #define ZMQ_IS_TRIVIALLY_COPYABLE(T) __has_trivial_copy(T)
 #else
 #define ZMQ_IS_TRIVIALLY_COPYABLE(T) std::is_trivially_copyable<T>::value
@@ -335,7 +339,7 @@ class message_t
             throw error_t();
     }
 
-#ifdef ZMQ_CPP11
+#if defined(ZMQ_CPP11) && !defined(ZMQ_CPP11_PARTIAL)
     template<class Range,
              typename = typename std::enable_if<
                detail::is_range<Range>::value
