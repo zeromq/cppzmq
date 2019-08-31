@@ -122,6 +122,18 @@
 #define ZMQ_DELETED_FUNCTION
 #endif
 
+#if defined(ZMQ_CPP11) && defined(__GNUC__) && __GNUC__ < 5
+#define ZMQ_CPP11_PARTIAL
+#endif
+
+#ifdef ZMQ_CPP11
+#ifdef ZMQ_CPP11_PARTIAL
+#define ZMQ_IS_TRIVIALLY_COPYABLE(T) __has_trivial_copy(T)
+#else
+#define ZMQ_IS_TRIVIALLY_COPYABLE(T) std::is_trivially_copyable<T>::value
+#endif
+#endif
+
 #if ZMQ_VERSION >= ZMQ_MAKE_VERSION(3, 3, 0)
 #define ZMQ_NEW_MONITOR_EVENT_LAYOUT
 #endif
@@ -327,11 +339,11 @@ class message_t
             throw error_t();
     }
 
-#ifdef ZMQ_CPP11
+#if defined(ZMQ_CPP11) && !defined(ZMQ_CPP11_PARTIAL)
     template<class Range,
              typename = typename std::enable_if<
                detail::is_range<Range>::value
-               && std::is_trivially_copyable<detail::range_value_t<Range>>::value
+               && ZMQ_IS_TRIVIALLY_COPYABLE(detail::range_value_t<Range>)
                && !std::is_same<Range, message_t>::value>::type>
     explicit message_t(const Range &rng) :
         message_t(detail::ranges::begin(rng), detail::ranges::end(rng))
@@ -948,7 +960,7 @@ template<class T> struct is_pod_like
     // trivially copyable OR standard layout.
     // Here we decide to be conservative and require both.
     static constexpr bool value =
-      std::is_trivially_copyable<T>::value && std::is_standard_layout<T>::value;
+      ZMQ_IS_TRIVIALLY_COPYABLE(T) && std::is_standard_layout<T>::value;
 };
 
 template<class C> constexpr auto seq_size(const C &c) noexcept -> decltype(c.size())

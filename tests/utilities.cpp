@@ -1,7 +1,7 @@
 #include <catch.hpp>
 #include <zmq.hpp>
 
-#ifdef ZMQ_CPP11
+#if defined(ZMQ_CPP11) && !defined(ZMQ_CPP11_PARTIAL)
 
 namespace test_ns
 {
@@ -16,11 +16,11 @@ struct T_mr
 struct T_fr
 {
 };
-void *begin(const T_fr &) noexcept
+inline void *begin(const T_fr &) noexcept
 {
     return nullptr;
 }
-void *end(const T_fr &) noexcept
+inline void *end(const T_fr &) noexcept
 {
     return nullptr;
 }
@@ -29,11 +29,11 @@ struct T_mfr
     void *begin() const noexcept { return nullptr; }
     void *end() const noexcept { return nullptr; }
 };
-void *begin(const T_mfr &) noexcept
+inline void *begin(const T_mfr &) noexcept
 {
     return nullptr;
 }
-void *end(const T_mfr &) noexcept
+inline void *end(const T_mfr &) noexcept
 {
     return nullptr;
 }
@@ -50,11 +50,11 @@ struct T_assoc_ns_mr : std::exception
 struct T_assoc_ns_fr : std::exception
 {
 };
-void *begin(const T_assoc_ns_fr &) noexcept
+inline void *begin(const T_assoc_ns_fr &) noexcept
 {
     return nullptr;
 }
-void *end(const T_assoc_ns_fr &) noexcept
+inline void *end(const T_assoc_ns_fr &) noexcept
 {
     return nullptr;
 }
@@ -63,11 +63,11 @@ struct T_assoc_ns_mfr : std::exception
     void *begin() const noexcept { return nullptr; }
     void *end() const noexcept { return nullptr; }
 };
-void *begin(const T_assoc_ns_mfr &) noexcept
+inline void *begin(const T_assoc_ns_mfr &) noexcept
 {
     return nullptr;
 }
-void *end(const T_assoc_ns_mfr &) noexcept
+inline void *end(const T_assoc_ns_mfr &) noexcept
 {
     return nullptr;
 }
