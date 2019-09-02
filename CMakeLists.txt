@@ -38,14 +38,11 @@ endif (ENABLE_DRAFTS)
 
 message(STATUS "cppzmq v${cppzmq_VERSION}")
 
-set(CPPZMQ_HEADERS
-    zmq.hpp
-    zmq_addon.hpp
-)
+set(CPPZMQ_INCLUDE_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 
 foreach (target cppzmq cppzmq-static)
   add_library(${target} INTERFACE)
-  target_include_directories(${target} INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  target_include_directories(${target} INTERFACE $<BUILD_INTERFACE:${CPPZMQ_INCLUDE_BUILD_DIR}>
                                                  $<INSTALL_INTERFACE:include>)
 endforeach()
 
@@ -58,7 +55,7 @@ include(CMakePackageConfigHelpers)
 install(TARGETS cppzmq cppzmq-static
         EXPORT ${PROJECT_NAME}-targets)
 
-install(FILES ${CPPZMQ_HEADERS}
+install(DIRECTORY ${CPPZMQ_INCLUDE_BUILD_DIR}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 # GNUInstallDirs "DATADIR" wrong here; CMake search path wants "share".
