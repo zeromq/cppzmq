@@ -1110,6 +1110,19 @@ const_buffer buffer(std::basic_string_view<T, Traits> data, size_t n_bytes) noex
 }
 #endif
 
+// Buffer for a string literal (null terminated)
+// where the buffer size excludes the terminating character.
+// Equivalent to zmq::buffer(std::string_view("...")).
+template<class Char, size_t N>
+const_buffer str_buffer(const Char (&data)[N]) noexcept
+{
+    static_assert(detail::is_pod_like<Char>::value, "Char must be POD");
+    static_assert(N > 0, "N > 0");
+    assert(data[N - 1] == Char{0});
+    return const_buffer(N == 1 ? nullptr : static_cast<const Char*>(data), 
+                        (N - 1) * sizeof(Char));
+}
+
 #endif // ZMQ_CPP11
 
 namespace detail

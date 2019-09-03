@@ -236,6 +236,20 @@ TEST_CASE("const_buffer creation string_view", "[buffer]")
 }
 #endif
 
+TEST_CASE("const_buffer creation with str_buffer", "[buffer]")
+{
+    const wchar_t wd[10] = {};
+    zmq::const_buffer b = zmq::str_buffer(wd);
+    CHECK(b.size() == 9 * sizeof(wchar_t));
+    CHECK(b.data() == static_cast<const wchar_t*>(wd));
+
+    zmq::const_buffer b2_null = zmq::buffer("hello");
+    zmq::const_buffer b2 = zmq::str_buffer("hello");
+    CHECK(b2_null.size() == 6);
+    CHECK(b2.size() == 5);
+    CHECK(std::string(static_cast<const char*>(b2.data()), b2.size()) == "hello");
+}
+
 TEST_CASE("buffer of structs", "[buffer]")
 {
     struct some_pod
