@@ -95,12 +95,12 @@ TEST_CASE("socket_ref swap", "[socket_ref]")
     swap(sr1, sr2);
 }
 
-TEST_CASE("socket_ref reinterpret as void*", "[socket_ref]")
+TEST_CASE("socket_ref type punning", "[socket_ref]")
 {
     struct SVP
     {
         void *p;
-    };
+    } svp;
     struct SSR
     {
         zmq::socket_ref sr;
@@ -109,7 +109,9 @@ TEST_CASE("socket_ref reinterpret as void*", "[socket_ref]")
     zmq::context_t context;
     zmq::socket_t socket(context, zmq::socket_type::router);
     CHECK(socket.handle() != nullptr);
-    reinterpret_cast<SVP *>(&ssr)->p = socket.handle();
+    svp.p = socket.handle();
+    // static_cast to silence incorrect warning
+    std::memcpy(static_cast<void*>(&ssr), &svp, sizeof(ssr));
     CHECK(ssr.sr == socket);
 }
 
