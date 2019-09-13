@@ -236,6 +236,52 @@ TEST_CASE("const_buffer creation string_view", "[buffer]")
 }
 #endif
 
+TEST_CASE("const_buffer creation with str_buffer", "[buffer]")
+{
+    const wchar_t wd[10] = {};
+    zmq::const_buffer b = zmq::str_buffer(wd);
+    CHECK(b.size() == 9 * sizeof(wchar_t));
+    CHECK(b.data() == static_cast<const wchar_t*>(wd));
+
+    zmq::const_buffer b2_null = zmq::buffer("hello");
+    constexpr zmq::const_buffer b2 = zmq::str_buffer("hello");
+    CHECK(b2_null.size() == 6);
+    CHECK(b2.size() == 5);
+    CHECK(std::string(static_cast<const char*>(b2.data()), b2.size()) == "hello");
+}
+
+TEST_CASE("const_buffer creation with zbuf string literal char", "[buffer]")
+{
+    using namespace zmq::literals;
+    constexpr zmq::const_buffer b = "hello"_zbuf;
+    CHECK(b.size() == 5);
+    CHECK(std::memcmp(b.data(), "hello", b.size()) == 0);
+}
+
+TEST_CASE("const_buffer creation with zbuf string literal wchar_t", "[buffer]")
+{
+    using namespace zmq::literals;
+    constexpr zmq::const_buffer b = L"hello"_zbuf;
+    CHECK(b.size() == 5 * sizeof(wchar_t));
+    CHECK(std::memcmp(b.data(), L"hello", b.size()) == 0);
+}
+
+TEST_CASE("const_buffer creation with zbuf string literal char16_t", "[buffer]")
+{
+    using namespace zmq::literals;
+    constexpr zmq::const_buffer b = u"hello"_zbuf;
+    CHECK(b.size() == 5 * sizeof(char16_t));
+    CHECK(std::memcmp(b.data(), u"hello", b.size()) == 0);
+}
+
+TEST_CASE("const_buffer creation with zbuf string literal char32_t", "[buffer]")
+{
+    using namespace zmq::literals;
+    constexpr zmq::const_buffer b = U"hello"_zbuf;
+    CHECK(b.size() == 5 * sizeof(char32_t));
+    CHECK(std::memcmp(b.data(), U"hello", b.size()) == 0);
+}
+
 TEST_CASE("buffer of structs", "[buffer]")
 {
     struct some_pod
