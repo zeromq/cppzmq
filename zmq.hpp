@@ -124,7 +124,8 @@
 #define ZMQ_DELETED_FUNCTION
 #endif
 
-#if defined(ZMQ_CPP11) && defined(__GNUC__) && __GNUC__ < 5
+#if defined(ZMQ_CPP11) && !defined(__llvm__) && !defined(__INTEL_COMPILER) \
+    && defined(__GNUC__) && __GNUC__ < 5
 #define ZMQ_CPP11_PARTIAL
 #endif
 
