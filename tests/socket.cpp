@@ -71,8 +71,7 @@ TEST_CASE("socket readme example", "[socket]")
     zmq::context_t ctx;
     zmq::socket_t sock(ctx, zmq::socket_type::push);
     sock.bind("inproc://test");
-    const std::string m = "Hello, world";
-    sock.send(zmq::buffer(m), zmq::send_flags::dontwait);
+    sock.send(zmq::str_buffer("Hello, world"), zmq::send_flags::dontwait);
 }
 #endif
 
