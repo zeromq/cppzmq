@@ -82,6 +82,19 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" ENABLE_DRAFTS=ON
 
+    # Clang 8.0, draft disabled (default), latest libzmq (default), C++17
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-8
+          packages:
+            - g++-9
+            - clang-8
+      env:
+        - MATRIX_EVAL="CC=clang-8 && CXX=clang++-8" CMAKE_CPP_STD=-DCMAKE_CXX_STANDARD=17
+
   # - env: BUILD_TYPE=cmake DO_CLANG_FORMAT_CHECK=1 CLANG_FORMAT=/usr/local/clang-5.0.0/bin/clang-format
     # os: linux
     # addons:
