@@ -51,41 +51,50 @@ foreach (target cppzmq cppzmq-static)
                                                  $<INSTALL_INTERFACE:include>)
 endforeach()
 
+if(NOT TARGET libzmq)
 target_link_libraries(cppzmq INTERFACE ${ZeroMQ_LIBRARY} )
+else()
+target_link_libraries(cppzmq INTERFACE libzmq )
+endif()
+
+if(NOT TARGET libzmq-static)
 target_link_libraries(cppzmq-static INTERFACE ${ZeroMQ_STATIC_LIBRARY})
+else()
+target_link_libraries(cppzmq-static INTERFACE libzmq-static)
+endif()
 
 if(CPPZMQ_ENABLE_INSTALL)
-	include(GNUInstallDirs)
-	include(CMakePackageConfigHelpers)
+    include(GNUInstallDirs)
+    include(CMakePackageConfigHelpers)
 
-	install(TARGETS cppzmq cppzmq-static
-        	EXPORT ${PROJECT_NAME}-targets)
+    install(TARGETS cppzmq cppzmq-static
+            EXPORT ${PROJECT_NAME}-targets)
 
-	install(FILES ${CPPZMQ_HEADERS}
-        	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    install(FILES ${CPPZMQ_HEADERS}
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-	# GNUInstallDirs "DATADIR" wrong here; CMake search path wants "share".
-	set(CPPZMQ_CMAKECONFIG_INSTALL_DIR "share/cmake/${PROJECT_NAME}" CACHE STRING "install path for cppzmqConfig.cmake")
+    # GNUInstallDirs "DATADIR" wrong here; CMake search path wants "share".
+    set(CPPZMQ_CMAKECONFIG_INSTALL_DIR "share/cmake/${PROJECT_NAME}" CACHE STRING "install path for cppzmqConfig.cmake")
 
-	configure_file(libzmq-pkg-config/FindZeroMQ.cmake
-    	           libzmq-pkg-config/FindZeroMQ.cmake
-        	       COPYONLY)
+    configure_file(libzmq-pkg-config/FindZeroMQ.cmake
+                libzmq-pkg-config/FindZeroMQ.cmake
+                COPYONLY)
 
-	export(EXPORT ${PROJECT_NAME}-targets
-    	   FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
-	configure_package_config_file(${PROJECT_NAME}Config.cmake.in
-    	                          "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-        	                      INSTALL_DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR})
-	write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-    	                             VERSION ${CPPZMQ_VERSION}
-        	                         COMPATIBILITY AnyNewerVersion)
-	install(EXPORT ${PROJECT_NAME}-targets
-    	    FILE ${PROJECT_NAME}Targets.cmake
-        	DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR})
-	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+    export(EXPORT ${PROJECT_NAME}-targets
+        FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
+    configure_package_config_file(${PROJECT_NAME}Config.cmake.in
+                                "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+                                INSTALL_DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR})
+    write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+                                    VERSION ${CPPZMQ_VERSION}
+                                    COMPATIBILITY AnyNewerVersion)
+    install(EXPORT ${PROJECT_NAME}-targets
+            FILE ${PROJECT_NAME}Targets.cmake
+            DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR})
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
             ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
             DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR})
-	install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/libzmq-pkg-config/FindZeroMQ.cmake
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/libzmq-pkg-config/FindZeroMQ.cmake
             DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR}/libzmq-pkg-config)              
 endif()
 
