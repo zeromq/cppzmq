@@ -87,7 +87,17 @@
 #include <memory>
 #endif
 #ifdef ZMQ_CPP17
+#ifdef __has_include
+#if __has_include(<optional>)
 #include <optional>
+#define ZMQ_HAS_OPTIONAL 1
+#endif
+#if __has_include(<string_view>)
+#include <string_view>
+#define ZMQ_HAS_STRING_VIEW 1
+#endif
+#endif
+
 #endif
 
 /*  Version macros for compile-time API version detection                     */
@@ -127,12 +137,17 @@
 #if defined(ZMQ_CPP11) && !defined(__llvm__) && !defined(__INTEL_COMPILER) \
     && defined(__GNUC__) && __GNUC__ < 5
 #define ZMQ_CPP11_PARTIAL
+#elif defined(__GLIBCXX__) && __GLIBCXX__ < 20160805
+//the date here is the last date of gcc 4.9.4, which
+// effectively means libstdc++ from gcc 5.5 and higher won't trigger this branch
+#define ZMQ_CPP11_PARTIAL
 #endif
 
 #ifdef ZMQ_CPP11
 #ifdef ZMQ_CPP11_PARTIAL
 #define ZMQ_IS_TRIVIALLY_COPYABLE(T) __has_trivial_copy(T)
 #else
+#include <type_traits>
 #define ZMQ_IS_TRIVIALLY_COPYABLE(T) std::is_trivially_copyable<T>::value
 #endif
 #endif
@@ -700,7 +715,7 @@ struct recv_buffer_size
 namespace detail
 {
 
-#ifdef ZMQ_CPP17
+#if defined(ZMQ_HAS_OPTIONAL) && (ZMQ_HAS_OPTIONAL > 0)
 using send_result_t = std::optional<size_t>;
 using recv_result_t = std::optional<size_t>;
 using recv_buffer_result_t = std::optional<recv_buffer_size>;
@@ -1097,7 +1112,7 @@ const_buffer buffer(const std::basic_string<T, Traits, Allocator> &data,
     return detail::buffer_contiguous_sequence(data, n_bytes);
 }
 
-#ifdef ZMQ_CPP17
+#if defined(ZMQ_HAS_STRING_VIEW) && (ZMQ_HAS_STRING_VIEW > 0)
 // std::basic_string_view
 template<class T, class Traits>
 const_buffer buffer(std::basic_string_view<T, Traits> data) noexcept
@@ -1121,7 +1136,7 @@ constexpr const_buffer str_buffer(const Char (&data)[N]) noexcept
 #ifdef ZMQ_CPP14
     assert(data[N - 1] == Char{0});
 #endif
-    return const_buffer(static_cast<const Char*>(data), 
+    return const_buffer(static_cast<const Char*>(data),
                         (N - 1) * sizeof(Char));
 }
 
