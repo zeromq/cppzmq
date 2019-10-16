@@ -24,7 +24,7 @@
 #ifndef __ZMQ_ADDON_HPP_INCLUDED__
 #define __ZMQ_ADDON_HPP_INCLUDED__
 
-#include <zmq.hpp>
+#include "zmq.hpp"
 
 #include <deque>
 #include <iomanip>
