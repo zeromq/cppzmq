@@ -1348,7 +1348,7 @@ public:
     }
 
 #ifdef ZMQ_CPP11
-    detail::recv_buffer_result_t recv(mutable_buffer buf,
+    ZMQ_NODISCARD detail::recv_buffer_result_t recv(mutable_buffer buf,
                                       recv_flags flags = recv_flags::none)
     {
         const int nbytes =
@@ -1362,7 +1362,7 @@ public:
         throw error_t();
     }
 
-    detail::recv_result_t recv(message_t &msg, recv_flags flags = recv_flags::none)
+    ZMQ_NODISCARD detail::recv_result_t recv(message_t &msg, recv_flags flags = recv_flags::none)
     {
         const int nbytes = zmq_msg_recv(msg.handle(), _handle, static_cast<int>(flags));
         if (nbytes >= 0) {
