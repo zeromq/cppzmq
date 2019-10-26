@@ -25,6 +25,8 @@ add_executable(
     poller.cpp
     active_poller.cpp
     multipart.cpp
+    recv_multipart.cpp
+    send_multipart.cpp
     monitor.cpp
     utilities.cpp
 )

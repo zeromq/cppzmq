@@ -37,6 +37,78 @@
 
 namespace zmq
 {
+
+#ifdef ZMQ_CPP11
+
+/*  Receive a multipart message.
+    
+    Writes the zmq::message_t objects to OutputIterator out.
+    The out iterator must handle an unspecified amount of write,
+    e.g. using std::back_inserter.
+    
+    Returns: the number of messages received or nullopt (on EAGAIN).
+    Throws: if recv throws.
+*/
+template<class OutputIt>
+ZMQ_NODISCARD detail::recv_result_t recv_multipart(socket_ref s, OutputIt out,
+                                       recv_flags flags = recv_flags::none)
+{
+    size_t msg_count = 0;
+    message_t msg;
+    while (true)
+    {
+        if (!s.recv(msg, flags))
+        {
+            // zmq ensures atomic delivery of messages
+            assert(msg_count == 0);
+            return {};
+        }
+        ++msg_count;
+        const bool more = msg.more();
+        *out++ = std::move(msg);
+        if (!more)
+            break;
+    }
+    return msg_count;
+}
+
+/*  Send a multipart message.
+    
+    The range must be a ForwardRange of zmq::message_t,
+    zmq::const_buffer or zmq::mutable_buffer.
+    The flags may be zmq::send_flags::sndmore if there are 
+    more message parts to be sent after the call to this function.
+    
+    Returns: the number of messages sent or nullopt (on EAGAIN).
+    Throws: if send throws.
+*/
+template<class Range,
+             typename = typename std::enable_if<
+               detail::is_range<Range>::value
+               && (std::is_same<detail::range_value_t<Range>, message_t>::value
+               || detail::is_buffer<detail::range_value_t<Range>>::value)
+               >::type>
+detail::send_result_t send_multipart(socket_ref s, Range&& msgs,
+                                       send_flags flags = send_flags::none)
+{
+    auto it = msgs.begin();
+    auto last = msgs.end();
+    const size_t msg_count = static_cast<size_t>(std::distance(it, last));
+    for (; it != last; ++it)
+    {
+        const auto mf = flags | (std::next(it) == last ? send_flags::none : send_flags::sndmore);
+        if (!s.send(*it, mf))
+        {
+            // zmq ensures atomic delivery of messages
+            assert(it == msgs.begin());
+            return {};
+        }
+    }
+    return msg_count;
+}
+
+#endif
+
 #ifdef ZMQ_HAS_RVALUE_REFS
 
 /*
