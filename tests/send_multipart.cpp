@@ -1,8 +1,8 @@
+#ifdef ZMQ_CPP11
+
 #include <forward_list>
 #include <catch.hpp>
 #include <zmq_addon.hpp>
-
-#ifdef ZMQ_CPP11
 
 TEST_CASE("send_multipart test", "[send_multipart]")
 {
@@ -88,7 +88,6 @@ TEST_CASE("send_multipart test", "[send_multipart]")
         auto iret = zmq::send_multipart(push, imsgs, zmq::send_flags::dontwait);
         REQUIRE_FALSE(iret);
     }
-    // TODO send with EAGAIN
     SECTION("send, misc. containers")
     {
         std::vector<zmq::message_t> msgs_vec;

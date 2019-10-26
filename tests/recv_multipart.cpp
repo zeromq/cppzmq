@@ -1,7 +1,7 @@
+#ifdef ZMQ_CPP11
+
 #include <catch.hpp>
 #include <zmq_addon.hpp>
-
-#ifdef ZMQ_CPP11
 
 TEST_CASE("recv_multipart test", "[recv_multipart]")
 {
