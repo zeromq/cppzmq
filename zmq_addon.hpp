@@ -43,11 +43,14 @@ namespace zmq
 /*  Receive a multipart message.
     
     Writes the zmq::message_t objects to OutputIterator out.
-    The out iterator must handle an unspecified amount of write,
-    e.g. using std::back_inserter.
+    The out iterator must handle an unspecified number of writes,
+    e.g. by using std::back_inserter.
     
     Returns: the number of messages received or nullopt (on EAGAIN).
-    Throws: if recv throws.
+    Throws: if recv throws. Any exceptions thrown
+    by the out iterator will be propagated and the message
+    may have been only partially received with pending
+    message parts. It is adviced to close this socket in that event.
 */
 template<class OutputIt>
 ZMQ_NODISCARD detail::recv_result_t recv_multipart(socket_ref s, OutputIt out,
@@ -79,8 +82,10 @@ ZMQ_NODISCARD detail::recv_result_t recv_multipart(socket_ref s, OutputIt out,
     The flags may be zmq::send_flags::sndmore if there are 
     more message parts to be sent after the call to this function.
     
-    Returns: the number of messages sent or nullopt (on EAGAIN).
-    Throws: if send throws.
+    Returns: the number of messages sent (exactly msgs.size()) or nullopt (on EAGAIN).
+    Throws: if send throws. Any exceptions thrown
+    by the msgs range will be propagated and the message
+    may have been only partially sent. It is adviced to close this socket in that event.
 */
 template<class Range,
              typename = typename std::enable_if<
@@ -92,17 +97,20 @@ detail::send_result_t send_multipart(socket_ref s, Range&& msgs,
                                        send_flags flags = send_flags::none)
 {
     auto it = msgs.begin();
-    auto last = msgs.end();
-    const size_t msg_count = static_cast<size_t>(std::distance(it, last));
-    for (; it != last; ++it)
+    const auto end_it = msgs.end();
+    size_t msg_count = 0;
+    while (it != end_it)
     {
-        const auto mf = flags | (std::next(it) == last ? send_flags::none : send_flags::sndmore);
-        if (!s.send(*it, mf))
+        const auto next = std::next(it);
+        const auto msg_flags = flags | (next == end_it ? send_flags::none : send_flags::sndmore);
+        if (!s.send(*it, msg_flags))
         {
             // zmq ensures atomic delivery of messages
             assert(it == msgs.begin());
             return {};
         }
+        ++msg_count;
+        it = next;
     }
     return msg_count;
 }

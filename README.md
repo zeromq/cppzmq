@@ -41,7 +41,7 @@ Supported platforms
 
 Examples
 ========
-These examples requires at least C++11.
+These examples require at least C++11.
 ```c++
 #include <zmq.hpp>
 
