@@ -53,8 +53,9 @@ namespace zmq
     message parts. It is adviced to close this socket in that event.
 */
 template<class OutputIt>
-ZMQ_NODISCARD detail::recv_result_t recv_multipart(socket_ref s, OutputIt out,
-                                       recv_flags flags = recv_flags::none)
+ZMQ_NODISCARD
+recv_result_t recv_multipart(socket_ref s, OutputIt out,
+                             recv_flags flags = recv_flags::none)
 {
     size_t msg_count = 0;
     message_t msg;
@@ -93,8 +94,8 @@ template<class Range,
                && (std::is_same<detail::range_value_t<Range>, message_t>::value
                || detail::is_buffer<detail::range_value_t<Range>>::value)
                >::type>
-detail::send_result_t send_multipart(socket_ref s, Range&& msgs,
-                                       send_flags flags = send_flags::none)
+send_result_t send_multipart(socket_ref s, Range&& msgs,
+                             send_flags flags = send_flags::none)
 {
     using std::begin;
     using std::end;
