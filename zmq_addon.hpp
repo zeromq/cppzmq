@@ -96,8 +96,10 @@ template<class Range,
 detail::send_result_t send_multipart(socket_ref s, Range&& msgs,
                                        send_flags flags = send_flags::none)
 {
-    auto it = msgs.begin();
-    const auto end_it = msgs.end();
+    using std::begin;
+    using std::end;
+    auto it = begin(msgs);
+    const auto end_it = end(msgs);
     size_t msg_count = 0;
     while (it != end_it)
     {
@@ -106,7 +108,7 @@ detail::send_result_t send_multipart(socket_ref s, Range&& msgs,
         if (!s.send(*it, msg_flags))
         {
             // zmq ensures atomic delivery of messages
-            assert(it == msgs.begin());
+            assert(it == begin(msgs));
             return {};
         }
         ++msg_count;
