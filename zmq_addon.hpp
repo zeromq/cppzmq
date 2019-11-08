@@ -37,6 +37,88 @@
 
 namespace zmq
 {
+
+#ifdef ZMQ_CPP11
+
+/*  Receive a multipart message.
+    
+    Writes the zmq::message_t objects to OutputIterator out.
+    The out iterator must handle an unspecified number of writes,
+    e.g. by using std::back_inserter.
+    
+    Returns: the number of messages received or nullopt (on EAGAIN).
+    Throws: if recv throws. Any exceptions thrown
+    by the out iterator will be propagated and the message
+    may have been only partially received with pending
+    message parts. It is adviced to close this socket in that event.
+*/
+template<class OutputIt>
+ZMQ_NODISCARD detail::recv_result_t recv_multipart(socket_ref s, OutputIt out,
+                                       recv_flags flags = recv_flags::none)
+{
+    size_t msg_count = 0;
+    message_t msg;
+    while (true)
+    {
+        if (!s.recv(msg, flags))
+        {
+            // zmq ensures atomic delivery of messages
+            assert(msg_count == 0);
+            return {};
+        }
+        ++msg_count;
+        const bool more = msg.more();
+        *out++ = std::move(msg);
+        if (!more)
+            break;
+    }
+    return msg_count;
+}
+
+/*  Send a multipart message.
+    
+    The range must be a ForwardRange of zmq::message_t,
+    zmq::const_buffer or zmq::mutable_buffer.
+    The flags may be zmq::send_flags::sndmore if there are 
+    more message parts to be sent after the call to this function.
+    
+    Returns: the number of messages sent (exactly msgs.size()) or nullopt (on EAGAIN).
+    Throws: if send throws. Any exceptions thrown
+    by the msgs range will be propagated and the message
+    may have been only partially sent. It is adviced to close this socket in that event.
+*/
+template<class Range,
+             typename = typename std::enable_if<
+               detail::is_range<Range>::value
+               && (std::is_same<detail::range_value_t<Range>, message_t>::value
+               || detail::is_buffer<detail::range_value_t<Range>>::value)
+               >::type>
+detail::send_result_t send_multipart(socket_ref s, Range&& msgs,
+                                       send_flags flags = send_flags::none)
+{
+    using std::begin;
+    using std::end;
+    auto it = begin(msgs);
+    const auto end_it = end(msgs);
+    size_t msg_count = 0;
+    while (it != end_it)
+    {
+        const auto next = std::next(it);
+        const auto msg_flags = flags | (next == end_it ? send_flags::none : send_flags::sndmore);
+        if (!s.send(*it, msg_flags))
+        {
+            // zmq ensures atomic delivery of messages
+            assert(it == begin(msgs));
+            return {};
+        }
+        ++msg_count;
+        it = next;
+    }
+    return msg_count;
+}
+
+#endif
+
 #ifdef ZMQ_HAS_RVALUE_REFS
 
 /*

@@ -971,6 +971,15 @@ inline const_buffer buffer(const const_buffer& cb, size_t n) noexcept
 
 namespace detail
 {
+
+template<class T>
+struct is_buffer
+{
+    static constexpr bool value = 
+        std::is_same<T, const_buffer>::value ||
+        std::is_same<T, mutable_buffer>::value;
+};
+
 template<class T> struct is_pod_like
 {
     // NOTE: The networking draft N4771 section 16.11 requires
