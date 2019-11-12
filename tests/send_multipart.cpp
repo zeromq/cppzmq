@@ -1,8 +1,8 @@
+#include <catch.hpp>
+#include <zmq_addon.hpp>
 #ifdef ZMQ_CPP11
 
 #include <forward_list>
-#include <catch.hpp>
-#include <zmq_addon.hpp>
 
 TEST_CASE("send_multipart test", "[send_multipart]")
 {
