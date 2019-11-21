@@ -712,14 +712,16 @@ struct recv_buffer_size
     }
 };
 
-namespace detail
-{
-
 #if defined(ZMQ_HAS_OPTIONAL) && (ZMQ_HAS_OPTIONAL > 0)
+
 using send_result_t = std::optional<size_t>;
 using recv_result_t = std::optional<size_t>;
 using recv_buffer_result_t = std::optional<recv_buffer_size>;
+
 #else
+
+namespace detail
+{
 // A C++11 type emulating the most basic
 // operations of std::optional for trivial types
 template<class T> class trivial_optional
@@ -773,11 +775,16 @@ template<class T> class trivial_optional
     T _value{};
     bool _has_value{false};
 };
+} // namespace detail
 
-using send_result_t = trivial_optional<size_t>;
-using recv_result_t = trivial_optional<size_t>;
-using recv_buffer_result_t = trivial_optional<recv_buffer_size>;
+using send_result_t = detail::trivial_optional<size_t>;
+using recv_result_t = detail::trivial_optional<size_t>;
+using recv_buffer_result_t = detail::trivial_optional<recv_buffer_size>;
+
 #endif
+
+namespace detail
+{
 
 template<class T>
 constexpr T enum_bit_or(T a, T b) noexcept
@@ -1303,7 +1310,7 @@ public:
 #endif
 
 #ifdef ZMQ_CPP11
-    detail::send_result_t send(const_buffer buf, send_flags flags = send_flags::none)
+    send_result_t send(const_buffer buf, send_flags flags = send_flags::none)
     {
         const int nbytes =
           zmq_send(_handle, buf.data(), buf.size(), static_cast<int>(flags));
@@ -1314,7 +1321,7 @@ public:
         throw error_t();
     }
 
-    detail::send_result_t send(message_t &msg, send_flags flags)
+    send_result_t send(message_t &msg, send_flags flags)
     {
         int nbytes = zmq_msg_send(msg.handle(), _handle, static_cast<int>(flags));
         if (nbytes >= 0)
@@ -1324,7 +1331,7 @@ public:
         throw error_t();
     }
 
-    detail::send_result_t send(message_t &&msg, send_flags flags)
+    send_result_t send(message_t &&msg, send_flags flags)
     {
         return send(msg, flags);
     }
@@ -1357,8 +1364,9 @@ public:
     }
 
 #ifdef ZMQ_CPP11
-    ZMQ_NODISCARD detail::recv_buffer_result_t recv(mutable_buffer buf,
-                                      recv_flags flags = recv_flags::none)
+    ZMQ_NODISCARD
+    recv_buffer_result_t recv(mutable_buffer buf,
+                                    recv_flags flags = recv_flags::none)
     {
         const int nbytes =
           zmq_recv(_handle, buf.data(), buf.size(), static_cast<int>(flags));
@@ -1371,7 +1379,8 @@ public:
         throw error_t();
     }
 
-    ZMQ_NODISCARD detail::recv_result_t recv(message_t &msg, recv_flags flags = recv_flags::none)
+    ZMQ_NODISCARD
+    recv_result_t recv(message_t &msg, recv_flags flags = recv_flags::none)
     {
         const int nbytes = zmq_msg_recv(msg.handle(), _handle, static_cast<int>(flags));
         if (nbytes >= 0) {
