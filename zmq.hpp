@@ -644,6 +644,7 @@ class context_t
     context_t(context_t &&rhs) ZMQ_NOTHROW : ptr(rhs.ptr) { rhs.ptr = ZMQ_NULLPTR; }
     context_t &operator=(context_t &&rhs) ZMQ_NOTHROW
     {
+        close();
         std::swap(ptr, rhs.ptr);
         return *this;
     }
@@ -1566,6 +1567,7 @@ class socket_t : public detail::socket_base
     }
     socket_t &operator=(socket_t &&rhs) ZMQ_NOTHROW
     {
+        close();
         std::swap(_handle, rhs._handle);
         return *this;
     }
