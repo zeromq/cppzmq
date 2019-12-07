@@ -40,6 +40,37 @@ namespace zmq
 
 #ifdef ZMQ_CPP11
 
+namespace detail
+{
+template<bool CheckN, class OutputIt>
+recv_result_t recv_multipart_n(socket_ref s, OutputIt out, size_t n,
+                               recv_flags flags)
+{
+    size_t msg_count = 0;
+    message_t msg;
+    while (true)
+    {
+        if (CheckN)
+        {
+            if (msg_count >= n)
+                throw std::runtime_error("Too many message parts in recv_multipart_n");
+        }
+        if (!s.recv(msg, flags))
+        {
+            // zmq ensures atomic delivery of messages
+            assert(msg_count == 0);
+            return {};
+        }
+        ++msg_count;
+        const bool more = msg.more();
+        *out++ = std::move(msg);
+        if (!more)
+            break;
+    }
+    return msg_count;
+}
+} // namespace detail
+
 /*  Receive a multipart message.
     
     Writes the zmq::message_t objects to OutputIterator out.
@@ -57,23 +88,29 @@ ZMQ_NODISCARD
 recv_result_t recv_multipart(socket_ref s, OutputIt out,
                              recv_flags flags = recv_flags::none)
 {
-    size_t msg_count = 0;
-    message_t msg;
-    while (true)
-    {
-        if (!s.recv(msg, flags))
-        {
-            // zmq ensures atomic delivery of messages
-            assert(msg_count == 0);
-            return {};
-        }
-        ++msg_count;
-        const bool more = msg.more();
-        *out++ = std::move(msg);
-        if (!more)
-            break;
-    }
-    return msg_count;
+    return detail::recv_multipart_n<false>(s, std::move(out), 0, flags);
+}
+
+/*  Receive a multipart message.
+    
+    Writes at most n zmq::message_t objects to OutputIterator out.
+    If the number of message parts of the incoming message exceeds n
+    then an exception will be thrown.
+    
+    Returns: the number of messages received or nullopt (on EAGAIN).
+    Throws: if recv throws. Throws std::runtime_error if the number
+    of message parts exceeds n (exactly n messages will have been written
+    to out). Any exceptions thrown
+    by the out iterator will be propagated and the message
+    may have been only partially received with pending
+    message parts. It is adviced to close this socket in that event.
+*/
+template<class OutputIt>
+ZMQ_NODISCARD
+recv_result_t recv_multipart_n(socket_ref s, OutputIt out, size_t n,
+                               recv_flags flags = recv_flags::none)
+{
+    return detail::recv_multipart_n<true>(s, std::move(out), n, flags);
 }
 
 /*  Send a multipart message.
