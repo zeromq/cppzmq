@@ -552,9 +552,25 @@ class message_t
     }
 #endif
 
-    /** Dump content to string. Ascii chars are readable, the rest is printed as hex.
-         *  Probably ridiculously slow.
-         */
+    // interpret message content as a string
+    std::string to_string() const
+    {
+        return std::string(static_cast<const char*>(data()), size());
+    }
+#ifdef ZMQ_CPP17
+    // interpret message content as a string
+    std::string_view to_string_view() const noexcept
+    {
+        return std::string_view(static_cast<const char*>(data()), size());
+    }
+#endif
+
+    /** Dump content to string for debugging.
+    *   Ascii chars are readable, the rest is printed as hex.
+    *   Probably ridiculously slow.
+    *   Use to_string() or to_string_view() for
+    *   interpreting the message as a string.
+    */
     std::string str() const
     {
         // Partly mutuated from the same method in zmq::multipart_t
