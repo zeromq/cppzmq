@@ -151,6 +151,18 @@ TEST_CASE("message equality non equal lhs empty", "[message]")
     CHECK(msg_a != msg_b);
 }
 
+TEST_CASE("message to string", "[message]")
+{
+    const zmq::message_t a;
+    const zmq::message_t b("Foo", 3);
+    CHECK(a.to_string() == "");
+    CHECK(b.to_string() == "Foo");
+#ifdef ZMQ_CPP17
+    CHECK(a.to_string_view() == "");
+    CHECK(b.to_string_view() == "Foo");
+#endif
+}
+
 #if defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 0)
 TEST_CASE("message routing id persists", "[message]")
 {
