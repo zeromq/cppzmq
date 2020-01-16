@@ -73,9 +73,18 @@ export(EXPORT ${PROJECT_NAME}-targets
 configure_package_config_file(${PROJECT_NAME}Config.cmake.in
                               "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
                               INSTALL_DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR})
+# Workaround until ARCH_INDEPENDENT flag can be used with cmake 3.14.
+# The ConigVersion.cmake file contains checks for the architecture is was
+# generated on, which can cause problems for header only libraries
+# used with e.g. the Conan package manager. Since it is header only we
+# can/should omit those checks.
+set(CPPZMQ_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
+set(CMAKE_SIZEOF_VOID_P "") # a simple unset is not sufficient
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
                                  VERSION ${CPPZMQ_VERSION}
                                  COMPATIBILITY AnyNewerVersion)
+set(CMAKE_SIZEOF_VOID_P ${CPPZMQ_SIZEOF_VOID_P})
+
 install(EXPORT ${PROJECT_NAME}-targets
         FILE ${PROJECT_NAME}Targets.cmake
         DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR})
