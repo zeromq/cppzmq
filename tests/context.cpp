@@ -18,6 +18,26 @@ TEST_CASE("context create, close and destroy", "[context]")
     CHECK(NULL == (void *) context);
 }
 
+TEST_CASE("context shutdown", "[context]")
+{
+    zmq::context_t context;
+    context.shutdown();
+    CHECK(NULL != (void *) context);
+    context.close();
+    CHECK(NULL == (void *) context);
+}
+
+TEST_CASE("context shutdown often", "[context]")
+{
+    zmq::context_t context;
+    context.shutdown();
+    context.shutdown();
+    context.shutdown();
+    CHECK(NULL != (void *) context);
+    context.close();
+    CHECK(NULL == (void *) context);
+}
+
 #ifdef ZMQ_CPP11
 TEST_CASE("context swap", "[context]")
 {
@@ -25,5 +45,34 @@ TEST_CASE("context swap", "[context]")
     zmq::context_t context2;
     using std::swap;
     swap(context1, context2);
+}
+
+TEST_CASE("context - use socket after shutdown", "[context]")
+{
+    zmq::context_t context;
+    zmq::socket_t sock(context, zmq::socket_type::rep);
+    context.shutdown();
+    try
+    {
+        sock.connect("inproc://test");
+        zmq::message_t msg;
+        sock.recv(msg, zmq::recv_flags::dontwait);
+        REQUIRE(false);
+    }
+    catch (const zmq::error_t& e)
+    {
+        REQUIRE(e.num() == ETERM);
+    }
+}
+
+TEST_CASE("context - create socket after shutdown", "[context]")
+{
+    zmq::context_t context;
+    context.shutdown();
+    // sockets created after shutdown dont return ETERM
+    zmq::socket_t sock(context, zmq::socket_type::rep);
+    sock.connect("inproc://test");
+    zmq::message_t msg;
+    sock.recv(msg, zmq::recv_flags::dontwait);
 }
 #endif
