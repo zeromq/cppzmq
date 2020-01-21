@@ -1,5 +1,5 @@
 #include <catch.hpp>
-#include <zmq.hpp>
+#include <zmq_addon.hpp>
 
 #if (__cplusplus >= 201703L)
 static_assert(std::is_nothrow_swappable<zmq::context_t>::value,
@@ -74,5 +74,49 @@ TEST_CASE("context - create socket after shutdown", "[context]")
     sock.connect("inproc://test");
     zmq::message_t msg;
     sock.recv(msg, zmq::recv_flags::dontwait);
+}
+
+TEST_CASE("context - create socket after shutdown - shutdown_guard", "[context]")
+{
+    zmq::context_t context;
+    zmq::shutdown_guard sg{context};
+    try
+    {
+        zmq::socket_t sock(context, zmq::socket_type::rep);
+        sock.connect("inproc://test");
+        zmq::message_t msg;
+        sock.recv(msg, zmq::recv_flags::dontwait);
+        REQUIRE(false);
+    }
+    catch (const zmq::error_t& e)
+    {
+        REQUIRE(e.num() == ETERM);
+    }
+}
+
+TEST_CASE("context - create socket in thread after shutdown - shutdown_guard", "[context]")
+{
+    zmq::context_t context;
+    auto thread = std::thread([&]{
+        try
+        {
+            // this may or may not start before the shutdown() but that is OK
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            zmq::socket_t sock(context, zmq::socket_type::rep);
+            sock.connect("inproc://test");
+            zmq::message_t msg;
+            sock.recv(msg, zmq::recv_flags::dontwait);
+            REQUIRE(false);
+        }
+        catch (const zmq::error_t& e)
+        {
+            REQUIRE(e.num() == ETERM);
+        }
+    });
+    {
+        zmq::shutdown_guard sg{context};
+        thread.join();
+    }
+    context.close();
 }
 #endif

@@ -31,7 +31,10 @@
 #include <sstream>
 #include <stdexcept>
 #ifdef ZMQ_CPP11
+#include <condition_variable>
 #include <functional>
+#include <mutex>
+#include <thread>
 #include <unordered_map>
 #endif
 
@@ -571,6 +574,62 @@ class active_poller_t
 };     // class active_poller_t
 #endif //  defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && defined(ZMQ_HAVE_POLLER)
 
+
+#ifdef ZMQ_CPP11
+/*  A context shutdown scope guard.
+
+    Starts a context shutdown loop in another thread
+    until destructed or explicitly stopped.
+    Useful for unblocking blocking function calls
+    and stopping further socket operations
+    in multi-threaded applications before terminating
+    the context. Example usage:
+
+    {
+        zmq::shutdown_guard sg{ctx};
+        threads.join(); // join all threads using sockets
+    } // stops sg
+    ctx.close();        // terminate context
+*/
+class shutdown_guard
+{
+public:
+    // Call ctx.shutdown() repeatedly on iv intervals until stopped.
+    explicit shutdown_guard(zmq::context_t& ctx,
+                            std::chrono::microseconds iv = std::chrono::microseconds(5000))
+    {
+        thrd = std::thread([&, iv]{
+            while (true)
+            {
+                ctx.shutdown();
+                std::unique_lock<std::mutex> lock{mtx};
+                if (cv.wait_for(lock, iv, [this]{ return do_stop; }))
+                    return; // stop requested
+            }
+        });
+    }
+
+    ~shutdown_guard() noexcept { stop(); }
+
+    void stop() noexcept
+    {
+        if (!thrd.joinable())
+            return;
+        {
+            std::lock_guard<std::mutex> lock{mtx};
+            do_stop = true;
+        }
+        cv.notify_one();
+        thrd.join();
+    }
+
+private:
+    std::thread thrd;
+    std::mutex mtx;
+    std::condition_variable cv;
+    bool do_stop{false};
+};
+#endif
 
 } // namespace zmq
 
