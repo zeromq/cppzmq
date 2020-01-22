@@ -85,8 +85,7 @@ TEST_CASE("context - create socket after shutdown - shutdown_guard", "[context]"
         zmq::socket_t sock(context, zmq::socket_type::rep);
         sock.connect("inproc://test");
         zmq::message_t msg;
-        sock.recv(msg, zmq::recv_flags::dontwait);
-        REQUIRE(false);
+        sock.recv(msg); // blocks until shutdown
     }
     catch (const zmq::error_t& e)
     {
@@ -105,18 +104,15 @@ TEST_CASE("context - create socket in thread after shutdown - shutdown_guard", "
             zmq::socket_t sock(context, zmq::socket_type::rep);
             sock.connect("inproc://test");
             zmq::message_t msg;
-            sock.recv(msg, zmq::recv_flags::dontwait);
-            REQUIRE(false);
+            sock.recv(msg); // blocks until shutdown
         }
         catch (const zmq::error_t& e)
         {
             REQUIRE(e.num() == ETERM);
         }
     });
-    {
-        zmq::shutdown_guard sg{context};
-        thread.join();
-    }
-    context.close();
+
+    zmq::shutdown_guard sg{context};
+    thread.join();
 }
 #endif
