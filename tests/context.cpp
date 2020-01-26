@@ -63,15 +63,4 @@ TEST_CASE("context - use socket after shutdown", "[context]")
         REQUIRE(e.num() == ETERM);
     }
 }
-
-TEST_CASE("context - create socket after shutdown", "[context]")
-{
-    zmq::context_t context;
-    context.shutdown();
-    // sockets created after shutdown dont return ETERM
-    zmq::socket_t sock(context, zmq::socket_type::rep);
-    sock.connect("inproc://test");
-    zmq::message_t msg;
-    sock.recv(msg, zmq::recv_flags::dontwait);
-}
 #endif

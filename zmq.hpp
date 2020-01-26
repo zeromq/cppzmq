@@ -694,9 +694,7 @@ class context_t
 
     // Shutdown context in preparation for termination (close()).
     // Causes all blocking socket operations and any further
-    // operations to return with ETERM.
-    // Operation on sockets constructed after
-    // this call might not return with ETERM.
+    // socket operations to return with ETERM.
     void shutdown() ZMQ_NOTHROW
     {
         if (ptr == ZMQ_NULLPTR)
