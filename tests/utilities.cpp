@@ -8,31 +8,38 @@ namespace test_ns
 struct T_nr
 {
 };
+
 struct T_mr
 {
     void *begin() const noexcept { return nullptr; }
     void *end() const noexcept { return nullptr; }
 };
+
 struct T_fr
 {
 };
+
 inline void *begin(const T_fr &) noexcept
 {
     return nullptr;
 }
+
 inline void *end(const T_fr &) noexcept
 {
     return nullptr;
 }
+
 struct T_mfr
 {
     void *begin() const noexcept { return nullptr; }
     void *end() const noexcept { return nullptr; }
 };
+
 inline void *begin(const T_mfr &) noexcept
 {
     return nullptr;
 }
+
 inline void *end(const T_mfr &) noexcept
 {
     return nullptr;
@@ -42,31 +49,38 @@ inline void *end(const T_mfr &) noexcept
 struct T_assoc_ns_nr : std::exception
 {
 };
+
 struct T_assoc_ns_mr : std::exception
 {
     void *begin() const noexcept { return nullptr; }
     void *end() const noexcept { return nullptr; }
 };
+
 struct T_assoc_ns_fr : std::exception
 {
 };
+
 inline void *begin(const T_assoc_ns_fr &) noexcept
 {
     return nullptr;
 }
+
 inline void *end(const T_assoc_ns_fr &) noexcept
 {
     return nullptr;
 }
+
 struct T_assoc_ns_mfr : std::exception
 {
     void *begin() const noexcept { return nullptr; }
     void *end() const noexcept { return nullptr; }
 };
+
 inline void *begin(const T_assoc_ns_mfr &) noexcept
 {
     return nullptr;
 }
+
 inline void *end(const T_assoc_ns_mfr &) noexcept
 {
     return nullptr;

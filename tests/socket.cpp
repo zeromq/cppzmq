@@ -50,19 +50,19 @@ TEST_CASE("socket swap", "[socket]")
 TEST_CASE("socket flags", "[socket]")
 {
     CHECK((zmq::recv_flags::dontwait | zmq::recv_flags::none)
-          == static_cast<zmq::recv_flags>(ZMQ_DONTWAIT | 0));
+        == static_cast<zmq::recv_flags>(ZMQ_DONTWAIT | 0));
     CHECK((zmq::recv_flags::dontwait & zmq::recv_flags::none)
-          == static_cast<zmq::recv_flags>(ZMQ_DONTWAIT & 0));
+        == static_cast<zmq::recv_flags>(ZMQ_DONTWAIT & 0));
     CHECK((zmq::recv_flags::dontwait ^ zmq::recv_flags::none)
-          == static_cast<zmq::recv_flags>(ZMQ_DONTWAIT ^ 0));
+        == static_cast<zmq::recv_flags>(ZMQ_DONTWAIT ^ 0));
     CHECK(~zmq::recv_flags::dontwait == static_cast<zmq::recv_flags>(~ZMQ_DONTWAIT));
 
     CHECK((zmq::send_flags::dontwait | zmq::send_flags::sndmore)
-          == static_cast<zmq::send_flags>(ZMQ_DONTWAIT | ZMQ_SNDMORE));
+        == static_cast<zmq::send_flags>(ZMQ_DONTWAIT | ZMQ_SNDMORE));
     CHECK((zmq::send_flags::dontwait & zmq::send_flags::sndmore)
-          == static_cast<zmq::send_flags>(ZMQ_DONTWAIT & ZMQ_SNDMORE));
+        == static_cast<zmq::send_flags>(ZMQ_DONTWAIT & ZMQ_SNDMORE));
     CHECK((zmq::send_flags::dontwait ^ zmq::send_flags::sndmore)
-          == static_cast<zmq::send_flags>(ZMQ_DONTWAIT ^ ZMQ_SNDMORE));
+        == static_cast<zmq::send_flags>(ZMQ_DONTWAIT ^ ZMQ_SNDMORE));
     CHECK(~zmq::send_flags::dontwait == static_cast<zmq::send_flags>(~ZMQ_DONTWAIT));
 }
 
@@ -82,20 +82,20 @@ TEST_CASE("socket sends and receives const buffer", "[socket]")
     zmq::socket_t receiver(context, ZMQ_PAIR);
     receiver.bind("inproc://test");
     sender.connect("inproc://test");
-    const char* str = "Hi";
+    const char *str = "Hi";
 
-    #ifdef ZMQ_CPP11
+#ifdef ZMQ_CPP11
     CHECK(2 == *sender.send(zmq::buffer(str, 2)));
     char buf[2];
     const auto res = receiver.recv(zmq::buffer(buf));
     CHECK(res);
     CHECK(!res->truncated());
     CHECK(2 == res->size);
-    #else
+#else
     CHECK(2 == sender.send(str, 2));
     char buf[2];
     CHECK(2 == receiver.recv(buf, 2));
-    #endif
+#endif
     CHECK(0 == memcmp(buf, str, 2));
 }
 
@@ -126,7 +126,7 @@ TEST_CASE("socket send dontwait", "[socket]")
     auto res = s.send(zmq::buffer(buf), zmq::send_flags::dontwait);
     CHECK(!res);
     res = s.send(zmq::buffer(buf),
-                  zmq::send_flags::dontwait | zmq::send_flags::sndmore);
+                 zmq::send_flags::dontwait | zmq::send_flags::sndmore);
     CHECK(!res);
 
     zmq::message_t msg;
@@ -253,16 +253,15 @@ TEST_CASE("socket proxy", "[socket]")
     front.bind("inproc://test1");
     back.bind("inproc://test2");
     capture.bind("inproc://test3");
-    auto f = std::async(std::launch::async, [&]() {
+    auto f = std::async(std::launch::async, [&]()
+    {
         auto s1 = std::move(front);
         auto s2 = std::move(back);
         auto s3 = std::move(capture);
-        try
-        {
+        try {
             zmq::proxy(s1, s2, zmq::socket_ref(s3));
         }
-        catch (const zmq::error_t& e)
-        {
+        catch (const zmq::error_t &e) {
             return e.num() == ETERM;
         }
         return false;
@@ -280,16 +279,15 @@ TEST_CASE("socket proxy steerable", "[socket]")
     front.bind("inproc://test1");
     back.bind("inproc://test2");
     control.connect("inproc://test3");
-    auto f = std::async(std::launch::async, [&]() {
+    auto f = std::async(std::launch::async, [&]()
+    {
         auto s1 = std::move(front);
         auto s2 = std::move(back);
         auto s3 = std::move(control);
-        try
-        {
+        try {
             zmq::proxy_steerable(s1, s2, zmq::socket_ref(), s3);
         }
-        catch (const zmq::error_t& e)
-        {
+        catch (const zmq::error_t &e) {
             return e.num() == ETERM;
         }
         return false;

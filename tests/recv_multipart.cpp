@@ -10,8 +10,7 @@ TEST_CASE("recv_multipart test", "[recv_multipart]")
     output.bind("inproc://multipart.test");
     input.connect("inproc://multipart.test");
 
-    SECTION("send 1 message")
-    {
+    SECTION("send 1 message") {
         input.send(zmq::str_buffer("hello"));
 
         std::vector<zmq::message_t> msgs;
@@ -21,8 +20,7 @@ TEST_CASE("recv_multipart test", "[recv_multipart]")
         REQUIRE(msgs.size() == 1);
         CHECK(msgs[0].size() == 5);
     }
-    SECTION("send 2 messages")
-    {
+    SECTION("send 2 messages") {
         input.send(zmq::str_buffer("hello"), zmq::send_flags::sndmore);
         input.send(zmq::str_buffer("world!"));
 
@@ -34,26 +32,27 @@ TEST_CASE("recv_multipart test", "[recv_multipart]")
         CHECK(msgs[0].size() == 5);
         CHECK(msgs[1].size() == 6);
     }
-    SECTION("send no messages, dontwait")
-    {
+    SECTION("send no messages, dontwait") {
         std::vector<zmq::message_t> msgs;
-        auto ret = zmq::recv_multipart(output, std::back_inserter(msgs), zmq::recv_flags::dontwait);
+        auto ret = zmq::recv_multipart(output, std::back_inserter(msgs),
+                                       zmq::recv_flags::dontwait);
         CHECK_FALSE(ret);
         REQUIRE(msgs.size() == 0);
     }
-    SECTION("send 1 partial message, dontwait")
-    {
+    SECTION("send 1 partial message, dontwait") {
         input.send(zmq::str_buffer("hello"), zmq::send_flags::sndmore);
 
         std::vector<zmq::message_t> msgs;
-        auto ret = zmq::recv_multipart(output, std::back_inserter(msgs), zmq::recv_flags::dontwait);
+        auto ret = zmq::recv_multipart(output, std::back_inserter(msgs),
+                                       zmq::recv_flags::dontwait);
         CHECK_FALSE(ret);
         REQUIRE(msgs.size() == 0);
     }
-    SECTION("recv with invalid socket")
-    {
+    SECTION("recv with invalid socket") {
         std::vector<zmq::message_t> msgs;
-        CHECK_THROWS_AS(zmq::recv_multipart(zmq::socket_ref(), std::back_inserter(msgs)), const zmq::error_t &);
+        CHECK_THROWS_AS(
+            zmq::recv_multipart(zmq::socket_ref(), std::back_inserter(msgs)),
+            const zmq::error_t &);
     }
 }
 
@@ -65,8 +64,7 @@ TEST_CASE("recv_multipart_n test", "[recv_multipart]")
     output.bind("inproc://multipart.test");
     input.connect("inproc://multipart.test");
 
-    SECTION("send 1 message")
-    {
+    SECTION("send 1 message") {
         input.send(zmq::str_buffer("hello"));
 
         std::array<zmq::message_t, 1> msgs;
@@ -75,8 +73,7 @@ TEST_CASE("recv_multipart_n test", "[recv_multipart]")
         CHECK(*ret == 1);
         CHECK(msgs[0].size() == 5);
     }
-    SECTION("send 1 message 2")
-    {
+    SECTION("send 1 message 2") {
         input.send(zmq::str_buffer("hello"));
 
         std::array<zmq::message_t, 2> msgs;
@@ -86,28 +83,25 @@ TEST_CASE("recv_multipart_n test", "[recv_multipart]")
         CHECK(msgs[0].size() == 5);
         CHECK(msgs[1].size() == 0);
     }
-    SECTION("send 2 messages, recv 1")
-    {
+    SECTION("send 2 messages, recv 1") {
         input.send(zmq::str_buffer("hello"), zmq::send_flags::sndmore);
         input.send(zmq::str_buffer("world!"));
 
         std::array<zmq::message_t, 1> msgs;
         CHECK_THROWS_AS(
-            zmq::recv_multipart_n(output, msgs.data(), msgs.size()), 
+            zmq::recv_multipart_n(output, msgs.data(), msgs.size()),
             const std::runtime_error&);
     }
-    SECTION("recv 0")
-    {
+    SECTION("recv 0") {
         input.send(zmq::str_buffer("hello"), zmq::send_flags::sndmore);
         input.send(zmq::str_buffer("world!"));
 
         std::array<zmq::message_t, 1> msgs;
         CHECK_THROWS_AS(
-            zmq::recv_multipart_n(output, msgs.data(), 0), 
+            zmq::recv_multipart_n(output, msgs.data(), 0),
             const std::runtime_error&);
     }
-    SECTION("send 2 messages")
-    {
+    SECTION("send 2 messages") {
         input.send(zmq::str_buffer("hello"), zmq::send_flags::sndmore);
         input.send(zmq::str_buffer("world!"));
 
@@ -118,26 +112,27 @@ TEST_CASE("recv_multipart_n test", "[recv_multipart]")
         CHECK(msgs[0].size() == 5);
         CHECK(msgs[1].size() == 6);
     }
-    SECTION("send no messages, dontwait")
-    {
+    SECTION("send no messages, dontwait") {
         std::array<zmq::message_t, 1> msgs;
-        auto ret = zmq::recv_multipart_n(output, msgs.data(), msgs.size(), zmq::recv_flags::dontwait);
+        auto ret = zmq::recv_multipart_n(output, msgs.data(), msgs.size(),
+                                         zmq::recv_flags::dontwait);
         CHECK_FALSE(ret);
         REQUIRE(msgs[0].size() == 0);
     }
-    SECTION("send 1 partial message, dontwait")
-    {
+    SECTION("send 1 partial message, dontwait") {
         input.send(zmq::str_buffer("hello"), zmq::send_flags::sndmore);
-        
+
         std::array<zmq::message_t, 1> msgs;
-        auto ret = zmq::recv_multipart_n(output, msgs.data(), msgs.size(), zmq::recv_flags::dontwait);
+        auto ret = zmq::recv_multipart_n(output, msgs.data(), msgs.size(),
+                                         zmq::recv_flags::dontwait);
         CHECK_FALSE(ret);
         REQUIRE(msgs[0].size() == 0);
     }
-    SECTION("recv with invalid socket")
-    {
+    SECTION("recv with invalid socket") {
         std::array<zmq::message_t, 1> msgs;
-        CHECK_THROWS_AS(zmq::recv_multipart_n(zmq::socket_ref(), msgs.data(), msgs.size()), const zmq::error_t &);
+        CHECK_THROWS_AS(
+            zmq::recv_multipart_n(zmq::socket_ref(), msgs.data(), msgs.size()),
+            const zmq::error_t &);
     }
 }
 

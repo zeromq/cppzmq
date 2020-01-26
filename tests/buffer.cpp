@@ -35,10 +35,10 @@ TEST_CASE("buffer data ctor", "[buffer]")
     CHECK(mb.size() == from_mut.size());
     CHECK(mb.data() == from_mut.data());
     const auto cmb = mb;
-    static_assert(std::is_same<decltype(cmb.data()), void*>::value, "");
+    static_assert(std::is_same<decltype(cmb.data()), void *>::value, "");
 
-    constexpr const void* cp = nullptr;
-    constexpr void* p = nullptr;
+    constexpr const void *cp = nullptr;
+    constexpr void *p = nullptr;
     constexpr zmq::const_buffer cecb = zmq::buffer(p, 0);
     constexpr zmq::mutable_buffer cemb = zmq::buffer(p, 0);
     CHECK(cecb.data() == nullptr);
@@ -188,14 +188,14 @@ TEST_CASE("mutable_buffer creation vector", "[buffer]")
 TEST_CASE("const_buffer creation vector", "[buffer]")
 {
     std::vector<BT> d(10);
-    zmq::const_buffer b = zmq::buffer(static_cast<const std::vector<BT>&>(d));
+    zmq::const_buffer b = zmq::buffer(static_cast<const std::vector<BT> &>(d));
     CHECK(b.size() == d.size() * sizeof(BT));
     CHECK(b.data() == d.data());
-    zmq::const_buffer b2 = zmq::buffer(static_cast<const std::vector<BT>&>(d), 4);
+    zmq::const_buffer b2 = zmq::buffer(static_cast<const std::vector<BT> &>(d), 4);
     CHECK(b2.size() == 4);
     CHECK(b2.data() == d.data());
     d.clear();
-    b = zmq::buffer(static_cast<const std::vector<BT>&>(d));
+    b = zmq::buffer(static_cast<const std::vector<BT> &>(d));
     CHECK(b.size() == 0);
     CHECK(b.data() == nullptr);
 }
