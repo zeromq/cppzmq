@@ -696,7 +696,7 @@ class context_t
     // Causes all blocking socket operations and any further
     // operations to return with ETERM.
     // Operation on sockets constructed after
-    // this call will however NOT return with ETERM.
+    // this call might not return with ETERM.
     void shutdown() ZMQ_NOTHROW
     {
         if (ptr == ZMQ_NULLPTR)

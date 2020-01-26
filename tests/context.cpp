@@ -27,10 +27,9 @@ TEST_CASE("context shutdown", "[context]")
     CHECK(NULL == (void *) context);
 }
 
-TEST_CASE("context shutdown often", "[context]")
+TEST_CASE("context shutdown again", "[context]")
 {
     zmq::context_t context;
-    context.shutdown();
     context.shutdown();
     context.shutdown();
     CHECK(NULL != (void *) context);
