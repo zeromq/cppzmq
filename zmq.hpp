@@ -677,6 +677,7 @@ class context_t
 
     ~context_t() ZMQ_NOTHROW { close(); }
 
+    // Terminates context (see also shutdown()).
     void close() ZMQ_NOTHROW
     {
         if (ptr == ZMQ_NULLPTR)
@@ -689,6 +690,17 @@ class context_t
 
         ZMQ_ASSERT(rc == 0);
         ptr = ZMQ_NULLPTR;
+    }
+
+    // Shutdown context in preparation for termination (close()).
+    // Causes all blocking socket operations and any further
+    // socket operations to return with ETERM.
+    void shutdown() ZMQ_NOTHROW
+    {
+        if (ptr == ZMQ_NULLPTR)
+            return;
+        int rc = zmq_ctx_shutdown(ptr);
+        ZMQ_ASSERT(rc == 0);
     }
 
     //  Be careful with this, it's probably only useful for
