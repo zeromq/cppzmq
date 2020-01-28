@@ -37,26 +37,23 @@
 
 namespace zmq
 {
-
 #ifdef ZMQ_CPP11
 
 namespace detail
 {
 template<bool CheckN, class OutputIt>
-recv_result_t recv_multipart_n(socket_ref s, OutputIt out, size_t n,
-                               recv_flags flags)
+recv_result_t
+recv_multipart_n(socket_ref s, OutputIt out, size_t n, recv_flags flags)
 {
     size_t msg_count = 0;
     message_t msg;
-    while (true)
-    {
-        if (CheckN)
-        {
+    while (true) {
+        if (CheckN) {
             if (msg_count >= n)
-                throw std::runtime_error("Too many message parts in recv_multipart_n");
+                throw std::runtime_error(
+                  "Too many message parts in recv_multipart_n");
         }
-        if (!s.recv(msg, flags))
-        {
+        if (!s.recv(msg, flags)) {
             // zmq ensures atomic delivery of messages
             assert(msg_count == 0);
             return {};
@@ -84,9 +81,9 @@ recv_result_t recv_multipart_n(socket_ref s, OutputIt out, size_t n,
     message parts. It is adviced to close this socket in that event.
 */
 template<class OutputIt>
-ZMQ_NODISCARD
-recv_result_t recv_multipart(socket_ref s, OutputIt out,
-                             recv_flags flags = recv_flags::none)
+ZMQ_NODISCARD recv_result_t recv_multipart(socket_ref s,
+                                           OutputIt out,
+                                           recv_flags flags = recv_flags::none)
 {
     return detail::recv_multipart_n<false>(s, std::move(out), 0, flags);
 }
@@ -106,9 +103,10 @@ recv_result_t recv_multipart(socket_ref s, OutputIt out,
     message parts. It is adviced to close this socket in that event.
 */
 template<class OutputIt>
-ZMQ_NODISCARD
-recv_result_t recv_multipart_n(socket_ref s, OutputIt out, size_t n,
-                               recv_flags flags = recv_flags::none)
+ZMQ_NODISCARD recv_result_t recv_multipart_n(socket_ref s,
+                                             OutputIt out,
+                                             size_t n,
+                                             recv_flags flags = recv_flags::none)
 {
     return detail::recv_multipart_n<true>(s, std::move(out), n, flags);
 }
@@ -126,25 +124,23 @@ recv_result_t recv_multipart_n(socket_ref s, OutputIt out, size_t n,
     may have been only partially sent. It is adviced to close this socket in that event.
 */
 template<class Range,
-             typename = typename std::enable_if<
-               detail::is_range<Range>::value
-               && (std::is_same<detail::range_value_t<Range>, message_t>::value
-               || detail::is_buffer<detail::range_value_t<Range>>::value)
-               >::type>
-send_result_t send_multipart(socket_ref s, Range&& msgs,
-                             send_flags flags = send_flags::none)
+         typename = typename std::enable_if<
+           detail::is_range<Range>::value
+           && (std::is_same<detail::range_value_t<Range>, message_t>::value
+               || detail::is_buffer<detail::range_value_t<Range>>::value)>::type>
+send_result_t
+send_multipart(socket_ref s, Range &&msgs, send_flags flags = send_flags::none)
 {
     using std::begin;
     using std::end;
     auto it = begin(msgs);
     const auto end_it = end(msgs);
     size_t msg_count = 0;
-    while (it != end_it)
-    {
+    while (it != end_it) {
         const auto next = std::next(it);
-        const auto msg_flags = flags | (next == end_it ? send_flags::none : send_flags::sndmore);
-        if (!s.send(*it, msg_flags))
-        {
+        const auto msg_flags =
+          flags | (next == end_it ? send_flags::none : send_flags::sndmore);
+        if (!s.send(*it, msg_flags)) {
             // zmq ensures atomic delivery of messages
             assert(it == begin(msgs));
             return {};
@@ -250,13 +246,13 @@ class multipart_t
         bool more = true;
         while (more) {
             message_t message;
-            #ifdef ZMQ_CPP11
+#ifdef ZMQ_CPP11
             if (!socket.recv(message, static_cast<recv_flags>(flags)))
                 return false;
-            #else
+#else
             if (!socket.recv(&message, flags))
                 return false;
-            #endif
+#endif
             more = message.more();
             add(std::move(message));
         }
@@ -271,14 +267,14 @@ class multipart_t
         while (more) {
             message_t message = pop();
             more = size() > 0;
-            #ifdef ZMQ_CPP11
-            if (!socket.send(message,
-                             static_cast<send_flags>((more ? ZMQ_SNDMORE : 0) | flags)))
+#ifdef ZMQ_CPP11
+            if (!socket.send(message, static_cast<send_flags>(
+                                        (more ? ZMQ_SNDMORE : 0) | flags)))
                 return false;
-            #else
+#else
             if (!socket.send(message, (more ? ZMQ_SNDMORE : 0) | flags))
                 return false;
-            #endif
+#endif
         }
         clear();
         return true;
@@ -382,16 +378,10 @@ class multipart_t
     }
 
     // get message part from front
-    const message_t &front()
-    {
-        return m_parts.front();
-    }
+    const message_t &front() { return m_parts.front(); }
 
     // get message part from back
-    const message_t &back()
-    {
-        return m_parts.back();
-    }
+    const message_t &back() { return m_parts.back(); }
 
     // Get pointer to a specific message part
     const message_t *peek(size_t index) const { return &m_parts[index]; }
@@ -508,9 +498,8 @@ class active_poller_t
     {
         auto it = decltype(handlers)::iterator{};
         auto inserted = bool{};
-        std::tie(it, inserted) =
-          handlers.emplace(socket,
-                           std::make_shared<handler_type>(std::move(handler)));
+        std::tie(it, inserted) = handlers.emplace(
+          socket, std::make_shared<handler_type>(std::move(handler)));
         try {
             base_poller.add(socket, events,
                             inserted && *(it->second) ? it->second.get() : nullptr);
@@ -549,7 +538,8 @@ class active_poller_t
             need_rebuild = false;
         }
         const auto count = base_poller.wait_all(poller_events, timeout);
-        std::for_each(poller_events.begin(), poller_events.begin() + static_cast<ptrdiff_t>(count),
+        std::for_each(poller_events.begin(),
+                      poller_events.begin() + static_cast<ptrdiff_t>(count),
                       [](decltype(base_poller)::event_type &event) {
                           if (event.user_data != nullptr)
                               (*event.user_data)(event.events);

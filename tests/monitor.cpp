@@ -8,7 +8,7 @@
 
 class mock_monitor_t : public zmq::monitor_t
 {
-  public:
+public:
     void on_event_connect_delayed(const zmq_event_t &, const char *) ZMQ_OVERRIDE
     {
         ++connect_delayed;
@@ -38,13 +38,11 @@ TEST_CASE("monitor move construct", "[monitor]")
 {
     zmq::context_t ctx;
     zmq::socket_t sock(ctx, ZMQ_DEALER);
-    SECTION("move ctor empty")
-    {
+    SECTION("move ctor empty") {
         zmq::monitor_t monitor1;
         zmq::monitor_t monitor2 = std::move(monitor1);
     }
-    SECTION("move ctor init")
-    {
+    SECTION("move ctor init") {
         zmq::monitor_t monitor1;
         monitor1.init(sock, "inproc://monitor-client");
         zmq::monitor_t monitor2 = std::move(monitor1);
@@ -55,21 +53,18 @@ TEST_CASE("monitor move assign", "[monitor]")
 {
     zmq::context_t ctx;
     zmq::socket_t sock(ctx, ZMQ_DEALER);
-    SECTION("move assign empty")
-    {
-      zmq::monitor_t monitor1;
-      zmq::monitor_t monitor2;
-      monitor1 = std::move(monitor2);
+    SECTION("move assign empty") {
+        zmq::monitor_t monitor1;
+        zmq::monitor_t monitor2;
+        monitor1 = std::move(monitor2);
     }
-    SECTION("move assign init")
-    {
+    SECTION("move assign init") {
         zmq::monitor_t monitor1;
         monitor1.init(sock, "inproc://monitor-client");
         zmq::monitor_t monitor2;
         monitor2 = std::move(monitor1);
     }
-    SECTION("move assign init both")
-    {
+    SECTION("move assign init both") {
         zmq::monitor_t monitor1;
         monitor1.init(sock, "inproc://monitor-client");
         zmq::monitor_t monitor2;
@@ -101,10 +96,11 @@ TEST_CASE("monitor init abort", "[monitor]")
 {
     class mock_monitor : public mock_monitor_t
     {
-      public:
-        mock_monitor(std::function<void(void)> handle_connected)
-            : handle_connected{std::move(handle_connected)}
-        {}
+    public:
+        mock_monitor(std::function<void(void)> handle_connected) :
+            handle_connected{std::move(handle_connected)}
+        {
+        }
 
         void on_event_connected(const zmq_event_t &e, const char *m) ZMQ_OVERRIDE
         {
@@ -113,7 +109,6 @@ TEST_CASE("monitor init abort", "[monitor]")
         }
 
         std::function<void(void)> handle_connected;
-
     };
 
     common_server_client_setup s(false);
@@ -122,14 +117,16 @@ TEST_CASE("monitor init abort", "[monitor]")
     std::condition_variable cond_var;
     bool done{false};
 
-    mock_monitor monitor([&]() {
+    mock_monitor monitor([&]()
+    {
         std::lock_guard<std::mutex> lock(mutex);
         done = true;
         cond_var.notify_one();
     });
     monitor.init(s.client, "inproc://foo");
 
-    auto thread = std::thread([&monitor] {
+    auto thread = std::thread([&monitor]
+    {
         while (monitor.check_event(-1)) {
         }
     });
