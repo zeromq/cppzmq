@@ -29,7 +29,11 @@ add_executable(
     send_multipart.cpp
     monitor.cpp
     utilities.cpp
+    ../zmq.hpp
+    ../zmq_addon.hpp
 )
+
+set_property(TARGET unit_tests PROPERTY CXX_STANDARD 17)
 
 add_dependencies(unit_tests catch)
 

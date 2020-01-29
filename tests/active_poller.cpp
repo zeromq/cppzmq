@@ -158,6 +158,8 @@ namespace
 {
 struct server_client_setup : common_server_client_setup
 {
+    using common_server_client_setup::common_server_client_setup;
+
     zmq::active_poller_t::handler_type handler = [&](zmq::event_flags e)
     {
         events = e;

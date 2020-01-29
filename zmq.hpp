@@ -33,13 +33,15 @@
 #endif
 #if (defined(__cplusplus) && __cplusplus >= 201402L)                                \
   || (defined(_HAS_CXX14) && _HAS_CXX14 == 1)                                       \
-  || (defined(_HAS_CXX17)                                                           \
-      && _HAS_CXX17                                                                 \
-           == 1) // _HAS_CXX14 might not be defined when using C++17 on MSVC
+  || (defined(_HAS_CXX17) && _HAS_CXX17 == 1)                                       \
+  || (defined(_MSVC_LANG)                                                           \
+      && _MSVC_LANG                                                                 \
+           >= 201402L) // _HAS_CXX14 might not be defined when using C++17 on MSVC
 #define ZMQ_CPP14
 #endif
 #if (defined(__cplusplus) && __cplusplus >= 201703L)                                \
-  || (defined(_HAS_CXX17) && _HAS_CXX17 == 1)
+  || (defined(_HAS_CXX17) && _HAS_CXX17 == 1)                                       \
+  || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
 #define ZMQ_CPP17
 #endif
 
