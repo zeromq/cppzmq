@@ -63,4 +63,20 @@ TEST_CASE("context - use socket after shutdown", "[context]")
         REQUIRE(e.num() == ETERM);
     }
 }
+
+TEST_CASE("context set/get options", "[context]")
+{
+    zmq::context_t context;
+    context.set(zmq::ctxopt::blocky, false);
+    context.set(zmq::ctxopt::io_threads, 5);
+    CHECK(context.get(zmq::ctxopt::io_threads) == 5);
+
+    CHECK_THROWS_AS(
+        context.set(static_cast<zmq::ctxopt>(-42), 5),
+        const zmq::error_t &);
+
+    CHECK_THROWS_AS(
+        context.get(static_cast<zmq::ctxopt>(-42)),
+        const zmq::error_t &);
+}
 #endif
