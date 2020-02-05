@@ -643,7 +643,7 @@ enum class ctxopt
     thread_affinity_cpu_remove = ZMQ_THREAD_AFFINITY_CPU_REMOVE,
     thread_name_prefix = ZMQ_THREAD_NAME_PREFIX,
     max_msgsz = ZMQ_MAX_MSGSZ,
-#ifdef ZMQ_BUILD_DRAFT_API
+#ifdef ZMQ_ZERO_COPY_RECV
     zero_copy_recv = ZMQ_ZERO_COPY_RECV,
 #endif
     max_sockets = ZMQ_MAX_SOCKETS,
