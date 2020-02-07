@@ -64,6 +64,7 @@
 #define ZMQ_NULLPTR nullptr
 #define ZMQ_CONSTEXPR_FN constexpr
 #define ZMQ_CONSTEXPR_VAR constexpr
+#define ZMQ_CPP11_DEPRECATED(msg) ZMQ_DEPRECATED(msg)
 #else
 #define ZMQ_NOTHROW throw()
 #define ZMQ_EXPLICIT
@@ -71,6 +72,7 @@
 #define ZMQ_NULLPTR 0
 #define ZMQ_CONSTEXPR_FN
 #define ZMQ_CONSTEXPR_VAR const
+#define ZMQ_CPP11_DEPRECATED(msg)
 #endif
 
 #include <zmq.h>
@@ -630,6 +632,27 @@ inline void swap(message_t &a, message_t &b) ZMQ_NOTHROW
     a.swap(b);
 }
 
+#ifdef ZMQ_CPP11
+enum class ctxopt
+{
+    blocky = ZMQ_BLOCKY,
+    io_threads = ZMQ_IO_THREADS,
+    thread_sched_policy = ZMQ_THREAD_SCHED_POLICY,
+    thread_priority = ZMQ_THREAD_PRIORITY,
+    thread_affinity_cpu_add = ZMQ_THREAD_AFFINITY_CPU_ADD,
+    thread_affinity_cpu_remove = ZMQ_THREAD_AFFINITY_CPU_REMOVE,
+    thread_name_prefix = ZMQ_THREAD_NAME_PREFIX,
+    max_msgsz = ZMQ_MAX_MSGSZ,
+#ifdef ZMQ_ZERO_COPY_RECV
+    zero_copy_recv = ZMQ_ZERO_COPY_RECV,
+#endif
+    max_sockets = ZMQ_MAX_SOCKETS,
+    socket_limit = ZMQ_SOCKET_LIMIT,
+    ipv6 = ZMQ_IPV6,
+    msg_t_size = ZMQ_MSG_T_SIZE
+};
+#endif
+
 class context_t
 {
   public:
@@ -664,6 +687,9 @@ class context_t
     }
 #endif
 
+    ~context_t() ZMQ_NOTHROW { close(); }
+
+    ZMQ_CPP11_DEPRECATED("from 4.7.0, use set taking zmq::ctxopt instead")
     int setctxopt(int option_, int optval_)
     {
         int rc = zmq_ctx_set(ptr, option_, optval_);
@@ -671,9 +697,28 @@ class context_t
         return rc;
     }
 
+    ZMQ_CPP11_DEPRECATED("from 4.7.0, use get taking zmq::ctxopt instead")
     int getctxopt(int option_) { return zmq_ctx_get(ptr, option_); }
 
-    ~context_t() ZMQ_NOTHROW { close(); }
+#ifdef ZMQ_CPP11
+    void set(ctxopt option, int optval)
+    {
+        int rc = zmq_ctx_set(ptr, static_cast<int>(option), optval);
+        if (rc == -1)
+            throw error_t();
+    }
+
+    ZMQ_NODISCARD int get(ctxopt option)
+    {
+        int rc = zmq_ctx_get(ptr, static_cast<int>(option));
+        // some options have a default value of -1
+        // which is unfortunate, and may result in errors
+        // that don't make sense
+        if (rc == -1)
+            throw error_t();
+        return rc;
+    }
+#endif
 
     // Terminates context (see also shutdown()).
     void close() ZMQ_NOTHROW
@@ -1266,9 +1311,7 @@ class socket_base
 
     bool connected() const ZMQ_NOTHROW { return (_handle != ZMQ_NULLPTR); }
 
-#ifdef ZMQ_CPP11
-    ZMQ_DEPRECATED("from 4.3.1, use send taking a const_buffer and send_flags")
-#endif
+    ZMQ_CPP11_DEPRECATED("from 4.3.1, use send taking a const_buffer and send_flags")
     size_t send(const void *buf_, size_t len_, int flags_ = 0)
     {
         int nbytes = zmq_send(_handle, buf_, len_, flags_);
@@ -1279,9 +1322,7 @@ class socket_base
         throw error_t();
     }
 
-#ifdef ZMQ_CPP11
-    ZMQ_DEPRECATED("from 4.3.1, use send taking message_t and send_flags")
-#endif
+    ZMQ_CPP11_DEPRECATED("from 4.3.1, use send taking message_t and send_flags")
     bool send(message_t &msg_,
               int flags_ = 0) // default until removed
     {
@@ -1294,10 +1335,9 @@ class socket_base
     }
 
     template<typename T>
-#ifdef ZMQ_CPP11
-    ZMQ_DEPRECATED("from 4.4.1, use send taking message_t or buffer (for contiguous "
-                   "ranges), and send_flags")
-#endif
+    ZMQ_CPP11_DEPRECATED(
+      "from 4.4.1, use send taking message_t or buffer (for contiguous "
+      "ranges), and send_flags")
     bool send(T first, T last, int flags_ = 0)
     {
         zmq::message_t msg(first, last);
@@ -1310,9 +1350,7 @@ class socket_base
     }
 
 #ifdef ZMQ_HAS_RVALUE_REFS
-#ifdef ZMQ_CPP11
-    ZMQ_DEPRECATED("from 4.3.1, use send taking message_t and send_flags")
-#endif
+    ZMQ_CPP11_DEPRECATED("from 4.3.1, use send taking message_t and send_flags")
     bool send(message_t &&msg_,
               int flags_ = 0) // default until removed
     {
@@ -1352,9 +1390,8 @@ class socket_base
     }
 #endif
 
-#ifdef ZMQ_CPP11
-    ZMQ_DEPRECATED("from 4.3.1, use recv taking a mutable_buffer and recv_flags")
-#endif
+    ZMQ_CPP11_DEPRECATED(
+      "from 4.3.1, use recv taking a mutable_buffer and recv_flags")
     size_t recv(void *buf_, size_t len_, int flags_ = 0)
     {
         int nbytes = zmq_recv(_handle, buf_, len_, flags_);
@@ -1365,10 +1402,8 @@ class socket_base
         throw error_t();
     }
 
-#ifdef ZMQ_CPP11
-    ZMQ_DEPRECATED(
+    ZMQ_CPP11_DEPRECATED(
       "from 4.3.1, use recv taking a reference to message_t and recv_flags")
-#endif
     bool recv(message_t *msg_, int flags_ = 0)
     {
         int nbytes = zmq_msg_recv(msg_->handle(), _handle, flags_);
