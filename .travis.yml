@@ -58,7 +58,7 @@ matrix:
           packages:
             - g++-6
       env:
-        - ZMQ_VERSION=4.2.0 MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+        - ZMQ_VERSION=4.2.5 MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
 
     # GCC 4.9, draft disabled (default), latest libzmq (default)
     - os: linux
