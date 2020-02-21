@@ -67,9 +67,11 @@ TEST_CASE("context - use socket after shutdown", "[context]")
 TEST_CASE("context set/get options", "[context]")
 {
     zmq::context_t context;
+#if defined(ZMQ_BLOCKY) && defined(ZMQ_IO_THREADS)
     context.set(zmq::ctxopt::blocky, false);
     context.set(zmq::ctxopt::io_threads, 5);
     CHECK(context.get(zmq::ctxopt::io_threads) == 5);
+#endif
 
     CHECK_THROWS_AS(
         context.set(static_cast<zmq::ctxopt>(-42), 5),

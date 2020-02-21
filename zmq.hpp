@@ -635,21 +635,45 @@ inline void swap(message_t &a, message_t &b) ZMQ_NOTHROW
 #ifdef ZMQ_CPP11
 enum class ctxopt
 {
+#ifdef ZMQ_BLOCKY
     blocky = ZMQ_BLOCKY,
+#endif
+#ifdef ZMQ_IO_THREADS
     io_threads = ZMQ_IO_THREADS,
+#endif
+#ifdef ZMQ_THREAD_SCHED_POLICY
     thread_sched_policy = ZMQ_THREAD_SCHED_POLICY,
+#endif
+#ifdef ZMQ_THREAD_PRIORITY
     thread_priority = ZMQ_THREAD_PRIORITY,
+#endif
+#ifdef ZMQ_THREAD_AFFINITY_CPU_ADD
     thread_affinity_cpu_add = ZMQ_THREAD_AFFINITY_CPU_ADD,
+#endif
+#ifdef ZMQ_THREAD_AFFINITY_CPU_REMOVE
     thread_affinity_cpu_remove = ZMQ_THREAD_AFFINITY_CPU_REMOVE,
+#endif
+#ifdef ZMQ_THREAD_NAME_PREFIX
     thread_name_prefix = ZMQ_THREAD_NAME_PREFIX,
+#endif
+#ifdef ZMQ_MAX_MSGSZ
     max_msgsz = ZMQ_MAX_MSGSZ,
+#endif
 #ifdef ZMQ_ZERO_COPY_RECV
     zero_copy_recv = ZMQ_ZERO_COPY_RECV,
 #endif
+#ifdef ZMQ_MAX_SOCKETS
     max_sockets = ZMQ_MAX_SOCKETS,
+#endif
+#ifdef ZMQ_SOCKET_LIMIT
     socket_limit = ZMQ_SOCKET_LIMIT,
+#endif
+#ifdef ZMQ_IPV6
     ipv6 = ZMQ_IPV6,
+#endif
+#ifdef ZMQ_MSG_T_SIZE
     msg_t_size = ZMQ_MSG_T_SIZE
+#endif
 };
 #endif
 
