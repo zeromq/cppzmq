@@ -99,7 +99,7 @@ namespace zmq {
         }
 
         ~actor_t() {
-            auto sres = _pipe.send(message_t{"$TERM"}, send_flags::dontwait);
+            auto sres = _pipe.send(message_t("$TERM",5), send_flags::dontwait);
             if (sres) {
                 message_t rmsg;
                 auto res = _pipe.recv(rmsg, recv_flags::none);
