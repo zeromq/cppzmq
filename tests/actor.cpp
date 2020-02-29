@@ -1,9 +1,8 @@
 #include <catch.hpp>
-#include <zmq_actor.hpp>
 
+#include <zmq_actor.hpp>
 #ifdef ZMQ_CPP11
 #include <future>
-#endif
 
 #if (__cplusplus >= 201703L)
 static_assert(std::is_nothrow_swappable<zmq::socket_t>::value,
@@ -40,3 +39,5 @@ TEST_CASE("actor internal termination", "[actor]")
         actor.pipe().send(zmq::message_t{}, zmq::send_flags::none);
     }
 }
+
+#endif  // ZMQ_CPP11

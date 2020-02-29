@@ -25,6 +25,10 @@
 #define __ZMQ_ACTOR_HPP_INCLUDED__
 
 #include "zmq.hpp"
+
+#ifdef ZMQ_CPP11
+// Actor needs some threading.
+// Initial implementation uses std::thread so C++11 only.
 #include <thread>
 
 namespace zmq {
@@ -113,4 +117,5 @@ namespace zmq {
     
 }
 
+#endif
 #endif
