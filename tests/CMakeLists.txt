@@ -29,6 +29,7 @@ add_executable(
     send_multipart.cpp
     monitor.cpp
     utilities.cpp
+    actor.cpp
 )
 
 add_dependencies(unit_tests catch)

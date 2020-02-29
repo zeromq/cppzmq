@@ -466,6 +466,74 @@ class multipart_t
         return true;
     }
 
+    // Return single part message_t encoded from this multipart_t in a
+    // CZMQ zmsg_t/zframe_t compatible way.
+    message_t encode() const {
+        size_t total_size = 0;
+        for (auto& part : *this) {
+            size_t frame_size = part.size();
+            if (frame_size < 255) {
+                total_size += frame_size + 1;
+            }
+            else {
+                total_size += frame_size + 1 + 4;
+            }
+        }
+        message_t encoded(total_size);
+        unsigned char* dest = encoded.data<unsigned char>();
+        for (auto& part : *this) {
+            size_t frame_size = part.size();
+            if (frame_size < 255) {
+                *dest++ = (unsigned char) frame_size;
+                memcpy (dest, part.data<unsigned char>(), frame_size);
+                dest += frame_size;
+            }
+            else {
+                *dest++ = 0xFF;
+                *dest++ = (frame_size >> 24) & 255;
+                *dest++ = (frame_size >> 16) & 255;
+                *dest++ = (frame_size >>  8) & 255;
+                *dest++ =  frame_size        & 255;
+                memcpy (dest, part.data<unsigned char>(), frame_size);
+                dest += frame_size;
+            }
+        }
+        return encoded;
+    }
+    // Decode the CZMQ zmsg_t/zframe_t compatible encoded single part
+    // message into multi-parts and append to self.  Return true if
+    // self was updated.  A false value will be returned if the
+    // encoded is garbage.
+    bool decode(const message_t& encoded) {
+        const unsigned char *source = encoded.data<unsigned char>();
+        const unsigned char *limit = source + encoded.size();
+        multipart_t decoded;
+        while (source < limit) {
+            size_t frame_size = *source++;
+            if (frame_size == 255) {
+                if (source > limit - 4) {
+                    // garbage, bail
+                    return false;
+                }
+
+                frame_size
+                    = (source [0] << 24)
+                    + (source [1] << 16)
+                    + (source [2] << 8)
+                    +  source [3];
+                source += 4;
+            }
+            if (source > limit - frame_size) {
+                // garbage, bail
+                return false;
+            }
+            decoded.addmem(source, frame_size);
+            source += frame_size;
+        }
+        append(std::move(decoded));
+        return true;
+    }
+
   private:
     // Disable implicit copying (moving is more efficient)
     multipart_t(const multipart_t &other) ZMQ_DELETED_FUNCTION;
