@@ -17,6 +17,7 @@ find_package(Threads)
 
 add_executable(
     unit_tests
+    actor.cpp
     buffer.cpp
     message.cpp
     context.cpp
@@ -29,7 +30,6 @@ add_executable(
     send_multipart.cpp
     monitor.cpp
     utilities.cpp
-    actor.cpp
 )
 
 add_dependencies(unit_tests catch)
