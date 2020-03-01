@@ -466,37 +466,42 @@ class multipart_t
         return true;
     }
 
-    // Return single part message_t encoded from this multipart_t in a
-    // CZMQ zmsg_t/zframe_t compatible way.
+    // Return single part message_t encoded from this multipart_t.
+    // This encodes in a manner that should be compatible with the
+    // packing done by CZMQ's zmsg_encode().
     message_t encode() const {
-        size_t total_size = 0;
+        size_t mmsg_size = 0;
         for (auto& part : *this) {
-            size_t frame_size = part.size();
-            if (frame_size < 255) {
-                total_size += frame_size + 1;
+            size_t part_size = part.size();
+            size_t count_size = 5;
+            if (part_size < 255) {
+                count_size = 1;
             }
-            else {
-                total_size += frame_size + 1 + 4;
-            }
+            mmsg_size += part_size + count_size;
         }
-        message_t encoded(total_size);
-        unsigned char* dest = encoded.data<unsigned char>();
+
+        message_t encoded(mmsg_size);
+        unsigned char* buf = encoded.data<unsigned char>();
         for (auto& part : *this) {
-            size_t frame_size = part.size();
-            if (frame_size < 255) {
-                *dest++ = (unsigned char) frame_size;
-                memcpy (dest, part.data<unsigned char>(), frame_size);
-                dest += frame_size;
+            size_t part_size = part.size();
+            const unsigned char* part_data = part.data<unsigned char>();
+
+            // small part
+            if (part_size < 255) {
+                *buf++ = (unsigned char) part_size;
+                memcpy (buf, part_data, part_size);
+                buf += part_size;
+                continue;
             }
-            else {
-                *dest++ = 0xFF;
-                *dest++ = (frame_size >> 24) & 255;
-                *dest++ = (frame_size >> 16) & 255;
-                *dest++ = (frame_size >>  8) & 255;
-                *dest++ =  frame_size        & 255;
-                memcpy (dest, part.data<unsigned char>(), frame_size);
-                dest += frame_size;
-            }
+
+            // big part
+            *buf++ = 0xFF;
+            *buf++ = (part_size >> 24) & 255;
+            *buf++ = (part_size >> 16) & 255;
+            *buf++ = (part_size >>  8) & 255;
+            *buf++ =  part_size        & 255;
+            memcpy (buf, part_data, part_size);
+            buf += part_size;
         }
         return encoded;
     }
@@ -509,26 +514,26 @@ class multipart_t
         const unsigned char *limit = source + encoded.size();
         multipart_t decoded;
         while (source < limit) {
-            size_t frame_size = *source++;
-            if (frame_size == 255) {
+            size_t part_size = *source++;
+            if (part_size == 255) {
                 if (source > limit - 4) {
                     // garbage, bail
                     return false;
                 }
 
-                frame_size
+                part_size
                     = (source [0] << 24)
                     + (source [1] << 16)
                     + (source [2] << 8)
                     +  source [3];
                 source += 4;
             }
-            if (source > limit - frame_size) {
+            if (source > limit - part_size) {
                 // garbage, bail
                 return false;
             }
-            decoded.addmem(source, frame_size);
-            source += frame_size;
+            decoded.addmem(source, part_size);
+            source += part_size;
         }
         append(std::move(decoded));
         return true;
