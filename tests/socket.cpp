@@ -47,6 +47,40 @@ TEST_CASE("socket swap", "[socket]")
     swap(socket1, socket2);
 }
 
+#ifdef ZMQ_CPP11
+TEST_CASE("socket options", "[socket]")
+{
+    zmq::context_t context;
+    zmq::socket_t socket(context, zmq::socket_type::router);
+
+    socket.set(zmq::sockopt::immediate, 0);
+    socket.set(zmq::sockopt::immediate, false);
+    CHECK(socket.get(zmq::sockopt::immediate) == false);
+    // unit out of range
+    CHECK_THROWS_AS(socket.set(zmq::sockopt::immediate, 80), const zmq::error_t &);
+
+    socket.set(zmq::sockopt::linger, 55);
+    CHECK(socket.get(zmq::sockopt::linger) == 55);
+
+    const std::string id = "foobar";
+    socket.set(zmq::sockopt::routing_id, "foobar");
+    socket.set(zmq::sockopt::routing_id, zmq::buffer(id));
+    socket.set(zmq::sockopt::routing_id, id);
+    #ifdef ZMQ_CPP17
+    socket.set(zmq::sockopt::routing_id, std::string_view{id});
+    #endif
+
+    std::string id_ret(10, ' ');
+    auto size = socket.get(zmq::sockopt::routing_id, zmq::buffer(id_ret));
+    id_ret.resize(size);
+    CHECK(id == id_ret);
+
+    std::string id_ret_small(3, ' ');
+    // truncated
+    CHECK_THROWS_AS(socket.get(zmq::sockopt::routing_id, zmq::buffer(id_ret_small)), const zmq::error_t &);
+}
+#endif
+
 TEST_CASE("socket flags", "[socket]")
 {
     CHECK((zmq::recv_flags::dontwait | zmq::recv_flags::none)
