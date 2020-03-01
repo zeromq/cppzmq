@@ -31,9 +31,6 @@
 // Initial implementation uses std::thread so C++11 only.
 #include <thread>
 
-// #include <random>
-#include <iostream>             // debug
-
 namespace zmq {
 
     typedef std::pair<zmq::socket_t, zmq::socket_t> pipe;
@@ -47,18 +44,13 @@ namespace zmq {
         pipe ret{socket_t(ctx, socket_type::pair),
                  socket_t(ctx, socket_type::pair)};
 
-        // std::default_random_engine gen;
-        // std::uniform_int_distribution<int> uni(0,0x10000);
-
         std::stringstream ss;
         ss << "inproc://pipe-"
            << std::hex
            << ret.first.handle()
            << "-"
            << ret.second.handle();
-        // ss << "inproc://pipe-" << std::hex << uni(gen) << "-" << uni(gen);
         std::string addr = ss.str();
-        std::cerr << "create_pipe: " << addr << std::endl;
         ret.first.bind(addr.c_str());
         ret.second.connect(addr.c_str());
         return ret;
