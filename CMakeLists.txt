@@ -6,7 +6,7 @@ include (DetectCPPZMQVersion)
 
 project(cppzmq VERSION ${DETECTED_CPPZMQ_VERSION})
 
-if (NOT TARGET libzmq)
+if (NOT TARGET libzmq AND NOT TARGET libzmq-static)
   find_package(ZeroMQ QUIET)
 
   # libzmq autotools install: fallback to pkg-config
