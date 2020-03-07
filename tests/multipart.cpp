@@ -178,4 +178,39 @@ TEST_CASE("multipart legacy test", "[multipart]")
     assert(received.empty());
     assert(str == "One-hundred");
 }
+
+TEST_CASE("multipart codec", "[multipart]")
+{
+    using namespace zmq;
+
+    multipart_t mmsg;
+    mmsg.addstr("Hello World");
+    message_t msg = mmsg.encode();
+    assert(msg.size() == 1 + 11); // small size packing
+
+    mmsg.addstr("Second frame");
+    msg = mmsg.encode();
+    assert(msg.size() == 1 + 11 + 1 + 12);
+    multipart_t mmsg2;
+    mmsg2.decode(msg);
+    assert(mmsg2.size() == 2);
+    std::string part0 = mmsg2[0].to_string();
+    assert(part0 == "Hello World");
+    assert(mmsg2[1].to_string() == "Second frame");
+
+    message_t big(495);         // large size packing
+    big.data<char>()[0] = 'X';
+    mmsg2.pushmem(big.data(), big.size());
+    msg = mmsg2.encode();
+    assert(msg.size() == 5 + 495 + 1 + 11 + 1 + 12);
+    assert(msg.data<unsigned char>()[0] == 0xFF);
+    assert(msg.data<unsigned char>()[5] == 'X');
+
+    assert(mmsg2.size() == 3);
+    mmsg2.decode(msg);          // decode doesn't clear()
+    assert(mmsg2.size() == 6);
+    assert(mmsg2[0].data<char>()[0] == 'X');
+
+}
+
 #endif
