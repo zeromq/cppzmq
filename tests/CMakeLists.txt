@@ -17,6 +17,7 @@ find_package(Threads)
 
 add_executable(
     unit_tests
+    actor.cpp
     buffer.cpp
     message.cpp
     context.cpp

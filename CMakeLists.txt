@@ -43,6 +43,7 @@ message(STATUS "cppzmq v${cppzmq_VERSION}")
 set(CPPZMQ_HEADERS
     zmq.hpp
     zmq_addon.hpp
+    zmq_actor.hpp
 )
 
 foreach (target cppzmq cppzmq-static)
