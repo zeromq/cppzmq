@@ -123,11 +123,14 @@ ZMQ_NODISCARD recv_result_t recv_multipart_n(socket_ref s,
     by the msgs range will be propagated and the message
     may have been only partially sent. It is adviced to close this socket in that event.
 */
-template<class Range,
-         typename = typename std::enable_if<
+template<class Range
+#ifndef ZMQ_CPP11_PARTIAL
+, typename = typename std::enable_if<
            detail::is_range<Range>::value
            && (std::is_same<detail::range_value_t<Range>, message_t>::value
-               || detail::is_buffer<detail::range_value_t<Range>>::value)>::type>
+               || detail::is_buffer<detail::range_value_t<Range>>::value)>::type
+#endif
+               >
 send_result_t
 send_multipart(socket_ref s, Range &&msgs, send_flags flags = send_flags::none)
 {
