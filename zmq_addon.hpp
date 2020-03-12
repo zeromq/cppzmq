@@ -125,12 +125,13 @@ ZMQ_NODISCARD recv_result_t recv_multipart_n(socket_ref s,
 */
 template<class Range
 #ifndef ZMQ_CPP11_PARTIAL
-, typename = typename std::enable_if<
+         ,
+         typename = typename std::enable_if<
            detail::is_range<Range>::value
            && (std::is_same<detail::range_value_t<Range>, message_t>::value
                || detail::is_buffer<detail::range_value_t<Range>>::value)>::type
 #endif
-               >
+         >
 send_result_t
 send_multipart(socket_ref s, Range &&msgs, send_flags flags = send_flags::none)
 {
@@ -154,7 +155,122 @@ send_multipart(socket_ref s, Range &&msgs, send_flags flags = send_flags::none)
     return msg_count;
 }
 
+/* Encode a multipart message.
+
+   The range must be a ForwardRange of zmq::message_t.  A
+   zmq::multipart_t or STL container may be passed for encoding.
+
+   Returns: a zmq::message_t holding the encoded multipart data.
+
+   Throws: std::range_error is thrown if the size of any single part
+   can not fit in an unsigned 32 bit integer.
+
+   The encoding is compatible with that used by the CZMQ function
+   zmsg_encode().  Each part consists of a size followed by the data.
+   These are placed contiguously into the output message.  A part of
+   size less than 255 bytes will have a single byte size value.
+   Larger parts will have a five byte size value with the first byte
+   set to 0xFF and the remaining four bytes holding the size of the
+   part's data.
+*/
+template<class Range
+#ifndef ZMQ_CPP11_PARTIAL
+         ,
+         typename = typename std::enable_if<
+           detail::is_range<Range>::value
+           && (std::is_same<detail::range_value_t<Range>, message_t>::value
+               || detail::is_buffer<detail::range_value_t<Range>>::value)>::type
 #endif
+         >
+message_t encode(const Range &parts)
+{
+    size_t mmsg_size = 0;
+
+    // First pass check sizes
+    for (const message_t &part : parts) {
+        size_t part_size = part.size();
+        if (part_size > 0xFFFFFFFF) {
+            // Size value must fit into uint32_t.
+            throw std::range_error("Invalid size, message part too large");
+        }
+        size_t count_size = 5;
+        if (part_size < 255) {
+            count_size = 1;
+        }
+        mmsg_size += part_size + count_size;
+    }
+
+    message_t encoded(mmsg_size);
+    unsigned char *buf = encoded.data<unsigned char>();
+    for (const message_t &part : parts) {
+        uint32_t part_size = part.size();
+        const unsigned char *part_data = part.data<const unsigned char>();
+
+        // small part
+        if (part_size < 255) {
+            *buf++ = (unsigned char) part_size;
+            memcpy(buf, part_data, part_size);
+            buf += part_size;
+            continue;
+        }
+
+        // big part
+        *buf++ = 0xFF;
+        *buf++ = (part_size >> 24) & 255;
+        *buf++ = (part_size >> 16) & 255;
+        *buf++ = (part_size >> 8) & 255;
+        *buf++ = part_size & 255;
+        memcpy(buf, part_data, part_size);
+        buf += part_size;
+    }
+    return encoded;
+}
+
+/*  Decode an encoded message to multiple parts.
+
+    The given output iterator must be a ForwardIterator to a container
+    holding zmq::message_t such as a zmq::multipart_t or various STL
+    containers.
+
+    Returns the ForwardIterator advanced once past the last decoded
+    part.
+
+    Throws: a std::out_of_range is thrown if the encoded part sizes
+    lead to exceeding the message data bounds.
+
+    The decoding assumes the message is encoded in the manner
+    performed by zmq::encode().
+ */
+template<class OutputIt> OutputIt decode(const message_t &encoded, OutputIt out)
+{
+    const unsigned char *source = encoded.data<unsigned char>();
+    const unsigned char *const limit = source + encoded.size();
+
+    while (source < limit) {
+        size_t part_size = *source++;
+        if (part_size == 255) {
+            if (source > limit - 4) {
+                throw std::out_of_range(
+                  "Malformed encoding, overflow in reading size");
+            }
+            part_size =
+              (source[0] << 24) + (source[1] << 16) + (source[2] << 8) + source[3];
+            source += 4;
+        }
+
+        if (source > limit - part_size) {
+            throw std::out_of_range("Malformed encoding, overflow in reading part");
+        }
+        message_t msg(source, part_size);
+        *out = std::move(msg);
+        ++out;
+        source += part_size;
+    }
+    return out;
+}
+
+#endif
+
 
 #ifdef ZMQ_HAS_RVALUE_REFS
 
@@ -171,6 +287,8 @@ class multipart_t
     std::deque<message_t> m_parts;
 
   public:
+    typedef std::deque<message_t>::value_type value_type;
+
     typedef std::deque<message_t>::iterator iterator;
     typedef std::deque<message_t>::const_iterator const_iterator;
 
@@ -343,6 +461,9 @@ class multipart_t
     // Push message part to back
     void add(message_t &&message) { m_parts.push_back(std::move(message)); }
 
+    // Alias to allow std::back_inserter()
+    void push_back(message_t &&message) { m_parts.push_back(std::move(message)); }
+
     // Pop string from front
     std::string popstr()
     {
@@ -470,76 +591,20 @@ class multipart_t
     }
 
     // Return single part message_t encoded from this multipart_t.
-    // This encodes in a manner that should be compatible with the
-    // packing done by CZMQ's zmsg_encode().
-    message_t encode() const {
-        size_t mmsg_size = 0;
-        for (auto& part : *this) {
-            size_t part_size = part.size();
-            size_t count_size = 5;
-            if (part_size < 255) {
-                count_size = 1;
-            }
-            mmsg_size += part_size + count_size;
-        }
+    message_t encode() const { return zmq::encode(*this); }
 
-        message_t encoded(mmsg_size);
-        unsigned char* buf = encoded.data<unsigned char>();
-        for (auto& part : *this) {
-            size_t part_size = part.size();
-            const unsigned char* part_data = part.data<unsigned char>();
-
-            // small part
-            if (part_size < 255) {
-                *buf++ = (unsigned char) part_size;
-                memcpy (buf, part_data, part_size);
-                buf += part_size;
-                continue;
-            }
-
-            // big part
-            *buf++ = 0xFF;
-            *buf++ = (part_size >> 24) & 255;
-            *buf++ = (part_size >> 16) & 255;
-            *buf++ = (part_size >>  8) & 255;
-            *buf++ =  part_size        & 255;
-            memcpy (buf, part_data, part_size);
-            buf += part_size;
-        }
-        return encoded;
+    // Decode encoded message into multiple parts and append to self.
+    void decode_append(const message_t &encoded)
+    {
+        zmq::decode(encoded, std::back_inserter(*this));
     }
-    // Decode the CZMQ zmsg_t/zframe_t compatible encoded single part
-    // message into multi-parts and append to self.  Return true if
-    // self was updated.  A false value will be returned if the
-    // encoded is garbage.
-    bool decode(const message_t& encoded) {
-        const unsigned char *source = encoded.data<unsigned char>();
-        const unsigned char *limit = source + encoded.size();
-        multipart_t decoded;
-        while (source < limit) {
-            size_t part_size = *source++;
-            if (part_size == 255) {
-                if (source > limit - 4) {
-                    // garbage, bail
-                    return false;
-                }
 
-                part_size
-                    = (source [0] << 24)
-                    + (source [1] << 16)
-                    + (source [2] << 8)
-                    +  source [3];
-                source += 4;
-            }
-            if (source > limit - part_size) {
-                // garbage, bail
-                return false;
-            }
-            decoded.addmem(source, part_size);
-            source += part_size;
-        }
-        append(std::move(decoded));
-        return true;
+    // Return a new multipart_t containing the decoded message_t.
+    static multipart_t decode(const message_t &encoded)
+    {
+        multipart_t tmp;
+        zmq::decode(encoded, std::back_inserter(tmp));
+        return tmp;
     }
 
   private:
