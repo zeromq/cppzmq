@@ -1305,7 +1305,6 @@ typedef unsigned int cppzmq_fd_t;
 typedef int cppzmq_fd_t;
 #endif
 
-// integral
 #ifdef ZMQ_AFFINITY
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_AFFINITY, affinity, uint64_t);
 #endif
