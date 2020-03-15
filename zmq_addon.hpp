@@ -31,6 +31,7 @@
 #include <sstream>
 #include <stdexcept>
 #ifdef ZMQ_CPP11
+#include <limits>
 #include <functional>
 #include <unordered_map>
 #endif
@@ -187,14 +188,14 @@ message_t encode(const Range &parts)
     size_t mmsg_size = 0;
 
     // First pass check sizes
-    for (const message_t &part : parts) {
+    for (const auto &part : parts) {
         size_t part_size = part.size();
-        if (part_size > 0xFFFFFFFF) {
+        if (part_size > std::numeric_limits<std::uint32_t>::max()) {
             // Size value must fit into uint32_t.
             throw std::range_error("Invalid size, message part too large");
         }
         size_t count_size = 5;
-        if (part_size < 255) {
+        if (part_size < std::numeric_limits<std::uint8_t>::max()) {
             count_size = 1;
         }
         mmsg_size += part_size + count_size;
@@ -202,12 +203,13 @@ message_t encode(const Range &parts)
 
     message_t encoded(mmsg_size);
     unsigned char *buf = encoded.data<unsigned char>();
-    for (const message_t &part : parts) {
+    for (const auto &part : parts) {
         uint32_t part_size = part.size();
-        const unsigned char *part_data = part.data<const unsigned char>();
+        const unsigned char *part_data =
+          static_cast<const unsigned char *>(part.data());
 
         // small part
-        if (part_size < 255) {
+        if (part_size < std::numeric_limits<std::uint8_t>::max()) {
             *buf++ = (unsigned char) part_size;
             memcpy(buf, part_data, part_size);
             buf += part_size;
@@ -215,11 +217,11 @@ message_t encode(const Range &parts)
         }
 
         // big part
-        *buf++ = 0xFF;
-        *buf++ = (part_size >> 24) & 255;
-        *buf++ = (part_size >> 16) & 255;
-        *buf++ = (part_size >> 8) & 255;
-        *buf++ = part_size & 255;
+        *buf++ = std::numeric_limits<uint8_t>::max();
+        *buf++ = (part_size >> 24) & std::numeric_limits<std::uint8_t>::max();
+        *buf++ = (part_size >> 16) & std::numeric_limits<std::uint8_t>::max();
+        *buf++ = (part_size >> 8) & std::numeric_limits<std::uint8_t>::max();
+        *buf++ = part_size & std::numeric_limits<std::uint8_t>::max();
         memcpy(buf, part_data, part_size);
         buf += part_size;
     }
@@ -248,21 +250,20 @@ template<class OutputIt> OutputIt decode(const message_t &encoded, OutputIt out)
 
     while (source < limit) {
         size_t part_size = *source++;
-        if (part_size == 255) {
+        if (part_size == std::numeric_limits<std::uint8_t>::max()) {
             if (source > limit - 4) {
                 throw std::out_of_range(
                   "Malformed encoding, overflow in reading size");
             }
-            part_size =
-              (source[0] << 24) + (source[1] << 16) + (source[2] << 8) + source[3];
+            part_size = ((uint32_t) source[0] << 24) + ((uint32_t) source[1] << 16)
+                        + ((uint32_t) source[2] << 8) + (uint32_t) source[3];
             source += 4;
         }
 
         if (source > limit - part_size) {
             throw std::out_of_range("Malformed encoding, overflow in reading part");
         }
-        message_t msg(source, part_size);
-        *out = std::move(msg);
+        *out = message_t(source, part_size);
         ++out;
         source += part_size;
     }
@@ -590,6 +591,8 @@ class multipart_t
         return true;
     }
 
+#ifdef ZMQ_CPP11
+
     // Return single part message_t encoded from this multipart_t.
     message_t encode() const { return zmq::encode(*this); }
 
@@ -606,6 +609,8 @@ class multipart_t
         zmq::decode(encoded, std::back_inserter(tmp));
         return tmp;
     }
+
+#endif
 
   private:
     // Disable implicit copying (moving is more efficient)

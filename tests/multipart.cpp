@@ -178,5 +178,4 @@ TEST_CASE("multipart legacy test", "[multipart]")
     assert(received.empty());
     assert(str == "One-hundred");
 }
-
 #endif

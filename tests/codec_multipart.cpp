@@ -1,7 +1,7 @@
 #include <catch.hpp>
 #include <zmq_addon.hpp>
 
-#ifdef ZMQ_HAS_RVALUE_REFS
+#ifdef ZMQ_CPP11
 
 TEST_CASE("multipart codec empty", "[codec_multipart]")
 {
@@ -49,7 +49,7 @@ TEST_CASE("multipart codec big", "[codec_multipart]")
     mmsg.pushmem(big.data(), big.size());
     message_t msg = mmsg.encode();
     CHECK(msg.size() == 5 + 495);
-    CHECK(msg.data<unsigned char>()[0] == 0xFF);
+    CHECK(msg.data<unsigned char>()[0] == std::numeric_limits<uint8_t>::max());
     CHECK(msg.data<unsigned char>()[5] == 'X');
 
     CHECK(mmsg.size() == 1);
@@ -95,14 +95,14 @@ TEST_CASE("multipart codec encode too big", "[codec_multipart]")
 {
     using namespace zmq;
 
-    const size_t too_big_size = 1L + 0xFFFFFFFF;
-    CHECK(too_big_size > 0xFFFFFFFF);
+    const size_t too_big_size = 1L + std::numeric_limits<uint32_t>::max();
+    CHECK(too_big_size > std::numeric_limits<uint32_t>::max());
     char* too_big_data = new char[too_big_size];
     multipart_t mmsg(too_big_data, too_big_size);
     delete [] too_big_data;
 
     CHECK(mmsg.size() == 1);
-    CHECK(mmsg[0].size() > 0xFFFFFFFF);
+    CHECK(mmsg[0].size() > std::numeric_limits<uint32_t>::max());
 
     CHECK_THROWS_AS(
         mmsg.encode(),
@@ -110,12 +110,54 @@ TEST_CASE("multipart codec encode too big", "[codec_multipart]")
 }
 #endif
 
-TEST_CASE("multipart codec free function with vector", "[codec_multipart]")
+TEST_CASE("multipart codec free function with vector of message_t", "[codec_multipart]")
 {
     using namespace zmq;
     std::vector<message_t> parts;
     parts.emplace_back("Hello", 5);
     parts.emplace_back("World",5);
+    auto msg = encode(parts);
+    CHECK(msg.size() == 1 + 5 + 1 + 5 );
+    CHECK(msg.data<unsigned char>()[0] == 5);
+    CHECK(msg.data<unsigned char>()[1] == 'H');
+    CHECK(msg.data<unsigned char>()[6] == 5);
+    CHECK(msg.data<unsigned char>()[7] == 'W');
+
+    std::vector<message_t> parts2;
+    decode(msg, std::back_inserter(parts2));
+    CHECK(parts.size() == 2);
+    CHECK(parts[0].size() == 5);
+    CHECK(parts[1].size() == 5);
+}
+
+TEST_CASE("multipart codec free function with vector of const_buffer", "[codec_multipart]")
+{
+    using namespace zmq;
+    std::vector<const_buffer> parts;
+    parts.emplace_back("Hello", 5);
+    parts.emplace_back("World",5);
+    auto msg = encode(parts);
+    CHECK(msg.size() == 1 + 5 + 1 + 5 );
+    CHECK(msg.data<unsigned char>()[0] == 5);
+    CHECK(msg.data<unsigned char>()[1] == 'H');
+    CHECK(msg.data<unsigned char>()[6] == 5);
+    CHECK(msg.data<unsigned char>()[7] == 'W');
+
+    std::vector<message_t> parts2;
+    decode(msg, std::back_inserter(parts2));
+    CHECK(parts.size() == 2);
+    CHECK(parts[0].size() == 5);
+    CHECK(parts[1].size() == 5);
+}
+
+TEST_CASE("multipart codec free function with vector of mutable_buffer", "[codec_multipart]")
+{
+    using namespace zmq;
+    std::vector<mutable_buffer> parts;
+    char hello[6] = "Hello";
+    parts.emplace_back(hello, 5);
+    char world[6] = "World";
+    parts.emplace_back(world,5);
     auto msg = encode(parts);
     CHECK(msg.size() == 1 + 5 + 1 + 5 );
     CHECK(msg.data<unsigned char>()[0] == 5);
