@@ -21,7 +21,7 @@ if (NOT TARGET libzmq AND NOT TARGET libzmq-static)
     message(FATAL_ERROR "ZeroMQ was not found, neither as a CMake package nor via pkg-config")
   endif()
 
-  if (ZeroMQ_FOUND AND (NOT TARGET libzmq OR NOT TARGET libzmq-static))
+  if (ZeroMQ_FOUND AND NOT (TARGET libzmq OR TARGET libzmq-static))
     message(FATAL_ERROR "ZeroMQ version not supported!")
   endif()
 endif()
