@@ -556,13 +556,17 @@ class message_t
     // interpret message content as a string
     std::string to_string() const
     {
-        return std::string(static_cast<const char *>(data()), size());
+        const auto start = data<const char>();
+        const auto length = std::distance(start, std::find(start, start+size(), '\0'));
+        return std::string(start, length);
     }
 #ifdef ZMQ_CPP17
     // interpret message content as a string
     std::string_view to_string_view() const noexcept
     {
-        return std::string_view(static_cast<const char *>(data()), size());
+        const auto start = data<const char>();
+        const auto length = std::distance(start, std::find(start, start+size(), '\0'));
+        return std::string_view(start, length);
     }
 #endif
 
