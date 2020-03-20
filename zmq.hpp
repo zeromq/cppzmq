@@ -26,6 +26,12 @@
 #ifndef __ZMQ_HPP_INCLUDED__
 #define __ZMQ_HPP_INCLUDED__
 
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#endif
+
 // macros defined if has a specific standard or greater
 #if (defined(__cplusplus) && __cplusplus >= 201103L)                                \
   || (defined(_MSC_VER) && _MSC_VER >= 1900)

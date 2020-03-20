@@ -27,6 +27,7 @@ add_executable(
     multipart.cpp
     recv_multipart.cpp
     send_multipart.cpp
+    codec_multipart.cpp
     monitor.cpp
     utilities.cpp
 )
