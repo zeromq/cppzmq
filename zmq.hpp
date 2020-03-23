@@ -1272,14 +1272,21 @@ constexpr const_buffer operator"" _zbuf(const char32_t *str, size_t len) noexcep
 namespace sockopt
 {
 
-// there are two types of options,
+// There are two types of options,
 // integral type with known compiler time size (int, bool, int64_t, uint64_t)
-// and arrays with dynamic size (strings, binary data)
+// and arrays with dynamic size (strings, binary data).
+
+// BoolUnit: if true accepts values of type bool (but passed as T into libzmq)
 template<int Opt, class T, bool BoolUnit = false>
 struct integral_option
 {
 };
-template<int Opt>
+
+// NullTerm:
+// 0: binary data
+// 1: null-terminated string (`getsockopt` size includes null)
+// 2: binary (size 32) or Z85 encoder string of size 41 (null included)
+template<int Opt, int NullTerm = 1>
 struct array_option
 {
 };
@@ -1292,6 +1299,12 @@ struct array_option
     ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME
 #define ZMQ_DEFINE_ARRAY_OPT(OPT, NAME) \
     using NAME##_t = array_option<OPT>; \
+    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME
+#define ZMQ_DEFINE_ARRAY_OPT_BINARY(OPT, NAME) \
+    using NAME##_t = array_option<OPT, 0>; \
+    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME
+#define ZMQ_DEFINE_ARRAY_OPT_BIN_OR_Z85(OPT, NAME) \
+    using NAME##_t = array_option<OPT, 2>; \
     ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME
 
 // duplicate definition from libzmq 4.3.3
@@ -1312,7 +1325,7 @@ ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_AFFINITY, affinity, uint64_t);
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_BACKLOG, backlog, int);
 #endif
 #ifdef ZMQ_BINDTODEVICE
-ZMQ_DEFINE_ARRAY_OPT(ZMQ_BINDTODEVICE, bindtodevice);
+ZMQ_DEFINE_ARRAY_OPT_BINARY(ZMQ_BINDTODEVICE, bindtodevice);
 #endif
 #ifdef ZMQ_CONFLATE
 ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_CONFLATE, conflate, int);
@@ -1324,16 +1337,16 @@ ZMQ_DEFINE_ARRAY_OPT(ZMQ_CONNECT_ROUTING_ID, connect_routing_id);
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_CONNECT_TIMEOUT, connect_timeout, int);
 #endif
 #ifdef ZMQ_CURVE_PUBLICKEY
-ZMQ_DEFINE_ARRAY_OPT(ZMQ_CURVE_PUBLICKEY, curve_publickey);
+ZMQ_DEFINE_ARRAY_OPT_BIN_OR_Z85(ZMQ_CURVE_PUBLICKEY, curve_publickey);
 #endif
 #ifdef ZMQ_CURVE_SECRETKEY
-ZMQ_DEFINE_ARRAY_OPT(ZMQ_CURVE_SECRETKEY, curve_secretkey);
+ZMQ_DEFINE_ARRAY_OPT_BIN_OR_Z85(ZMQ_CURVE_SECRETKEY, curve_secretkey);
 #endif
 #ifdef ZMQ_CURVE_SERVER
 ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_CURVE_SERVER, curve_server, int);
 #endif
 #ifdef ZMQ_CURVE_SERVERKEY
-ZMQ_DEFINE_ARRAY_OPT(ZMQ_CURVE_SERVERKEY, curve_serverkey);
+ZMQ_DEFINE_ARRAY_OPT_BIN_OR_Z85(ZMQ_CURVE_SERVERKEY, curve_serverkey);
 #endif
 #ifdef ZMQ_EVENTS
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_EVENTS, events, int);
@@ -1459,7 +1472,7 @@ ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_ROUTER_MANDATORY, router_mandatory, int);
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_ROUTER_NOTIFY, router_notify, int);
 #endif
 #ifdef ZMQ_ROUTING_ID
-ZMQ_DEFINE_ARRAY_OPT(ZMQ_ROUTING_ID, routing_id);
+ZMQ_DEFINE_ARRAY_OPT_BINARY(ZMQ_ROUTING_ID, routing_id);
 #endif
 #ifdef ZMQ_SNDBUF
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_SNDBUF, sndbuf, int);
@@ -1495,7 +1508,7 @@ ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_TCP_KEEPALIVE_INTVL, tcp_keepalive_intvl, int);
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_TCP_MAXRT, tcp_maxrt, int);
 #endif
 #ifdef ZMQ_THREAD_SAFE
-ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_THREAD_SAFE, thread_safe, bool);
+ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_THREAD_SAFE, thread_safe, int);
 #endif
 #ifdef ZMQ_TOS
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_TOS, tos, int);
@@ -1606,25 +1619,25 @@ class socket_base
     }
 
     // Set array socket option, e.g.
-    // `socket.set(zmq::sockopt::routing_id, "foo123")`
-    template<int Opt>
-    void set(sockopt::array_option<Opt>, const char* buf)
+    // `socket.set(zmq::sockopt::plain_username, "foo123")`
+    template<int Opt, int NullTerm>
+    void set(sockopt::array_option<Opt, NullTerm>, const char* buf)
     {
         set_option(Opt, buf, std::strlen(buf));
     }
 
     // Set array socket option, e.g.
     // `socket.set(zmq::sockopt::routing_id, zmq::buffer(id))`
-    template<int Opt>
-    void set(sockopt::array_option<Opt>, const_buffer buf)
+    template<int Opt, int NullTerm>
+    void set(sockopt::array_option<Opt, NullTerm>, const_buffer buf)
     {
         set_option(Opt, buf.data(), buf.size());
     }
 
     // Set array socket option, e.g.
     // `socket.set(zmq::sockopt::routing_id, id_str)`
-    template<int Opt>
-    void set(sockopt::array_option<Opt>, const std::string& buf)
+    template<int Opt, int NullTerm>
+    void set(sockopt::array_option<Opt, NullTerm>, const std::string& buf)
     {
         set_option(Opt, buf.data(), buf.size());
     }
@@ -1632,8 +1645,8 @@ class socket_base
 #ifdef ZMQ_CPP17
     // Set array socket option, e.g.
     // `socket.set(zmq::sockopt::routing_id, id_str)`
-    template<int Opt>
-    void set(sockopt::array_option<Opt>, std::string_view buf)
+    template<int Opt, int NullTerm>
+    void set(sockopt::array_option<Opt, NullTerm>, std::string_view buf)
     {
         set_option(Opt, buf.data(), buf.size());
     }
@@ -1652,15 +1665,51 @@ class socket_base
         return val;
     }
 
-    // Get array socket option, returns option size in bytes, e.g.
+    // Get array socket option, writes to buf, returns option size in bytes, e.g.
     // `size_t optsize = socket.get(zmq::sockopt::routing_id, zmq::buffer(id))`
-    template<int Opt>
+    template<int Opt, int NullTerm>
     ZMQ_NODISCARD
-    size_t get(sockopt::array_option<Opt>, mutable_buffer buf) const
+    size_t get(sockopt::array_option<Opt, NullTerm>, mutable_buffer buf) const
     {
         size_t size = buf.size();
         get_option(Opt, buf.data(), &size);
         return size;
+    }
+
+    // Get array socket option as string (initializes the string buffer size to init_size) e.g.
+    // `auto s = socket.get(zmq::sockopt::routing_id)`
+    // Note: removes the null character from null-terminated string options,
+    // i.e. the string size excludes the null character.
+    template<int Opt, int NullTerm>
+    ZMQ_NODISCARD
+    std::string get(sockopt::array_option<Opt, NullTerm>,
+        size_t init_size = 1024) const
+    {
+        if (NullTerm == 2 && init_size == 1024)
+        {
+            init_size = 41; // get as Z85 string
+        }
+        std::string str(init_size, '\0');
+        size_t size = get(sockopt::array_option<Opt>{}, buffer(str));
+        if (NullTerm == 1)
+        {
+            if (size > 0)
+            {
+                assert(str[size - 1] == '\0');
+                --size;
+            }
+        }
+        else if (NullTerm == 2)
+        {
+            assert(size == 32 || size == 41);
+            if (size == 41)
+            {
+                assert(str[size - 1] == '\0');
+                --size;
+            }
+        }
+        str.resize(size);
+        return str;
     }
 #endif
 
