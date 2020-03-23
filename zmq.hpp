@@ -1271,14 +1271,12 @@ constexpr const_buffer operator"" _zbuf(const char32_t *str, size_t len) noexcep
 #ifdef ZMQ_CPP11
 namespace sockopt
 {
-
 // There are two types of options,
 // integral type with known compiler time size (int, bool, int64_t, uint64_t)
 // and arrays with dynamic size (strings, binary data).
 
 // BoolUnit: if true accepts values of type bool (but passed as T into libzmq)
-template<int Opt, class T, bool BoolUnit = false>
-struct integral_option
+template<int Opt, class T, bool BoolUnit = false> struct integral_option
 {
 };
 
@@ -1286,25 +1284,24 @@ struct integral_option
 // 0: binary data
 // 1: null-terminated string (`getsockopt` size includes null)
 // 2: binary (size 32) or Z85 encoder string of size 41 (null included)
-template<int Opt, int NullTerm = 1>
-struct array_option
+template<int Opt, int NullTerm = 1> struct array_option
 {
 };
 
-#define ZMQ_DEFINE_INTEGRAL_OPT(OPT, NAME, TYPE) \
-    using NAME##_t = integral_option<OPT, TYPE, false>; \
+#define ZMQ_DEFINE_INTEGRAL_OPT(OPT, NAME, TYPE)                                    \
+    using NAME##_t = integral_option<OPT, TYPE, false>;                             \
     ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME
-#define ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(OPT, NAME, TYPE) \
-    using NAME##_t = integral_option<OPT, TYPE, true>; \
+#define ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(OPT, NAME, TYPE)                          \
+    using NAME##_t = integral_option<OPT, TYPE, true>;                              \
     ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME
-#define ZMQ_DEFINE_ARRAY_OPT(OPT, NAME) \
-    using NAME##_t = array_option<OPT>; \
+#define ZMQ_DEFINE_ARRAY_OPT(OPT, NAME)                                             \
+    using NAME##_t = array_option<OPT>;                                             \
     ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME
-#define ZMQ_DEFINE_ARRAY_OPT_BINARY(OPT, NAME) \
-    using NAME##_t = array_option<OPT, 0>; \
+#define ZMQ_DEFINE_ARRAY_OPT_BINARY(OPT, NAME)                                      \
+    using NAME##_t = array_option<OPT, 0>;                                          \
     ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME
-#define ZMQ_DEFINE_ARRAY_OPT_BIN_OR_Z85(OPT, NAME) \
-    using NAME##_t = array_option<OPT, 2>; \
+#define ZMQ_DEFINE_ARRAY_OPT_BIN_OR_Z85(OPT, NAME)                                  \
+    using NAME##_t = array_option<OPT, 2>;                                          \
     ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME
 
 // duplicate definition from libzmq 4.3.3
@@ -1364,13 +1361,17 @@ ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_GSSAPI_SERVER, gssapi_server, int);
 ZMQ_DEFINE_ARRAY_OPT(ZMQ_GSSAPI_SERVICE_PRINCIPAL, gssapi_service_principal);
 #endif
 #ifdef ZMQ_GSSAPI_SERVICE_PRINCIPAL_NAMETYPE
-ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_GSSAPI_SERVICE_PRINCIPAL_NAMETYPE, gssapi_service_principal_nametype, int);
+ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_GSSAPI_SERVICE_PRINCIPAL_NAMETYPE,
+                        gssapi_service_principal_nametype,
+                        int);
 #endif
 #ifdef ZMQ_GSSAPI_PRINCIPAL
 ZMQ_DEFINE_ARRAY_OPT(ZMQ_GSSAPI_PRINCIPAL, gssapi_principal);
 #endif
 #ifdef ZMQ_GSSAPI_PRINCIPAL_NAMETYPE
-ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_GSSAPI_PRINCIPAL_NAMETYPE, gssapi_principal_nametype, int);
+ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_GSSAPI_PRINCIPAL_NAMETYPE,
+                        gssapi_principal_nametype,
+                        int);
 #endif
 #ifdef ZMQ_HANDSHAKE_IVL
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_HANDSHAKE_IVL, handshake_ivl, int);
@@ -1602,7 +1603,7 @@ class socket_base
     // Set integral socket option, e.g.
     // `socket.set(zmq::sockopt::linger, 0)`
     template<int Opt, class T, bool BoolUnit>
-    void set(sockopt::integral_option<Opt, T, BoolUnit>, const T& val)
+    void set(sockopt::integral_option<Opt, T, BoolUnit>, const T &val)
     {
         static_assert(std::is_integral<T>::value, "T must be integral");
         set_option(Opt, &val, sizeof val);
@@ -1621,7 +1622,7 @@ class socket_base
     // Set array socket option, e.g.
     // `socket.set(zmq::sockopt::plain_username, "foo123")`
     template<int Opt, int NullTerm>
-    void set(sockopt::array_option<Opt, NullTerm>, const char* buf)
+    void set(sockopt::array_option<Opt, NullTerm>, const char *buf)
     {
         set_option(Opt, buf, std::strlen(buf));
     }
@@ -1637,7 +1638,7 @@ class socket_base
     // Set array socket option, e.g.
     // `socket.set(zmq::sockopt::routing_id, id_str)`
     template<int Opt, int NullTerm>
-    void set(sockopt::array_option<Opt, NullTerm>, const std::string& buf)
+    void set(sockopt::array_option<Opt, NullTerm>, const std::string &buf)
     {
         set_option(Opt, buf.data(), buf.size());
     }
@@ -1668,8 +1669,8 @@ class socket_base
     // Get array socket option, writes to buf, returns option size in bytes, e.g.
     // `size_t optsize = socket.get(zmq::sockopt::routing_id, zmq::buffer(id))`
     template<int Opt, int NullTerm>
-    ZMQ_NODISCARD
-    size_t get(sockopt::array_option<Opt, NullTerm>, mutable_buffer buf) const
+    ZMQ_NODISCARD size_t get(sockopt::array_option<Opt, NullTerm>,
+                             mutable_buffer buf) const
     {
         size_t size = buf.size();
         get_option(Opt, buf.data(), &size);
@@ -1681,29 +1682,22 @@ class socket_base
     // Note: removes the null character from null-terminated string options,
     // i.e. the string size excludes the null character.
     template<int Opt, int NullTerm>
-    ZMQ_NODISCARD
-    std::string get(sockopt::array_option<Opt, NullTerm>,
-        size_t init_size = 1024) const
+    ZMQ_NODISCARD std::string get(sockopt::array_option<Opt, NullTerm>,
+                                  size_t init_size = 1024) const
     {
-        if (NullTerm == 2 && init_size == 1024)
-        {
+        if (NullTerm == 2 && init_size == 1024) {
             init_size = 41; // get as Z85 string
         }
         std::string str(init_size, '\0');
         size_t size = get(sockopt::array_option<Opt>{}, buffer(str));
-        if (NullTerm == 1)
-        {
-            if (size > 0)
-            {
+        if (NullTerm == 1) {
+            if (size > 0) {
                 assert(str[size - 1] == '\0');
                 --size;
             }
-        }
-        else if (NullTerm == 2)
-        {
+        } else if (NullTerm == 2) {
             assert(size == 32 || size == 41);
-            if (size == 41)
-            {
+            if (size == 41) {
                 assert(str[size - 1] == '\0');
                 --size;
             }
