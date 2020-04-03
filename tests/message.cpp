@@ -70,13 +70,40 @@ TEST_CASE("message constructor with char array", "[message]")
     CHECK(0 == memcmp(data, hi_msg.data(), 2));
 }
 
-#if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11)
-TEST_CASE("message constructor with container", "[message]")
+#if defined(ZMQ_CPP11) && !defined(ZMQ_CPP11_PARTIAL)
+TEST_CASE("message constructor with container - deprecated", "[message]")
 {
-    const std::string hi(data);
-    zmq::message_t hi_msg(hi);
-    CHECK(2u == hi_msg.size());
-    CHECK(0 == memcmp(data, hi_msg.data(), 2));
+    zmq::message_t hi_msg("Hi"); // deprecated
+    REQUIRE(3u == hi_msg.size());
+    CHECK(0 == memcmp(data, hi_msg.data(), 3));
+}
+
+TEST_CASE("message constructor with container of trivial data", "[message]")
+{
+    int buf[3] = {1, 2, 3};
+    zmq::message_t msg(buf);
+    REQUIRE(sizeof(buf) == msg.size());
+    CHECK(0 == memcmp(buf, msg.data(), msg.size()));
+}
+
+TEST_CASE("message constructor with strings", "[message]")
+{
+    SECTION("string")
+    {
+        const std::string hi(data);
+        zmq::message_t hi_msg(hi);
+        CHECK(2u == hi_msg.size());
+        CHECK(0 == memcmp(data, hi_msg.data(), 2));
+    }
+#if CPPZMQ_HAS_STRING_VIEW
+    SECTION("string_view")
+    {
+        const std::string_view hi(data);
+        zmq::message_t hi_msg(hi);
+        CHECK(2u == hi_msg.size());
+        CHECK(0 == memcmp(data, hi_msg.data(), 2));
+    }
+#endif
 }
 #endif
 
@@ -161,6 +188,12 @@ TEST_CASE("message to string", "[message]")
 #if CPPZMQ_HAS_STRING_VIEW
     CHECK(a.to_string_view() == "");
     CHECK(b.to_string_view() == "Foo");
+#endif
+
+#if defined(ZMQ_CPP11) && !defined(ZMQ_CPP11_PARTIAL)
+    const zmq::message_t depr("Foo"); // deprecated
+    CHECK(depr.to_string() != "Foo");
+    CHECK(depr.to_string() == std::string("Foo", 4));
 #endif
 }
 
