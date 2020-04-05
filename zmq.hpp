@@ -365,7 +365,12 @@ class message_t
         int rc = zmq_msg_init_size(&msg, size_);
         if (rc != 0)
             throw error_t();
-        memcpy(data(), data_, size_);
+        if (size_)
+        {
+            // this constructor allows (nullptr, 0),
+            // memcpy with a null pointer is UB
+            memcpy(data(), data_, size_);
+        }
     }
 
     message_t(void *data_, size_t size_, free_fn *ffn_, void *hint_ = ZMQ_NULLPTR)
