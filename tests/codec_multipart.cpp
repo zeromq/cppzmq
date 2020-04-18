@@ -69,7 +69,7 @@ TEST_CASE("multipart codec decode bad data overflow", "[codec_multipart]")
     
     CHECK_THROWS_AS(
         multipart_t::decode(wrong_size),
-        std::out_of_range);
+        const std::out_of_range&);
 }
 
 TEST_CASE("multipart codec decode bad data extra data", "[codec_multipart]")
@@ -83,7 +83,7 @@ TEST_CASE("multipart codec decode bad data extra data", "[codec_multipart]")
     
     CHECK_THROWS_AS(
         multipart_t::decode(wrong_size),
-        std::out_of_range);
+        const std::out_of_range&);
 }
 
 
