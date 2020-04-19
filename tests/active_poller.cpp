@@ -14,9 +14,9 @@ TEST_CASE("create destroy", "[active_poller]")
 }
 
 static_assert(!std::is_copy_constructible<zmq::active_poller_t>::value,
-              "active_active_poller_t should not be copy-constructible");
+              "active_poller_t should not be copy-constructible");
 static_assert(!std::is_copy_assignable<zmq::active_poller_t>::value,
-              "active_active_poller_t should not be copy-assignable");
+              "active_poller_t should not be copy-assignable");
 
 static const zmq::active_poller_t::handler_type no_op_handler =
   [](zmq::event_flags) {};
@@ -115,12 +115,19 @@ TEST_CASE("add handler invalid events type", "[active_poller]")
 
 TEST_CASE("add handler twice throws", "[active_poller]")
 {
-    zmq::context_t context;
-    zmq::socket_t socket{context, zmq::socket_type::router};
+    common_server_client_setup s;
+
+    CHECK(s.client.send(zmq::message_t{}, zmq::send_flags::none));
+
     zmq::active_poller_t active_poller;
-    active_poller.add(socket, zmq::event_flags::pollin, no_op_handler);
+    bool message_received = false;
+    active_poller.add(
+      s.server, zmq::event_flags::pollin,
+      [&message_received](zmq::event_flags) { message_received = true; });
     CHECK_THROWS_ZMQ_ERROR(
-      EINVAL, active_poller.add(socket, zmq::event_flags::pollin, no_op_handler));
+      EINVAL, active_poller.add(s.server, zmq::event_flags::pollin, no_op_handler));
+    CHECK(1 == active_poller.wait(std::chrono::milliseconds{-1}));
+    CHECK(message_received); // handler unmodified
 }
 
 TEST_CASE("wait with no handlers throws", "[active_poller]")
