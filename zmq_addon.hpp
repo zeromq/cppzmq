@@ -167,7 +167,8 @@ send_multipart(socket_ref s, Range &&msgs, send_flags flags = send_flags::none)
    can not fit in an unsigned 32 bit integer.
 
    The encoding is compatible with that used by the CZMQ function
-   zmsg_encode().  Each part consists of a size followed by the data.
+   zmsg_encode(), see https://rfc.zeromq.org/spec/50/.
+   Each part consists of a size followed by the data.
    These are placed contiguously into the output message.  A part of
    size less than 255 bytes will have a single byte size value.
    Larger parts will have a five byte size value with the first byte
@@ -241,7 +242,7 @@ message_t encode(const Range &parts)
     lead to exceeding the message data bounds.
 
     The decoding assumes the message is encoded in the manner
-    performed by zmq::encode().
+    performed by zmq::encode(), see https://rfc.zeromq.org/spec/50/.
  */
 template<class OutputIt> OutputIt decode(const message_t &encoded, OutputIt out)
 {
