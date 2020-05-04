@@ -788,6 +788,9 @@ class context_t
 
     ZMQ_EXPLICIT operator void const *() const ZMQ_NOTHROW { return ptr; }
 
+    ZMQ_NODISCARD void *handle() ZMQ_NOTHROW { return ptr; }
+
+    ZMQ_DEPRECATED("from 4.7.0, use handle() != nullptr instead")
     operator bool() const ZMQ_NOTHROW { return ptr != ZMQ_NULLPTR; }
 
     void swap(context_t &other) ZMQ_NOTHROW { std::swap(ptr, other.ptr); }
@@ -2051,8 +2054,8 @@ class socket_t : public detail::socket_base
     socket_t() ZMQ_NOTHROW : detail::socket_base(ZMQ_NULLPTR), ctxptr(ZMQ_NULLPTR) {}
 
     socket_t(context_t &context_, int type_) :
-        detail::socket_base(zmq_socket(static_cast<void *>(context_), type_)),
-        ctxptr(static_cast<void *>(context_))
+        detail::socket_base(zmq_socket(context_.handle(), type_)),
+        ctxptr(context_.handle())
     {
         if (_handle == ZMQ_NULLPTR)
             throw error_t();
