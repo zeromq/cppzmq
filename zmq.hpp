@@ -297,7 +297,7 @@ inline int poll(std::vector<zmq_pollitem_t> const &items, long timeout_ = -1)
 {
     return poll(const_cast<zmq_pollitem_t *>(items.data()), items.size(), timeout_);
 }
-
+ 
 inline int
 poll(zmq_pollitem_t *items, size_t nitems, std::chrono::milliseconds timeout)
 {
