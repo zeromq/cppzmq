@@ -320,6 +320,13 @@ inline int poll(std::array<zmq_pollitem_t, SIZE>& items, long timeout_ = -1)
 {
     return poll(items.data(), items.size(), timeout_);
 }
+
+template<std::size_t SIZE>
+inline int poll(std::array<zmq_pollitem_t, SIZE>& items,
+    std::chrono::milliseconds timeout)
+{
+    return poll(items.data(), items.size(), static_cast<long>(timeout.count()));
+}
 #endif
 
 
