@@ -2414,6 +2414,15 @@ class monitor_t
         _socket = socket_ref();
     }
 #endif
+
+    void close() ZMQ_NOTHROW
+    {
+#ifdef ZMQ_EVENT_MONITOR_STOPPED
+        abort();
+#endif
+        _monitor_socket = socket_t();
+    }
+
     virtual void on_monitor_started() {}
     virtual void on_event_connected(const zmq_event_t &event_, const char *addr_)
     {
@@ -2518,13 +2527,6 @@ class monitor_t
 
     socket_ref _socket;
     socket_t _monitor_socket;
-
-    void close() ZMQ_NOTHROW
-    {
-        if (_socket)
-            zmq_socket_monitor(_socket.handle(), ZMQ_NULLPTR, 0);
-        _monitor_socket.close();
-    }
 };
 
 #if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && defined(ZMQ_HAVE_POLLER)
