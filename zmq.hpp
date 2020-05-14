@@ -2232,6 +2232,8 @@ class monitor_t
 
     ZMQ_NODISCARD const void *handle() const ZMQ_NOTHROW { return _monitor_socket.handle(); }
 
+    operator socket_ref() ZMQ_NOTHROW { return (zmq::socket_ref) _monitor_socket; }
+
 #if ZMQ_VERSION_MAJOR >= 4
     bool get_event(zmq_event_t& eventMsg, std::string& address, zmq::recv_flags flags = zmq::recv_flags::none)
     {

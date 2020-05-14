@@ -156,6 +156,24 @@ TEST_CASE("monitor init get event count", "[monitor]")
         }
     }
 
+    SECTION("poller_t get_event")
+    {
+        zmq::poller_t<> poller;
+        CHECK_NOTHROW(poller.add(monitor, zmq::event_flags::pollin));
+
+        while (total < expected_event_count)
+        {
+            std::vector<zmq::poller_event<>> events(1);
+            if(0 == poller.wait_all(events, std::chrono::milliseconds{ 100 }))
+                continue;
+
+            CHECK(zmq::event_flags::pollin == events[0].events);
+            CHECK(monitor.get_event(eventMsg, address));
+
+            lbd_count_event(eventMsg);
+        }
+    }
+
     CHECK(connect_delayed == 1);
     CHECK(connected == 1);
     CHECK(total == expected_event_count);
