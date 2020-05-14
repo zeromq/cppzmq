@@ -567,7 +567,7 @@ class multipart_t
             ss << "\n[" << std::dec << std::setw(3) << std::setfill('0') << size
                << "] ";
             if (size >= 1000) {
-                ss << "... (to big to print)";
+                ss << "... (too big to print)";
                 continue;
             }
             for (size_t j = 0; j < size; j++) {
