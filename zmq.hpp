@@ -2224,6 +2224,53 @@ class monitor_t
         on_monitor_started();
     }
 
+#if ZMQ_VERSION_MAJOR >= 4
+    bool get_event(zmq_event_t& eventMsg, std::string& address, zmq::recv_flags flags = zmq::recv_flags::none)
+    {
+        assert(_monitor_socket);
+
+        eventMsg.event = 0;
+        eventMsg.value = 0;
+        address = std::string();
+
+        {
+            message_t msg;
+            int rc = zmq_msg_recv(msg.handle(), _monitor_socket.handle(),
+                static_cast<int>(flags));
+
+            if (rc == -1)
+            {
+                if (zmq_errno() == ETERM || zmq_errno() == EAGAIN)
+                    return false;
+                else
+                    throw error_t();
+            }
+
+            const char *data = msg.data<char>();
+            memcpy(&eventMsg.event, data, sizeof(uint16_t));
+            data += sizeof(uint16_t);
+            memcpy(&eventMsg.value, data, sizeof(int32_t));
+        }
+
+        message_t addrMsg;
+        int rc = zmq_msg_recv(addrMsg.handle(), _monitor_socket.handle(),
+            static_cast<int>(flags));
+
+        if (rc == -1)
+        {
+            if (zmq_errno() == ETERM)
+                return false;
+            else
+                throw error_t();
+        }
+
+        const char *str = addrMsg.data<char>();
+        address = std::string(str, str + addrMsg.size());
+
+        return true;
+    }
+#endif
+
     bool check_event(int timeout = 0)
     {
         assert(_monitor_socket);

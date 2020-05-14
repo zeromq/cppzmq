@@ -74,7 +74,7 @@ TEST_CASE("monitor move assign", "[monitor]")
     }
 }
 
-TEST_CASE("monitor init event count", "[monitor]")
+TEST_CASE("monitor init check event count", "[monitor]")
 {
     common_server_client_setup s{false};
     mock_monitor_t monitor;
@@ -90,6 +90,51 @@ TEST_CASE("monitor init event count", "[monitor]")
     CHECK(monitor.connect_delayed == 1);
     CHECK(monitor.connected == 1);
     CHECK(monitor.total == expected_event_count);
+}
+
+TEST_CASE("monitor init get event count", "[monitor]")
+{
+    common_server_client_setup s{ false };
+    zmq::monitor_t monitor;
+
+    const int expected_event_count = 2;
+    monitor.init(s.client, "inproc://foo");
+
+    int total{ 0 };
+    int connect_delayed{ 0 };
+    int connected{ 0 };
+
+    auto lbd_count_event = [&](const zmq_event_t& event) {
+        switch (event.event)
+        {
+        case ZMQ_EVENT_CONNECT_DELAYED:
+            connect_delayed++;
+            total++;
+            break;
+
+        case ZMQ_EVENT_CONNECTED:
+            connected++;
+            total++;
+            break;
+        }
+    };
+
+    zmq_event_t eventMsg;
+    std::string address;
+    CHECK_FALSE(monitor.get_event(eventMsg, address, zmq::recv_flags::dontwait));
+    s.init();
+
+    while (total < expected_event_count)
+    {
+        if (!monitor.get_event(eventMsg, address))
+            continue;
+
+        lbd_count_event(eventMsg);
+    }
+
+    CHECK(connect_delayed == 1);
+    CHECK(connected == 1);
+    CHECK(total == expected_event_count);
 }
 
 TEST_CASE("monitor init abort", "[monitor]")
