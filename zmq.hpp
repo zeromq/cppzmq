@@ -2224,6 +2224,14 @@ class monitor_t
         on_monitor_started();
     }
 
+    operator void *() ZMQ_NOTHROW { return handle(); }
+
+    operator void const *() const ZMQ_NOTHROW { return handle(); }
+
+    ZMQ_NODISCARD void *handle() ZMQ_NOTHROW { return _monitor_socket.handle(); }
+
+    ZMQ_NODISCARD const void *handle() const ZMQ_NOTHROW { return _monitor_socket.handle(); }
+
 #if ZMQ_VERSION_MAJOR >= 4
     bool get_event(zmq_event_t& eventMsg, std::string& address, zmq::recv_flags flags = zmq::recv_flags::none)
     {

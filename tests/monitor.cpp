@@ -124,12 +124,36 @@ TEST_CASE("monitor init get event count", "[monitor]")
     CHECK_FALSE(monitor.get_event(eventMsg, address, zmq::recv_flags::dontwait));
     s.init();
 
-    while (total < expected_event_count)
+    SECTION("get_event")
     {
-        if (!monitor.get_event(eventMsg, address))
-            continue;
+        while (total < expected_event_count)
+        {
+            if (!monitor.get_event(eventMsg, address))
+                continue;
 
-        lbd_count_event(eventMsg);
+            lbd_count_event(eventMsg);
+        }
+
+    }
+
+    SECTION("poll get_event")
+    {
+        while (total < expected_event_count)
+        {
+            zmq::pollitem_t items[] = {
+                { monitor.handle(), 0, ZMQ_POLLIN, 0 },
+            };
+
+            zmq::poll(&items[0], 1, 100);
+
+            if (!(items[0].revents & ZMQ_POLLIN)) {
+                continue;
+            }
+
+            CHECK(monitor.get_event(eventMsg, address));
+
+            lbd_count_event(eventMsg);
+        }
     }
 
     CHECK(connect_delayed == 1);
