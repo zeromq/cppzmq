@@ -67,6 +67,39 @@ recv_multipart_n(socket_ref s, OutputIt out, size_t n, recv_flags flags)
     }
     return msg_count;
 }
+
+inline bool is_little_endian()
+{
+    const uint16_t i = 0x01;
+    return *reinterpret_cast<const uint8_t *>(&i) == 0x01;
+}
+
+inline void write_network_order(unsigned char *buf, const uint32_t value)
+{
+    if (is_little_endian()) {
+        ZMQ_CONSTEXPR_VAR uint32_t mask = std::numeric_limits<std::uint8_t>::max();
+        *buf++ = (value >> 24) & mask;
+        *buf++ = (value >> 16) & mask;
+        *buf++ = (value >> 8) & mask;
+        *buf++ = value & mask;
+    } else {
+        std::memcpy(buf, &value, sizeof(value));
+    }
+}
+
+inline uint32_t read_u32_network_order(const unsigned char *buf)
+{
+    if (is_little_endian()) {
+        return (static_cast<uint32_t>(buf[0]) << 24)
+               + (static_cast<uint32_t>(buf[1]) << 16)
+               + (static_cast<uint32_t>(buf[2]) << 8)
+               + static_cast<uint32_t>(buf[3]);
+    } else {
+        uint32_t value;
+        std::memcpy(&value, buf, sizeof(value));
+        return value;
+    }
+}
 } // namespace detail
 
 /*  Receive a multipart message.
@@ -190,42 +223,37 @@ message_t encode(const Range &parts)
 
     // First pass check sizes
     for (const auto &part : parts) {
-        size_t part_size = part.size();
+        const size_t part_size = part.size();
         if (part_size > std::numeric_limits<std::uint32_t>::max()) {
             // Size value must fit into uint32_t.
             throw std::range_error("Invalid size, message part too large");
         }
-        size_t count_size = 5;
-        if (part_size < std::numeric_limits<std::uint8_t>::max()) {
-            count_size = 1;
-        }
+        const size_t count_size =
+          part_size < std::numeric_limits<std::uint8_t>::max() ? 1 : 5;
         mmsg_size += part_size + count_size;
     }
 
     message_t encoded(mmsg_size);
     unsigned char *buf = encoded.data<unsigned char>();
     for (const auto &part : parts) {
-        uint32_t part_size = part.size();
+        const uint32_t part_size = part.size();
         const unsigned char *part_data =
           static_cast<const unsigned char *>(part.data());
 
-        // small part
         if (part_size < std::numeric_limits<std::uint8_t>::max()) {
+            // small part
             *buf++ = (unsigned char) part_size;
-            memcpy(buf, part_data, part_size);
-            buf += part_size;
-            continue;
+        } else {
+            // big part
+            *buf++ = std::numeric_limits<uint8_t>::max();
+            detail::write_network_order(buf, part_size);
+            buf += sizeof(part_size);
         }
-
-        // big part
-        *buf++ = std::numeric_limits<uint8_t>::max();
-        *buf++ = (part_size >> 24) & std::numeric_limits<std::uint8_t>::max();
-        *buf++ = (part_size >> 16) & std::numeric_limits<std::uint8_t>::max();
-        *buf++ = (part_size >> 8) & std::numeric_limits<std::uint8_t>::max();
-        *buf++ = part_size & std::numeric_limits<std::uint8_t>::max();
-        memcpy(buf, part_data, part_size);
+        std::memcpy(buf, part_data, part_size);
         buf += part_size;
     }
+
+    assert(static_cast<size_t>(buf - encoded.data<unsigned char>()) == mmsg_size);
     return encoded;
 }
 
@@ -252,22 +280,24 @@ template<class OutputIt> OutputIt decode(const message_t &encoded, OutputIt out)
     while (source < limit) {
         size_t part_size = *source++;
         if (part_size == std::numeric_limits<std::uint8_t>::max()) {
-            if (source > limit - 4) {
+            if (static_cast<size_t>(limit - source) < sizeof(uint32_t)) {
                 throw std::out_of_range(
                   "Malformed encoding, overflow in reading size");
             }
-            part_size = ((uint32_t) source[0] << 24) + ((uint32_t) source[1] << 16)
-                        + ((uint32_t) source[2] << 8) + (uint32_t) source[3];
-            source += 4;
+            part_size = detail::read_u32_network_order(source);
+            // the part size is allowed to be less than 0xFF
+            source += sizeof(uint32_t);
         }
 
-        if (source > limit - part_size) {
+        if (static_cast<size_t>(limit - source) < part_size) {
             throw std::out_of_range("Malformed encoding, overflow in reading part");
         }
         *out = message_t(source, part_size);
         ++out;
         source += part_size;
     }
+
+    assert(source == limit);
     return out;
 }
 
