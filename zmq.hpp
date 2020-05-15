@@ -310,6 +310,7 @@ inline int poll(std::vector<zmq_pollitem_t> &items,
     return poll(items.data(), items.size(), static_cast<long>(timeout.count()));
 }
 
+ZMQ_DEPRECATED("from 4.3.1, use poll taking std::chrono instead of long")
 inline int poll(std::vector<zmq_pollitem_t> &items, long timeout_ = -1)
 {
     return poll(items.data(), items.size(), timeout_);
