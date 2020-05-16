@@ -55,7 +55,7 @@ TEST_CASE("context - use socket after shutdown", "[context]")
     {
         sock.connect("inproc://test");
         zmq::message_t msg;
-        sock.recv(msg, zmq::recv_flags::dontwait);
+        (void)sock.recv(msg, zmq::recv_flags::dontwait);
         REQUIRE(false);
     }
     catch (const zmq::error_t& e)
