@@ -582,7 +582,7 @@ class message_t
     {
         return std::string(static_cast<const char *>(data()), size());
     }
-#ifdef ZMQ_CPP17
+#if defined(ZMQ_HAS_STRING_VIEW) && (ZMQ_HAS_STRING_VIEW > 0)
     // interpret message content as a string
     std::string_view to_string_view() const noexcept
     {
@@ -1662,7 +1662,7 @@ class socket_base
         set_option(Opt, buf.data(), buf.size());
     }
 
-#ifdef ZMQ_CPP17
+#if defined(ZMQ_HAS_STRING_VIEW) && (ZMQ_HAS_STRING_VIEW > 0)
     // Set array socket option, e.g.
     // `socket.set(zmq::sockopt::routing_id, id_str)`
     template<int Opt, int NullTerm>
