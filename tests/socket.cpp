@@ -69,7 +69,7 @@ TEST_CASE("socket options", "[socket]")
     socket.set(zmq::sockopt::routing_id, "foobar");
     socket.set(zmq::sockopt::routing_id, zmq::buffer(id));
     socket.set(zmq::sockopt::routing_id, id);
-#if defined(ZMQ_HAS_STRING_VIEW) && (ZMQ_HAS_STRING_VIEW > 0)
+#if CPPZMQ_HAS_STRING_VIEW
     socket.set(zmq::sockopt::routing_id, std::string_view{id});
 #endif
 

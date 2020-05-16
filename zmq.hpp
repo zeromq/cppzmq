@@ -103,18 +103,29 @@
 #include <tuple>
 #include <memory>
 #endif
-#ifdef ZMQ_CPP17
-#ifdef __has_include
-#if __has_include(<optional>)
-#include <optional>
-#define ZMQ_HAS_OPTIONAL 1
-#endif
-#if __has_include(<string_view>)
-#include <string_view>
-#define ZMQ_HAS_STRING_VIEW 1
-#endif
+
+#if defined(__has_include) && defined(ZMQ_CPP17)
+#define CPPZMQ_HAS_INCLUDE_CPP17(X) __has_include(X)
+#else
+#define CPPZMQ_HAS_INCLUDE_CPP17(X) 0
 #endif
 
+#if CPPZMQ_HAS_INCLUDE_CPP17(<optional>) && !defined(CPPZMQ_HAS_OPTIONAL)
+#define CPPZMQ_HAS_OPTIONAL 1
+#endif
+#ifndef CPPZMQ_HAS_OPTIONAL
+#define CPPZMQ_HAS_OPTIONAL 0
+#elif CPPZMQ_HAS_OPTIONAL
+#include <optional>
+#endif
+
+#if CPPZMQ_HAS_INCLUDE_CPP17(<string_view>) && !defined(CPPZMQ_HAS_STRING_VIEW)
+#define CPPZMQ_HAS_STRING_VIEW 1
+#endif
+#ifndef CPPZMQ_HAS_STRING_VIEW
+#define CPPZMQ_HAS_STRING_VIEW 0
+#elif CPPZMQ_HAS_STRING_VIEW
+#include <string_view>
 #endif
 
 /*  Version macros for compile-time API version detection                     */
@@ -582,7 +593,7 @@ class message_t
     {
         return std::string(static_cast<const char *>(data()), size());
     }
-#if defined(ZMQ_HAS_STRING_VIEW) && (ZMQ_HAS_STRING_VIEW > 0)
+#if CPPZMQ_HAS_STRING_VIEW
     // interpret message content as a string
     std::string_view to_string_view() const noexcept
     {
@@ -830,7 +841,7 @@ struct recv_buffer_size
     }
 };
 
-#if defined(ZMQ_HAS_OPTIONAL) && (ZMQ_HAS_OPTIONAL > 0)
+#if CPPZMQ_HAS_OPTIONAL
 
 using send_result_t = std::optional<size_t>;
 using recv_result_t = std::optional<size_t>;
@@ -1237,7 +1248,7 @@ const_buffer buffer(const std::basic_string<T, Traits, Allocator> &data,
     return detail::buffer_contiguous_sequence(data, n_bytes);
 }
 
-#if defined(ZMQ_HAS_STRING_VIEW) && (ZMQ_HAS_STRING_VIEW > 0)
+#if CPPZMQ_HAS_STRING_VIEW
 // std::basic_string_view
 template<class T, class Traits>
 const_buffer buffer(std::basic_string_view<T, Traits> data) noexcept
@@ -1662,7 +1673,7 @@ class socket_base
         set_option(Opt, buf.data(), buf.size());
     }
 
-#if defined(ZMQ_HAS_STRING_VIEW) && (ZMQ_HAS_STRING_VIEW > 0)
+#if CPPZMQ_HAS_STRING_VIEW
     // Set array socket option, e.g.
     // `socket.set(zmq::sockopt::routing_id, id_str)`
     template<int Opt, int NullTerm>

@@ -84,6 +84,15 @@ int main()
 }
 ```
 
+Compatibility Guidelines
+========================
+
+The users of cppzmq are expected to follow the guidelines below to ensure not to break when upgrading cppzmq to newer versions (non-exhaustive list):
+
+* Do not depend on any macros defined in cppzmq unless explicitly declared public here.
+
+The following macros may be used by consumers of cppzmq: `CPPZMQ_VERSION`, `CPPZMQ_VERSION_MAJOR`, `CPPZMQ_VERSION_MINOR`, `CPPZMQ_VERSION_PATCH`.
+
 Contribution policy
 ===================
 

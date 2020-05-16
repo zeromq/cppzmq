@@ -222,7 +222,7 @@ TEST_CASE("mutable_buffer creation string", "[buffer]")
     CHECK(b2.data() == d.data());
 }
 
-#ifdef ZMQ_CPP17
+#if CPPZMQ_HAS_STRING_VIEW
 TEST_CASE("const_buffer creation string_view", "[buffer]")
 {
     std::wstring dstr(10, L'a');
