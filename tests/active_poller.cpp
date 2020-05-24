@@ -108,17 +108,13 @@ TEST_CASE("add handler twice throws", "[active_poller]")
     zmq::active_poller_t active_poller;
     zmq::active_poller_t::handler_type handler;
     active_poller.add(socket, zmq::event_flags::pollin, handler);
-    /// \todo the actual error code should be checked
-    CHECK_THROWS_AS(active_poller.add(socket, zmq::event_flags::pollin, handler),
-                    const zmq::error_t &);
+    CHECK_THROWS_ZMQ_ERROR(EINVAL, active_poller.add(socket, zmq::event_flags::pollin, handler));
 }
 
 TEST_CASE("wait with no handlers throws", "[active_poller]")
 {
     zmq::active_poller_t active_poller;
-    /// \todo the actual error code should be checked
-    CHECK_THROWS_AS(active_poller.wait(std::chrono::milliseconds{10}),
-                    const zmq::error_t &);
+    CHECK_THROWS_ZMQ_ERROR(EFAULT, active_poller.wait(std::chrono::milliseconds{10}));
 }
 
 TEST_CASE("remove unregistered throws", "[active_poller]")
@@ -126,8 +122,7 @@ TEST_CASE("remove unregistered throws", "[active_poller]")
     zmq::context_t context;
     zmq::socket_t socket{context, zmq::socket_type::router};
     zmq::active_poller_t active_poller;
-    /// \todo the actual error code should be checked
-    CHECK_THROWS_AS(active_poller.remove(socket), const zmq::error_t &);
+    CHECK_THROWS_ZMQ_ERROR(EINVAL, active_poller.remove(socket));
 }
 
 TEST_CASE("remove registered empty", "[active_poller]")
@@ -351,8 +346,8 @@ TEST_CASE("wait on move constructed active_poller", "[active_poller]")
     CHECK_NOTHROW(a.add(s.server, zmq::event_flags::pollin, handler));
     zmq::active_poller_t b{std::move(a)};
     CHECK(1u == b.size());
-    /// \todo the actual error code should be checked
-    CHECK_THROWS_AS(a.wait(std::chrono::milliseconds{10}), const zmq::error_t &);
+    CHECK(0u == a.size());
+    CHECK_THROWS_ZMQ_ERROR(EFAULT, a.wait(std::chrono::milliseconds{10}));
     CHECK(b.wait(std::chrono::milliseconds{-1}));
 }
 
@@ -366,8 +361,8 @@ TEST_CASE("wait on move assigned active_poller", "[active_poller]")
     zmq::active_poller_t b;
     b = {std::move(a)};
     CHECK(1u == b.size());
-    /// \todo the actual error code should be checked
-    CHECK_THROWS_AS(a.wait(std::chrono::milliseconds{10}), const zmq::error_t &);
+    CHECK(0u == a.size());
+    CHECK_THROWS_ZMQ_ERROR(EFAULT, a.wait(std::chrono::milliseconds{10}));
     CHECK(b.wait(std::chrono::milliseconds{-1}));
 }
 
