@@ -673,6 +673,8 @@ class active_poller_t
 
     void add(zmq::socket_ref socket, event_flags events, handler_type handler)
     {
+        if (!handler)
+            throw std::invalid_argument("null handler in active_poller_t::add");
         auto it = decltype(handlers)::iterator{};
         auto inserted = bool{};
         std::tie(it, inserted) = handlers.emplace(
