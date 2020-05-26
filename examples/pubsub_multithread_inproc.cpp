@@ -3,28 +3,12 @@
 
 #include "zmq.hpp"
 
-#ifdef _WIN32
-int main();
-int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{
-	main();
-}
-#endif // _WIN32
-
-#ifndef OutputDebugString
-#include <iostream>
-void OutputDebugString(char* s)
-{
-	std::cout << s;
-}
-#endif // OutputDebugString
-
 void PublisherThread(zmq::context_t* ctx)
 {
 	//  Prepare publisher
 	zmq::socket_t publisher(*ctx, zmq::socket_type::pub);
 	publisher.bind("inproc://#1");
-	
+
 	// Give the subscribers a chance to connect, so they don't lose any messages
 	std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
@@ -36,7 +20,7 @@ void PublisherThread(zmq::context_t* ctx)
 		publisher.send(zmq::str_buffer("Message in B envelope"));
 		publisher.send(zmq::str_buffer("C"), zmq::send_flags::sndmore);
 		publisher.send(zmq::str_buffer("Message in C envelope"));
-		Sleep(100);
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 }
 
@@ -101,7 +85,7 @@ int main()
 	zmq::context_t ctx(0);
 
 	auto thread1 = std::async(std::launch::async, PublisherThread, &ctx);
-	
+
 	// Give the publisher a chance to bind, since inproc requires it
 	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
@@ -121,3 +105,10 @@ int main()
 	 *     Thread3: [C] Message in C envelope
 	 */
 }
+
+#ifdef _WIN32
+int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+{
+	main();
+}
+#endif // _WIN32
