@@ -42,9 +42,7 @@ void SubscriberThread1(zmq::context_t* ctx)
 		zmq::recv_result_t result = zmq::recv_multipart(subscriber, std::back_inserter(recv_msgs));
 		assert(result && "recv failed");
 
-		std::stringstream out;
-		out << "Thread2: [" << recv_msgs[0].to_string_view() << "] " << recv_msgs[1].to_string_view() << std::endl;
-		std::cout << out.str();
+		std::cout << "Thread2: [" << recv_msgs[0].to_string_view() << "] " << recv_msgs[1].to_string_view() << std::endl;
 	}
 }
 
@@ -63,9 +61,7 @@ void SubscriberThread2(zmq::context_t* ctx)
 		zmq::recv_result_t result = zmq::recv_multipart(subscriber, std::back_inserter(recv_msgs));
 		assert(result && "recv failed");
 
-		std::stringstream out;
-		out << "Thread3: [" << recv_msgs[0].to_string_view() << "] " << recv_msgs[1].to_string_view() << std::endl;
-		std::cout << out.str();
+		std::cout << "Thread3: [" << recv_msgs[0].to_string_view() << "] " << recv_msgs[1].to_string_view() << std::endl;
 	}
 }
 
