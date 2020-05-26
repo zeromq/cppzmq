@@ -95,7 +95,7 @@ int main()
 	 *
 	 * Source: http://api.zeromq.org/2-1:zmq-inproc
 	 */
-	zmq::context_t ctx;
+	zmq::context_t ctx(0);
 
 	auto thread1 = std::async(std::launch::async, PublisherThread, &ctx);
 	
