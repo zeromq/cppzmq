@@ -98,6 +98,11 @@ int main()
 	zmq::context_t ctx;
 
 	auto thread1 = std::async(std::launch::async, PublisherThread, &ctx);
+	
+	// Give publisher time to bind
+	// "the server must issue a bind before any client issues a connect"
+	Sleep(10);
+
 	auto thread2 = std::async(std::launch::async, SubscriberThread1, &ctx);
 	auto thread3 = std::async(std::launch::async, SubscriberThread2, &ctx);
 	thread1.wait();
