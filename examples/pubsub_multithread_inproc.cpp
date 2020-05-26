@@ -1,7 +1,9 @@
 #include <future>
+#include <iostream>
 #include <string>
 
 #include "zmq.hpp"
+#include "zmq_addon.hpp"
 
 void PublisherThread(zmq::context_t* ctx)
 {
@@ -31,21 +33,18 @@ void SubscriberThread1(zmq::context_t* ctx)
 	subscriber.connect("inproc://#1");
 
 	//  Thread2 opens "A" and "B" envelopes
-	subscriber.setsockopt(ZMQ_SUBSCRIBE, "A", 1);
-	subscriber.setsockopt(ZMQ_SUBSCRIBE, "B", 1);
+	subscriber.setsockopt(zmq::sockopt::subscribe, "A", 1);
+	subscriber.setsockopt(zmq::sockopt::subscribe, "B", 1);
 
 	while (1) {
-		//  Read envelope address
-		zmq::message_t address;
-		zmq::recv_result_t result = subscriber.recv(address);
-
-		//  Read message contents
-		zmq::message_t contents;
-		result = subscriber.recv(contents);
+		// Receive all parts of the message
+		std::vector<zmq::message_t> recv_msgs;
+		zmq::recv_result_t result = zmq::recv_multipart(subscriber, std::back_inserter(recv_msgs));
+		assert(result && "recv failed");
 
 		std::stringstream out;
-		out << "Thread2: [" << address.to_string_view() << "] " << contents.to_string_view() << std::endl;
-		OutputDebugString(out.str().c_str());
+		out << "Thread2: [" << recv_msgs[0].to_string_view() << "] " << recv_msgs[1].to_string_view() << std::endl;
+		std::cout << out.str();
 	}
 }
 
@@ -56,20 +55,17 @@ void SubscriberThread2(zmq::context_t* ctx)
 	subscriber.connect("inproc://#1");
 
 	//  Thread3 opens ALL envelopes
-	subscriber.setsockopt(ZMQ_SUBSCRIBE, "", 0);
+	subscriber.setsockopt(zmq::sockopt::subscribe, "", 0);
 
 	while (1) {
-		//  Read envelope address
-		zmq::message_t address;
-		zmq::recv_result_t result = subscriber.recv(address);
-
-		//  Read message contents
-		zmq::message_t contents;
-		result = subscriber.recv(contents);
+		// Receive all parts of the message
+		std::vector<zmq::message_t> recv_msgs;
+		zmq::recv_result_t result = zmq::recv_multipart(subscriber, std::back_inserter(recv_msgs));
+		assert(result && "recv failed");
 
 		std::stringstream out;
-		out << "Thread3: [" << address.to_string_view() << "] " << contents.to_string_view() << std::endl;
-		OutputDebugString(out.str().c_str());
+		out << "Thread3: [" << recv_msgs[0].to_string_view() << "] " << recv_msgs[1].to_string_view() << std::endl;
+		std::cout << out.str();
 	}
 }
 
@@ -80,7 +76,7 @@ int main()
 	 * Therefore, if you are using a ØMQ context for in-process messaging only you
 	 * can initialise the context with zero I/O threads.
 	 *
-	 * Source: http://api.zeromq.org/2-1:zmq-inproc
+	 * Source: http://api.zeromq.org/4-3:zmq-inproc
 	 */
 	zmq::context_t ctx(0);
 
@@ -105,10 +101,3 @@ int main()
 	 *     Thread3: [C] Message in C envelope
 	 */
 }
-
-#ifdef _WIN32
-int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{
-	main();
-}
-#endif // _WIN32
