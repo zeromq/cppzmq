@@ -24,6 +24,9 @@ void PublisherThread(zmq::context_t* ctx)
 	//  Prepare publisher
 	zmq::socket_t publisher(*ctx, zmq::socket_type::pub);
 	publisher.bind("inproc://#1");
+	
+	// Give the subscribers a chance to connect, so they don't lose any messages
+	std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
 	while (true) {
 		//  Write three messages, each with an envelope and content
@@ -99,9 +102,8 @@ int main()
 
 	auto thread1 = std::async(std::launch::async, PublisherThread, &ctx);
 	
-	// Give publisher time to bind
-	// "the server must issue a bind before any client issues a connect"
-	Sleep(10);
+	// Give the publisher a chance to bind, since inproc requires it
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
 	auto thread2 = std::async(std::launch::async, SubscriberThread1, &ctx);
 	auto thread3 = std::async(std::launch::async, SubscriberThread2, &ctx);
