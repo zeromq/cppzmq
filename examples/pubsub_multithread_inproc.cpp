@@ -33,8 +33,8 @@ void SubscriberThread1(zmq::context_t* ctx)
 	subscriber.connect("inproc://#1");
 
 	//  Thread2 opens "A" and "B" envelopes
-	subscriber.setsockopt(zmq::sockopt::subscribe, "A", 1);
-	subscriber.setsockopt(zmq::sockopt::subscribe, "B", 1);
+	subscriber.set(zmq::sockopt::subscribe, "A");
+	subscriber.set(zmq::sockopt::subscribe, "B");
 
 	while (1) {
 		// Receive all parts of the message
@@ -53,7 +53,7 @@ void SubscriberThread2(zmq::context_t* ctx)
 	subscriber.connect("inproc://#1");
 
 	//  Thread3 opens ALL envelopes
-	subscriber.setsockopt(zmq::sockopt::subscribe, "", 0);
+	subscriber.set(zmq::sockopt::subscribe, "");
 
 	while (1) {
 		// Receive all parts of the message
