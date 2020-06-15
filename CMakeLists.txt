@@ -6,22 +6,24 @@ include (DetectCPPZMQVersion)
 
 project(cppzmq VERSION ${DETECTED_CPPZMQ_VERSION})
 
-find_package(ZeroMQ QUIET)
+if(NOT TARGET libzmq AND NOT TARGET libzmq-static)
+    find_package(ZeroMQ QUIET)
 
-# libzmq autotools install: fallback to pkg-config
-if(NOT ZeroMQ_FOUND)
-    message(STATUS "CMake libzmq package not found, trying again with pkg-config (normal install of zeromq)")
-    list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/libzmq-pkg-config)
-    find_package(ZeroMQ REQUIRED)
-endif()
+    # libzmq autotools install: fallback to pkg-config
+    if(NOT ZeroMQ_FOUND)
+        message(STATUS "CMake libzmq package not found, trying again with pkg-config (normal install of zeromq)")
+        list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/libzmq-pkg-config)
+        find_package(ZeroMQ REQUIRED)
+    endif()
 
-# TODO "REQUIRED" above should already cause a fatal failure if not found, but this doesn't seem to work
-if(NOT ZeroMQ_FOUND)
-    message(FATAL_ERROR "ZeroMQ was not found, neither as a CMake package nor via pkg-config")
-endif()
+    # TODO "REQUIRED" above should already cause a fatal failure if not found, but this doesn't seem to work
+    if(NOT ZeroMQ_FOUND)
+        message(FATAL_ERROR "ZeroMQ was not found, neither as a CMake package nor via pkg-config")
+    endif()
 
-if (ZeroMQ_FOUND AND (NOT TARGET libzmq OR NOT TARGET libzmq-static))
-  message(FATAL_ERROR "ZeroMQ version not supported!")
+    if (ZeroMQ_FOUND AND (NOT TARGET libzmq OR NOT TARGET libzmq-static))
+      message(FATAL_ERROR "ZeroMQ version not supported!")
+    endif()
 endif()
 
 if (EXISTS "${CMAKE_SOURCE_DIR}/.git")
