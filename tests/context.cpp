@@ -15,16 +15,16 @@ TEST_CASE("context create, close and destroy", "[context]")
 {
     zmq::context_t context;
     context.close();
-    CHECK(NULL == (void *) context);
+    CHECK(NULL == context.handle());
 }
 
 TEST_CASE("context shutdown", "[context]")
 {
     zmq::context_t context;
     context.shutdown();
-    CHECK(NULL != (void *) context);
+    CHECK(NULL != context.handle());
     context.close();
-    CHECK(NULL == (void *) context);
+    CHECK(NULL == context.handle());
 }
 
 TEST_CASE("context shutdown again", "[context]")
@@ -32,9 +32,9 @@ TEST_CASE("context shutdown again", "[context]")
     zmq::context_t context;
     context.shutdown();
     context.shutdown();
-    CHECK(NULL != (void *) context);
+    CHECK(NULL != context.handle());
     context.close();
-    CHECK(NULL == (void *) context);
+    CHECK(NULL == context.handle());
 }
 
 #ifdef ZMQ_CPP11
