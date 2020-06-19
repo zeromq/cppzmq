@@ -158,7 +158,7 @@ TEST_CASE("message to string", "[message]")
     const zmq::message_t b("Foo", 3);
     CHECK(a.to_string() == "");
     CHECK(b.to_string() == "Foo");
-#ifdef ZMQ_CPP17
+#if CPPZMQ_HAS_STRING_VIEW
     CHECK(a.to_string_view() == "");
     CHECK(b.to_string_view() == "Foo");
 #endif
