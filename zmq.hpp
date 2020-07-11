@@ -32,20 +32,32 @@
 #endif
 #endif
 
+// included here for _HAS_CXX* macros
+#include <zmq.h>
+
+#if defined(_MSVC_LANG)
+#define CPPZMQ_LANG _MSVC_LANG
+#else
+#define CPPZMQ_LANG __cplusplus
+#endif
+// overwrite if specific language macros indicate higher version
+#if defined(_HAS_CXX14) && _HAS_CXX14 && CPPZMQ_LANG < 201402L
+#undef CPPZMQ_LANG
+#define CPPZMQ_LANG 201402L
+#endif
+#if defined(_HAS_CXX17) && _HAS_CXX17 && CPPZMQ_LANG < 201703L
+#undef CPPZMQ_LANG
+#define CPPZMQ_LANG 201703L
+#endif
+
 // macros defined if has a specific standard or greater
-#if (defined(__cplusplus) && __cplusplus >= 201103L)                                \
-  || (defined(_MSC_VER) && _MSC_VER >= 1900)
+#if CPPZMQ_LANG >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1900)
 #define ZMQ_CPP11
 #endif
-#if (defined(__cplusplus) && __cplusplus >= 201402L)                                \
-  || (defined(_HAS_CXX14) && _HAS_CXX14 == 1)                                       \
-  || (defined(_HAS_CXX17)                                                           \
-      && _HAS_CXX17                                                                 \
-           == 1) // _HAS_CXX14 might not be defined when using C++17 on MSVC
+#if CPPZMQ_LANG >= 201402L
 #define ZMQ_CPP14
 #endif
-#if (defined(__cplusplus) && __cplusplus >= 201703L)                                \
-  || (defined(_HAS_CXX17) && _HAS_CXX17 == 1)
+#if CPPZMQ_LANG >= 201703L
 #define ZMQ_CPP17
 #endif
 
@@ -85,8 +97,6 @@
 #else
 #define ZMQ_INLINE_VAR
 #endif
-
-#include <zmq.h>
 
 #include <cassert>
 #include <cstring>
