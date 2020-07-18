@@ -142,4 +142,19 @@ TEST_CASE("monitor init abort", "[monitor]")
     monitor.abort();
     thread.join();
 }
+
+
+TEST_CASE("monitor from move assigned socket", "[monitor]")
+{
+    zmq::context_t ctx;
+    zmq::socket_t sock;
+    sock = std::move([&ctx] {
+        zmq::socket_t sock(ctx, ZMQ_DEALER);
+        return sock;
+    }());
+    zmq::monitor_t monitor1;
+    monitor1.init(sock, "inproc://monitor-client");
+    // On failure, this test might hang indefinitely instead of immediately
+    // failing
+}
 #endif

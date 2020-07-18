@@ -2103,6 +2103,7 @@ class socket_t : public detail::socket_base
     {
         close();
         std::swap(_handle, rhs._handle);
+        std::swap(ctxptr, rhs.ctxptr);
         return *this;
     }
 #endif
@@ -2121,6 +2122,7 @@ class socket_t : public detail::socket_base
         int rc = zmq_close(_handle);
         ZMQ_ASSERT(rc == 0);
         _handle = ZMQ_NULLPTR;
+        ctxptr = ZMQ_NULLPTR;
     }
 
     void swap(socket_t &other) ZMQ_NOTHROW
@@ -2143,6 +2145,9 @@ class socket_t : public detail::socket_base
     {
         if (_handle == ZMQ_NULLPTR)
             throw error_t();
+        if (ctxptr == ZMQ_NULLPTR)
+            throw error_t();
+
     }
 };
 
