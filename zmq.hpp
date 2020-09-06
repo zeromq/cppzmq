@@ -250,12 +250,13 @@ typedef zmq_pollitem_t pollitem_t;
 class error_t : public std::exception
 {
   public:
-    error_t() : errnum(zmq_errno()) {}
+    error_t() ZMQ_NOTHROW : errnum(zmq_errno()) {}
+    explicit error_t(int err) ZMQ_NOTHROW : errnum(err) {}
     virtual const char *what() const ZMQ_NOTHROW ZMQ_OVERRIDE
     {
         return zmq_strerror(errnum);
     }
-    int num() const { return errnum; }
+    int num() const ZMQ_NOTHROW { return errnum; }
 
   private:
     int errnum;
