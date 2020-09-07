@@ -92,6 +92,9 @@
 #define ZMQ_CONSTEXPR_VAR const
 #define ZMQ_CPP11_DEPRECATED(msg)
 #endif
+#if defined(ZMQ_CPP14) && (!defined(_MSC_VER) || _MSC_VER > 1900)
+#define ZMQ_EXTENDED_CONSTEXPR
+#endif
 #if defined(ZMQ_CPP17)
 #define ZMQ_INLINE_VAR inline
 #else
@@ -1013,7 +1016,7 @@ class mutable_buffer
     constexpr mutable_buffer() noexcept : _data(nullptr), _size(0) {}
     constexpr mutable_buffer(void *p, size_t n) noexcept : _data(p), _size(n)
     {
-#ifdef ZMQ_CPP14
+#ifdef ZMQ_EXTENDED_CONSTEXPR
         assert(p != nullptr || n == 0);
 #endif
     }
@@ -1050,7 +1053,7 @@ class const_buffer
     constexpr const_buffer() noexcept : _data(nullptr), _size(0) {}
     constexpr const_buffer(const void *p, size_t n) noexcept : _data(p), _size(n)
     {
-#ifdef ZMQ_CPP14
+#ifdef ZMQ_EXTENDED_CONSTEXPR
         assert(p != nullptr || n == 0);
 #endif
     }
@@ -1282,7 +1285,7 @@ template<class Char, size_t N>
 constexpr const_buffer str_buffer(const Char (&data)[N]) noexcept
 {
     static_assert(detail::is_pod_like<Char>::value, "Char must be POD");
-#ifdef ZMQ_CPP14
+#ifdef ZMQ_EXTENDED_CONSTEXPR
     assert(data[N - 1] == Char{0});
 #endif
     return const_buffer(static_cast<const Char *>(data), (N - 1) * sizeof(Char));
