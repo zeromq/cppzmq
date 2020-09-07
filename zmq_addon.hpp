@@ -673,20 +673,19 @@ class active_poller_t
 
     void add(zmq::socket_ref socket, event_flags events, handler_type handler)
     {
-        auto it = decltype(handlers)::iterator{};
-        auto inserted = bool{};
-        std::tie(it, inserted) = handlers.emplace(
+        if (!handler)
+            throw std::invalid_argument("null handler in active_poller_t::add");
+        auto ret = handlers.emplace(
           socket, std::make_shared<handler_type>(std::move(handler)));
+        if (!ret.second)
+            throw error_t(EINVAL); // already added
         try {
-            base_poller.add(socket, events,
-                            inserted && *(it->second) ? it->second.get() : nullptr);
-            need_rebuild |= inserted;
+            base_poller.add(socket, events, ret.first->second.get());
+            need_rebuild = true;
         }
-        catch (const zmq::error_t &) {
+        catch (...) {
             // rollback
-            if (inserted) {
-                handlers.erase(socket);
-            }
+            handlers.erase(socket);
             throw;
         }
     }
@@ -718,8 +717,8 @@ class active_poller_t
         std::for_each(poller_events.begin(),
                       poller_events.begin() + static_cast<ptrdiff_t>(count),
                       [](decltype(base_poller)::event_type &event) {
-                          if (event.user_data != nullptr)
-                              (*event.user_data)(event.events);
+                          assert(event.user_data != nullptr);
+                          (*event.user_data)(event.events);
                       });
         return count;
     }
