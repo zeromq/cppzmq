@@ -32,20 +32,32 @@
 #endif
 #endif
 
+// included here for _HAS_CXX* macros
+#include <zmq.h>
+
+#if defined(_MSVC_LANG)
+#define CPPZMQ_LANG _MSVC_LANG
+#else
+#define CPPZMQ_LANG __cplusplus
+#endif
+// overwrite if specific language macros indicate higher version
+#if defined(_HAS_CXX14) && _HAS_CXX14 && CPPZMQ_LANG < 201402L
+#undef CPPZMQ_LANG
+#define CPPZMQ_LANG 201402L
+#endif
+#if defined(_HAS_CXX17) && _HAS_CXX17 && CPPZMQ_LANG < 201703L
+#undef CPPZMQ_LANG
+#define CPPZMQ_LANG 201703L
+#endif
+
 // macros defined if has a specific standard or greater
-#if (defined(__cplusplus) && __cplusplus >= 201103L)                                \
-  || (defined(_MSC_VER) && _MSC_VER >= 1900)
+#if CPPZMQ_LANG >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1900)
 #define ZMQ_CPP11
 #endif
-#if (defined(__cplusplus) && __cplusplus >= 201402L)                                \
-  || (defined(_HAS_CXX14) && _HAS_CXX14 == 1)                                       \
-  || (defined(_HAS_CXX17)                                                           \
-      && _HAS_CXX17                                                                 \
-           == 1) // _HAS_CXX14 might not be defined when using C++17 on MSVC
+#if CPPZMQ_LANG >= 201402L
 #define ZMQ_CPP14
 #endif
-#if (defined(__cplusplus) && __cplusplus >= 201703L)                                \
-  || (defined(_HAS_CXX17) && _HAS_CXX17 == 1)
+#if CPPZMQ_LANG >= 201703L
 #define ZMQ_CPP17
 #endif
 
@@ -80,13 +92,14 @@
 #define ZMQ_CONSTEXPR_VAR const
 #define ZMQ_CPP11_DEPRECATED(msg)
 #endif
+#if defined(ZMQ_CPP14) && (!defined(_MSC_VER) || _MSC_VER > 1900)
+#define ZMQ_EXTENDED_CONSTEXPR
+#endif
 #if defined(ZMQ_CPP17)
 #define ZMQ_INLINE_VAR inline
 #else
 #define ZMQ_INLINE_VAR
 #endif
-
-#include <zmq.h>
 
 #include <cassert>
 #include <cstring>
@@ -1004,7 +1017,7 @@ class mutable_buffer
     constexpr mutable_buffer() noexcept : _data(nullptr), _size(0) {}
     constexpr mutable_buffer(void *p, size_t n) noexcept : _data(p), _size(n)
     {
-#ifdef ZMQ_CPP14
+#ifdef ZMQ_EXTENDED_CONSTEXPR
         assert(p != nullptr || n == 0);
 #endif
     }
@@ -1041,7 +1054,7 @@ class const_buffer
     constexpr const_buffer() noexcept : _data(nullptr), _size(0) {}
     constexpr const_buffer(const void *p, size_t n) noexcept : _data(p), _size(n)
     {
-#ifdef ZMQ_CPP14
+#ifdef ZMQ_EXTENDED_CONSTEXPR
         assert(p != nullptr || n == 0);
 #endif
     }
@@ -1273,7 +1286,7 @@ template<class Char, size_t N>
 constexpr const_buffer str_buffer(const Char (&data)[N]) noexcept
 {
     static_assert(detail::is_pod_like<Char>::value, "Char must be POD");
-#ifdef ZMQ_CPP14
+#ifdef ZMQ_EXTENDED_CONSTEXPR
     assert(data[N - 1] == Char{0});
 #endif
     return const_buffer(static_cast<const Char *>(data), (N - 1) * sizeof(Char));
