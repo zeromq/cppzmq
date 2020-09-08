@@ -342,8 +342,8 @@ inline int poll(std::vector<zmq_pollitem_t> &items, long timeout_ = -1)
 }
 
 template<std::size_t SIZE>
-inline int poll(std::array<zmq_pollitem_t, SIZE>& items,
-    std::chrono::milliseconds timeout)
+inline int poll(std::array<zmq_pollitem_t, SIZE> &items,
+                std::chrono::milliseconds timeout)
 {
     return poll(items.data(), items.size(), static_cast<long>(timeout.count()));
 }
@@ -362,6 +362,20 @@ inline std::tuple<int, int, int> version()
     zmq_version(&std::get<0>(v), &std::get<1>(v), &std::get<2>(v));
     return v;
 }
+
+#if !defined(ZMQ_CPP11_PARTIAL)
+namespace detail
+{
+template<class T> struct is_char_type
+{
+    // true if character type for string literals in C++11
+    static constexpr bool value =
+      std::is_same<T, char>::value || std::is_same<T, wchar_t>::value
+      || std::is_same<T, char16_t>::value || std::is_same<T, char32_t>::value;
+};
+}
+#endif
+
 #endif
 
 class message_t
@@ -398,8 +412,7 @@ class message_t
         int rc = zmq_msg_init_size(&msg, size_);
         if (rc != 0)
             throw error_t();
-        if (size_)
-        {
+        if (size_) {
             // this constructor allows (nullptr, 0),
             // memcpy with a null pointer is UB
             memcpy(data(), data_, size_);
@@ -413,16 +426,40 @@ class message_t
             throw error_t();
     }
 
+    // overload set of string-like types and generic containers
 #if defined(ZMQ_CPP11) && !defined(ZMQ_CPP11_PARTIAL)
+    // NOTE this constructor will include the null terminator
+    // when called with a string literal.
+    // An overload taking const char* can not be added because
+    // it would be preferred over this function and break compatiblity.
+    template<
+      class Char,
+      size_t N,
+      typename = typename std::enable_if<detail::is_char_type<Char>::value>::type>
+    ZMQ_DEPRECATED("from 4.7.0, use constructors taking iterators, (pointer, size) "
+                   "or strings instead")
+    explicit message_t(const Char (&data)[N]) :
+        message_t(detail::ranges::begin(data), detail::ranges::end(data))
+    {
+    }
+
     template<class Range,
              typename = typename std::enable_if<
                detail::is_range<Range>::value
                && ZMQ_IS_TRIVIALLY_COPYABLE(detail::range_value_t<Range>)
+               && !detail::is_char_type<detail::range_value_t<Range>>::value
                && !std::is_same<Range, message_t>::value>::type>
     explicit message_t(const Range &rng) :
         message_t(detail::ranges::begin(rng), detail::ranges::end(rng))
     {
     }
+
+    explicit message_t(const std::string &str) : message_t(str.data(), str.size()) {}
+
+#if CPPZMQ_HAS_STRING_VIEW
+    explicit message_t(std::string_view str) : message_t(str.data(), str.size()) {}
+#endif
+
 #endif
 
 #ifdef ZMQ_HAS_RVALUE_REFS
@@ -1337,19 +1374,19 @@ template<int Opt, int NullTerm = 1> struct array_option
 
 #define ZMQ_DEFINE_INTEGRAL_OPT(OPT, NAME, TYPE)                                    \
     using NAME##_t = integral_option<OPT, TYPE, false>;                             \
-    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME{}
+    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME {}
 #define ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(OPT, NAME, TYPE)                          \
     using NAME##_t = integral_option<OPT, TYPE, true>;                              \
-    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME{}
+    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME {}
 #define ZMQ_DEFINE_ARRAY_OPT(OPT, NAME)                                             \
     using NAME##_t = array_option<OPT>;                                             \
-    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME{}
+    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME {}
 #define ZMQ_DEFINE_ARRAY_OPT_BINARY(OPT, NAME)                                      \
     using NAME##_t = array_option<OPT, 0>;                                          \
-    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME{}
+    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME {}
 #define ZMQ_DEFINE_ARRAY_OPT_BIN_OR_Z85(OPT, NAME)                                  \
     using NAME##_t = array_option<OPT, 2>;                                          \
-    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME{}
+    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME {}
 
 // duplicate definition from libzmq 4.3.3
 #if defined _WIN32
@@ -2161,7 +2198,6 @@ class socket_t : public detail::socket_base
             throw error_t();
         if (ctxptr == ZMQ_NULLPTR)
             throw error_t();
-
     }
 };
 
