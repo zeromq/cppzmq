@@ -61,7 +61,7 @@
 #define ZMQ_CPP17
 #endif
 
-#if defined(ZMQ_CPP14)
+#if defined(ZMQ_CPP14) && !defined(_MSC_VER)
 #define ZMQ_DEPRECATED(msg) [[deprecated(msg)]]
 #elif defined(_MSC_VER)
 #define ZMQ_DEPRECATED(msg) __declspec(deprecated(msg))
