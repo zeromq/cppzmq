@@ -144,7 +144,7 @@
 /*  Version macros for compile-time API version detection                     */
 #define CPPZMQ_VERSION_MAJOR 4
 #define CPPZMQ_VERSION_MINOR 7
-#define CPPZMQ_VERSION_PATCH 0
+#define CPPZMQ_VERSION_PATCH 1
 
 #define CPPZMQ_VERSION                                                              \
     ZMQ_MAKE_VERSION(CPPZMQ_VERSION_MAJOR, CPPZMQ_VERSION_MINOR,                    \
@@ -1096,7 +1096,8 @@ class const_buffer
 #endif
     }
     constexpr const_buffer(const mutable_buffer &mb) noexcept :
-        _data(mb.data()), _size(mb.size())
+        _data(mb.data()),
+        _size(mb.size())
     {
     }
 
@@ -2192,7 +2193,8 @@ class socket_t : public detail::socket_base
 
     // used by monitor_t
     socket_t(void *context_, int type_) :
-        detail::socket_base(zmq_socket(context_, type_)), ctxptr(context_)
+        detail::socket_base(zmq_socket(context_, type_)),
+        ctxptr(context_)
     {
         if (_handle == ZMQ_NULLPTR)
             throw error_t();
