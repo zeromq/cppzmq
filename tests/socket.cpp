@@ -270,8 +270,7 @@ TEST_CASE("socket check integral options", "[socket]")
     check_integral_opt_get<int>(zmq::sockopt::events, router, "events");
 #endif
 #ifdef ZMQ_FD
-    check_integral_opt_get<zmq::sockopt::cppzmq_fd_t>(zmq::sockopt::fd, router,
-                                                      "fd");
+    check_integral_opt_get<zmq::fd_t>(zmq::sockopt::fd, router, "fd");
 #endif
 #ifdef ZMQ_HANDSHAKE_IVL
     check_integral_opt<int>(zmq::sockopt::handshake_ivl, router, "handshake_ivl");
