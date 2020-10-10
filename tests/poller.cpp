@@ -133,6 +133,20 @@ TEST_CASE("poller wait with no handlers throws", "[poller]")
                     const zmq::error_t&);
 }
 
+#if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 3, 3)
+TEST_CASE("poller add/remove size checks", "[poller]")
+{
+    zmq::context_t context;
+    zmq::socket_t socket{context, zmq::socket_type::router};
+    zmq::poller_t<> poller;
+    CHECK(poller.size() == 0);
+    poller.add(socket, zmq::event_flags::pollin);
+    CHECK(poller.size() == 1);
+    CHECK_NOTHROW(poller.remove(socket));
+    CHECK(poller.size() == 0);
+}
+#endif
+
 TEST_CASE("poller remove unregistered throws", "[poller]")
 {
     zmq::context_t context;
