@@ -78,10 +78,10 @@ inline void write_network_order(unsigned char *buf, const uint32_t value)
 {
     if (is_little_endian()) {
         ZMQ_CONSTEXPR_VAR uint32_t mask = std::numeric_limits<std::uint8_t>::max();
-        *buf++ = (value >> 24) & mask;
-        *buf++ = (value >> 16) & mask;
-        *buf++ = (value >> 8) & mask;
-        *buf++ = value & mask;
+        *buf++ = static_cast<unsigned char>((value >> 24) & mask);
+        *buf++ = static_cast<unsigned char>((value >> 16) & mask);
+        *buf++ = static_cast<unsigned char>((value >> 8) & mask);
+        *buf++ = static_cast<unsigned char>(value & mask);
     } else {
         std::memcpy(buf, &value, sizeof(value));
     }
@@ -236,7 +236,7 @@ message_t encode(const Range &parts)
     message_t encoded(mmsg_size);
     unsigned char *buf = encoded.data<unsigned char>();
     for (const auto &part : parts) {
-        const uint32_t part_size = part.size();
+        const uint32_t part_size = static_cast<uint32_t>(part.size());
         const unsigned char *part_data =
           static_cast<const unsigned char *>(part.data());
 
