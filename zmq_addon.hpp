@@ -49,7 +49,7 @@ recv_multipart_n(socket_ref s, OutputIt out, size_t n, recv_flags flags)
     size_t msg_count = 0;
     message_t msg;
     while (true) {
-        if (CheckN) {
+        if ZMQ_CONSTEXPR_IF (CheckN) {
             if (msg_count >= n)
                 throw std::runtime_error(
                   "Too many message parts in recv_multipart_n");
