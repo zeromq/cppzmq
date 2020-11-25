@@ -1827,6 +1827,7 @@ class socket_base
             throw error_t();
     }
 
+    ZMQ_DEPRECATED("from 4.7.1, use handle() != nullptr or operator bool")
     bool connected() const ZMQ_NOTHROW { return (_handle != ZMQ_NULLPTR); }
 
     ZMQ_CPP11_DEPRECATED("from 4.3.1, use send taking a const_buffer and send_flags")
