@@ -17,11 +17,11 @@ set(CATCH_MODULE_PATH ${DOWNLOAD_DIR} CACHE INTERNAL "Path to include catch")
 
 # Download module for CTest integration
 if(NOT EXISTS "${CATCH_MODULE_PATH}/Catch.cmake")
-    file(DOWNLOAD "https://raw.githubusercontent.com/catchorg/Catch2/master/contrib/Catch.cmake"
+    file(DOWNLOAD "https://raw.githubusercontent.com/catchorg/Catch2/90e2549cecc2e886d563b7a88e752c9b4104f798/contrib/Catch.cmake"
         "${CATCH_MODULE_PATH}/Catch.cmake")
 endif()
 if(NOT EXISTS "${CATCH_MODULE_PATH}/CatchAddTests.cmake")
-    file(DOWNLOAD "https://raw.githubusercontent.com/catchorg/Catch2/master/contrib/CatchAddTests.cmake"
+    file(DOWNLOAD "https://raw.githubusercontent.com/catchorg/Catch2/90e2549cecc2e886d563b7a88e752c9b4104f798/contrib/CatchAddTests.cmake"
         "${CATCH_MODULE_PATH}/CatchAddTests.cmake")
 endif()
 
