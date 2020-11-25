@@ -53,7 +53,7 @@ int main()
     sock.send(zmq::str_buffer("Hello, world"), zmq::send_flags::dontwait);
 }
 ```
-This a more complex example where we send and receive multi-part messages.
+This a more complex example where we send and receive multi-part messages over TCP with a wildcard port.
 ```c++
 #include <iostream>
 #include <zmq_addon.hpp>
@@ -61,10 +61,14 @@ This a more complex example where we send and receive multi-part messages.
 int main()
 {
     zmq::context_t ctx;
-    zmq::socket_t sock1(ctx, zmq::socket_type::pair);
-    zmq::socket_t sock2(ctx, zmq::socket_type::pair);
-    sock1.bind("inproc://test");
-    sock2.connect("inproc://test");
+    zmq::socket_t sock1(ctx, zmq::socket_type::push);
+    zmq::socket_t sock2(ctx, zmq::socket_type::pull);
+    sock1.bind("tcp://127.0.0.1:*");
+    const std::string last_endpoint =
+        sock1.get(zmq::sockopt::last_endpoint);
+    std::cout << "Connecting to "
+              << last_endpoint << std::endl;
+    sock2.connect(last_endpoint);
 
     std::array<zmq::const_buffer, 2> send_msgs = {
         zmq::str_buffer("foo"),
@@ -83,6 +87,8 @@ int main()
     return 0;
 }
 ```
+
+See the `examples` directory for more examples. When the project is compiled with tests enabled, each example gets compiled to an executable.
 
 Compatibility Guidelines
 ========================
