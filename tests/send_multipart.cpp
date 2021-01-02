@@ -115,7 +115,7 @@ TEST_CASE("send_multipart test", "[send_multipart]")
     SECTION("send with invalid socket") {
         std::vector<zmq::message_t> msgs(1);
         CHECK_THROWS_AS(zmq::send_multipart(zmq::socket_ref(), msgs),
-                        const zmq::error_t &);
+                        zmq::error_t);
     }
 }
 #endif

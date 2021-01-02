@@ -58,7 +58,7 @@ TEST_CASE("socket options", "[socket]")
     socket.set(zmq::sockopt::immediate, false);
     CHECK(socket.get(zmq::sockopt::immediate) == false);
     // unit out of range
-    CHECK_THROWS_AS(socket.set(zmq::sockopt::immediate, 80), const zmq::error_t &);
+    CHECK_THROWS_AS(socket.set(zmq::sockopt::immediate, 80), zmq::error_t);
 #endif
 #ifdef ZMQ_LINGER
     socket.set(zmq::sockopt::linger, 55);
@@ -83,7 +83,7 @@ TEST_CASE("socket options", "[socket]")
     std::string id_ret_small(3, ' ');
     // truncated
     CHECK_THROWS_AS(socket.get(zmq::sockopt::routing_id, zmq::buffer(id_ret_small)),
-                    const zmq::error_t &);
+                    zmq::error_t);
 #endif
 }
 
@@ -543,7 +543,7 @@ TEST_CASE("socket send exception", "[socket]")
     s.bind("inproc://test");
 
     std::vector<char> buf(4);
-    CHECK_THROWS_AS(s.send(zmq::buffer(buf)), const zmq::error_t &);
+    CHECK_THROWS_AS(s.send(zmq::buffer(buf)), zmq::error_t);
 }
 
 TEST_CASE("socket recv none", "[socket]")
@@ -631,7 +631,7 @@ TEST_CASE("socket recv dontwait", "[socket]")
     zmq::message_t msg;
     auto resm = s.recv(msg, flags);
     CHECK(!resm);
-    CHECK_THROWS_AS(resm.value(), const std::exception &);
+    CHECK_THROWS_AS(resm.value(), std::exception);
     CHECK(msg.size() == 0);
 }
 
@@ -642,7 +642,7 @@ TEST_CASE("socket recv exception", "[socket]")
     s.bind("inproc://test");
 
     std::vector<char> buf(4);
-    CHECK_THROWS_AS(s.recv(zmq::buffer(buf)), const zmq::error_t &);
+    CHECK_THROWS_AS(s.recv(zmq::buffer(buf)), zmq::error_t);
 }
 
 TEST_CASE("socket proxy", "[socket]")
