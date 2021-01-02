@@ -1,19 +1,21 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
-
-project(cppzmq-test CXX)
-
-# place binaries and libraries according to GNU standards
-
-include(GNUInstallDirs)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
-
-include(CTest)
-include(cmake/catch.cmake)
-include(${CATCH_MODULE_PATH}/Catch.cmake)
-
 find_package(Threads)
+
+find_package(Catch2 QUIET)
+
+if (Catch2_FOUND)
+  include(Catch)
+else()
+  include(FetchContent)
+
+  FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG        v2.13.4)
+
+  FetchContent_MakeAvailable(Catch2)
+
+  list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
+endif()
 
 add_executable(
     unit_tests
@@ -32,11 +34,10 @@ add_executable(
     utilities.cpp
 )
 
-add_dependencies(unit_tests catch)
-
 target_include_directories(unit_tests PUBLIC ${CATCH_MODULE_PATH})
 target_link_libraries(
     unit_tests
+    PRIVATE Catch2::Catch2
     PRIVATE cppzmq
     PRIVATE ${CMAKE_THREAD_LIBS_INIT}
 )
@@ -48,4 +49,6 @@ if (COVERAGE)
     target_link_libraries(unit_tests PRIVATE --coverage)
 endif()
 
+include(CTest)
+include(Catch)
 catch_discover_tests(unit_tests)
