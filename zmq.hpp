@@ -97,8 +97,10 @@
 #endif
 #if defined(ZMQ_CPP17)
 #define ZMQ_INLINE_VAR inline
+#define ZMQ_CONSTEXPR_IF constexpr
 #else
 #define ZMQ_INLINE_VAR
+#define ZMQ_CONSTEXPR_IF
 #endif
 
 #include <cassert>
@@ -1769,17 +1771,19 @@ class socket_base
     ZMQ_NODISCARD std::string get(sockopt::array_option<Opt, NullTerm>,
                                   size_t init_size = 1024) const
     {
-        if (NullTerm == 2 && init_size == 1024) {
-            init_size = 41; // get as Z85 string
+        if ZMQ_CONSTEXPR_IF (NullTerm == 2) {
+            if (init_size == 1024) {
+                init_size = 41; // get as Z85 string
+            }
         }
         std::string str(init_size, '\0');
         size_t size = get(sockopt::array_option<Opt>{}, buffer(str));
-        if (NullTerm == 1) {
+        if ZMQ_CONSTEXPR_IF (NullTerm == 1) {
             if (size > 0) {
                 assert(str[size - 1] == '\0');
                 --size;
             }
-        } else if (NullTerm == 2) {
+        } else if ZMQ_CONSTEXPR_IF (NullTerm == 2) {
             assert(size == 32 || size == 41);
             if (size == 41) {
                 assert(str[size - 1] == '\0');
