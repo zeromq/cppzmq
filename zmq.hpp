@@ -273,6 +273,17 @@ struct is_range<
 typedef zmq_free_fn free_fn;
 typedef zmq_pollitem_t pollitem_t;
 
+// duplicate definition from libzmq 4.3.3
+#if defined _WIN32
+#if defined _WIN64
+typedef unsigned __int64 fd_t;
+#else
+typedef unsigned int fd_t;
+#endif
+#else
+typedef int fd_t;
+#endif
+
 class error_t : public std::exception
 {
   public:
@@ -1351,10 +1362,6 @@ constexpr const_buffer operator"" _zbuf(const char32_t *str, size_t len) noexcep
 }
 }
 
-#endif // ZMQ_CPP11
-
-
-#ifdef ZMQ_CPP11
 namespace sockopt
 {
 // There are two types of options,
@@ -1390,16 +1397,8 @@ template<int Opt, int NullTerm = 1> struct array_option
     using NAME##_t = array_option<OPT, 2>;                                          \
     ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME {}
 
-// duplicate definition from libzmq 4.3.3
-#if defined _WIN32
-#if defined _WIN64
-typedef unsigned __int64 cppzmq_fd_t;
-#else
-typedef unsigned int cppzmq_fd_t;
-#endif
-#else
-typedef int cppzmq_fd_t;
-#endif
+// deprecated, use zmq::fd_t
+using cppzmq_fd_t = ::zmq::fd_t;
 
 #ifdef ZMQ_AFFINITY
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_AFFINITY, affinity, uint64_t);
@@ -1435,7 +1434,7 @@ ZMQ_DEFINE_ARRAY_OPT_BIN_OR_Z85(ZMQ_CURVE_SERVERKEY, curve_serverkey);
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_EVENTS, events, int);
 #endif
 #ifdef ZMQ_FD
-ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_FD, fd, cppzmq_fd_t);
+ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_FD, fd, ::zmq::fd_t);
 #endif
 #ifdef ZMQ_GSSAPI_PLAINTEXT
 ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_GSSAPI_PLAINTEXT, gssapi_plaintext, int);
@@ -2587,11 +2586,7 @@ struct no_user_data;
 template<class T = no_user_data> struct poller_event
 {
     socket_ref socket;
-#ifdef _WIN32
-    SOCKET fd;
-#else
-    int fd;
-#endif
+    ::zmq::fd_t fd;
     T *user_data;
     event_flags events;
 };
