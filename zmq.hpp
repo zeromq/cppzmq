@@ -1395,7 +1395,8 @@ template<int Opt, int NullTerm = 1> struct array_option
     using NAME##_t = array_option<OPT, 2>;                                          \
     ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME {}
 
-using cppzmq_fd_t ZMQ_DEPRECATED("use zmq::fd_t") = ::zmq::fd_t;
+// deprecated, use zmq::fd_t
+using cppzmq_fd_t = ::zmq::fd_t;
 
 #ifdef ZMQ_AFFINITY
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_AFFINITY, affinity, uint64_t);
