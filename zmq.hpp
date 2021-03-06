@@ -2309,8 +2309,7 @@ class monitor_t
     {
         assert(_monitor_socket);
 
-        zmq_msg_t eventMsg;
-        zmq_msg_init(&eventMsg);
+        zmq::message_t eventMsg;
 
         zmq::pollitem_t items[] = {
           {_monitor_socket.handle(), 0, ZMQ_POLLIN, 0},
@@ -2319,40 +2318,35 @@ class monitor_t
         zmq::poll(&items[0], 1, timeout);
 
         if (items[0].revents & ZMQ_POLLIN) {
-            int rc = zmq_msg_recv(&eventMsg, _monitor_socket.handle(), 0);
+            int rc = zmq_msg_recv(eventMsg.handle(), _monitor_socket.handle(), 0);
             if (rc == -1 && zmq_errno() == ETERM)
                 return false;
             assert(rc != -1);
 
         } else {
-            zmq_msg_close(&eventMsg);
             return false;
         }
 
 #if ZMQ_VERSION_MAJOR >= 4
-        const char *data = static_cast<const char *>(zmq_msg_data(&eventMsg));
+        const char *data = static_cast<const char *>(eventMsg.data());
         zmq_event_t msgEvent;
         memcpy(&msgEvent.event, data, sizeof(uint16_t));
         data += sizeof(uint16_t);
         memcpy(&msgEvent.value, data, sizeof(int32_t));
         zmq_event_t *event = &msgEvent;
 #else
-        zmq_event_t *event = static_cast<zmq_event_t *>(zmq_msg_data(&eventMsg));
+        zmq_event_t *event = static_cast<zmq_event_t *>(eventMsg.data());
 #endif
 
 #ifdef ZMQ_NEW_MONITOR_EVENT_LAYOUT
-        zmq_msg_t addrMsg;
-        zmq_msg_init(&addrMsg);
-        int rc = zmq_msg_recv(&addrMsg, _monitor_socket.handle(), 0);
+        zmq::message_t addrMsg;
+        int rc = zmq_msg_recv(addrMsg.handle(), _monitor_socket.handle(), 0);
         if (rc == -1 && zmq_errno() == ETERM) {
-            zmq_msg_close(&eventMsg);
             return false;
         }
 
         assert(rc != -1);
-        const char *str = static_cast<const char *>(zmq_msg_data(&addrMsg));
-        std::string address(str, str + zmq_msg_size(&addrMsg));
-        zmq_msg_close(&addrMsg);
+        std::string address = addrMsg.to_string();
 #else
         // Bit of a hack, but all events in the zmq_event_t union have the same layout so this will work for all event types.
         std::string address = event->data.connected.addr;
@@ -2360,7 +2354,6 @@ class monitor_t
 
 #ifdef ZMQ_EVENT_MONITOR_STOPPED
         if (event->event == ZMQ_EVENT_MONITOR_STOPPED) {
-            zmq_msg_close(&eventMsg);
             return false;
         }
 
@@ -2424,7 +2417,6 @@ class monitor_t
                 on_event_unknown(*event, address.c_str());
                 break;
         }
-        zmq_msg_close(&eventMsg);
 
         return true;
     }
