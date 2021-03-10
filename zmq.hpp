@@ -2083,27 +2083,27 @@ inline bool operator!=(std::nullptr_t /*p*/, socket_ref sr) ZMQ_NOTHROW
 }
 #endif
 
-inline bool operator==(socket_ref a, socket_ref b) ZMQ_NOTHROW
+inline bool operator==(const detail::socket_base& a, const detail::socket_base& b) ZMQ_NOTHROW
 {
-    return std::equal_to<void *>()(a.handle(), b.handle());
+    return std::equal_to<const void *>()(a.handle(), b.handle());
 }
-inline bool operator!=(socket_ref a, socket_ref b) ZMQ_NOTHROW
+inline bool operator!=(const detail::socket_base& a, const detail::socket_base& b) ZMQ_NOTHROW
 {
     return !(a == b);
 }
-inline bool operator<(socket_ref a, socket_ref b) ZMQ_NOTHROW
+inline bool operator<(const detail::socket_base& a, const detail::socket_base& b) ZMQ_NOTHROW
 {
-    return std::less<void *>()(a.handle(), b.handle());
+    return std::less<const void *>()(a.handle(), b.handle());
 }
-inline bool operator>(socket_ref a, socket_ref b) ZMQ_NOTHROW
+inline bool operator>(const detail::socket_base& a, const detail::socket_base& b) ZMQ_NOTHROW
 {
     return b < a;
 }
-inline bool operator<=(socket_ref a, socket_ref b) ZMQ_NOTHROW
+inline bool operator<=(const detail::socket_base& a, const detail::socket_base& b) ZMQ_NOTHROW
 {
     return !(a > b);
 }
-inline bool operator>=(socket_ref a, socket_ref b) ZMQ_NOTHROW
+inline bool operator>=(const detail::socket_base& a, const detail::socket_base& b) ZMQ_NOTHROW
 {
     return !(a < b);
 }
