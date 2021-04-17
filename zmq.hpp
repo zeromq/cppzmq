@@ -2030,6 +2030,13 @@ enum class socket_type : int
     client = ZMQ_CLIENT,
     radio = ZMQ_RADIO,
     dish = ZMQ_DISH,
+    gather = ZMQ_GATHER,
+    scatter = ZMQ_SCATTER,
+    dgram = ZMQ_DGRAM,
+#endif
+#if defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 3, 3)
+    peer = ZMQ_PEER,
+    channel = ZMQ_CHANNEL,
 #endif
 #if ZMQ_VERSION_MAJOR >= 4
     stream = ZMQ_STREAM,
