@@ -331,7 +331,7 @@ class multipart_t
     multipart_t() {}
 
     // Construct from socket receive
-    multipart_t(socket_t &socket) { recv(socket); }
+    multipart_t(socket_ref socket) { recv(socket); }
 
     // Construct from memory block
     multipart_t(const void *src, size_t size) { addmem(src, size); }
@@ -393,7 +393,7 @@ class multipart_t
     bool empty() const { return m_parts.empty(); }
 
     // Receive multipart message from socket
-    bool recv(socket_t &socket, int flags = 0)
+    bool recv(socket_ref socket, int flags = 0)
     {
         clear();
         bool more = true;
@@ -413,7 +413,7 @@ class multipart_t
     }
 
     // Send multipart message to socket
-    bool send(socket_t &socket, int flags = 0)
+    bool send(socket_ref socket, int flags = 0)
     {
         flags &= ~(ZMQ_SNDMORE);
         bool more = size() > 0;

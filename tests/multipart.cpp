@@ -1,6 +1,10 @@
 #include <catch.hpp>
 #include <zmq_addon.hpp>
 
+static_assert(std::is_same<decltype(zmq::multipart_t().send(zmq::socket_ref())), bool>::value);
+static_assert(std::is_same<decltype(zmq::multipart_t().recv(zmq::socket_ref())), bool>::value);
+static_assert(std::is_same<decltype(zmq::multipart_t(zmq::socket_ref())), decltype(zmq::multipart_t())>::value);
+
 #ifdef ZMQ_HAS_RVALUE_REFS
 /// \todo split this up into separate test cases
 ///
