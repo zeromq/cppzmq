@@ -2,6 +2,22 @@
 #include <zmq_addon.hpp>
 
 #ifdef ZMQ_HAS_RVALUE_REFS
+
+#ifdef ZMQ_CPP17
+static_assert(std::is_invocable<decltype(&zmq::multipart_t::send),
+                                zmq::multipart_t *,
+                                zmq::socket_ref,
+                                int>::value,
+              "Can't multipart_t::send with socket_ref");
+static_assert(std::is_invocable<decltype(&zmq::multipart_t::recv),
+                                zmq::multipart_t *,
+                                zmq::socket_ref,
+                                int>::value,
+              "Can't multipart_t::recv with socket_ref");
+#endif
+static_assert(std::is_constructible<zmq::multipart_t, zmq::socket_ref>::value,
+              "Can't construct with socket_ref");
+
 /// \todo split this up into separate test cases
 ///
 TEST_CASE("multipart legacy test", "[multipart]")
