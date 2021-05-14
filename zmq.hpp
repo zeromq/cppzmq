@@ -851,7 +851,7 @@ class context_t
 
         int rc;
         do {
-            rc = zmq_ctx_destroy(ptr);
+            rc = zmq_ctx_term(ptr);
         } while (rc == -1 && errno == EINTR);
 
         ZMQ_ASSERT(rc == 0);
