@@ -25,14 +25,16 @@ matrix:
 
     # Coverage, GCC 7, draft enabled, latest libzmq (default)
     - os: linux
+      python: 3.6
       before_install:
-        - pip install --user cpp-coveralls
+        - pip3 install --user cpp-coveralls
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
             - g++-7
+            - python3-pip
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" ENABLE_DRAFTS=ON COVERAGE=ON
       after_success:
