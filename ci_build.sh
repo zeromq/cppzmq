@@ -13,9 +13,11 @@ CPPZMQ=${PWD}/cppzmq-build
 JOBS=2
 
 cmake_install() {
+  local CMAKE_INSTALL_DIR=/tmp/cmake.root
+  mkdir -p $CMAKE_INSTALL_DIR
   wget -qO- "https://cmake.org/files/v3.20/cmake-3.20.5-linux-x86_64.tar.gz" \
-    | tar --strip-components=1 -xz -C /tmp/cmake.root
-  export PATH=/tmp/cmake.root/bin:$PATH
+    | tar --strip-components=1 -xz -C $CMAKE_INSTALL_DIR
+  export PATH=$CMAKE_INSTALL_DIR/bin:$PATH
   cmake --version
 }
 
