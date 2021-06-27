@@ -12,6 +12,13 @@ CPPZMQ=${PWD}/cppzmq-build
 # Travis machines have 2 cores
 JOBS=2
 
+cmake_install() {
+  wget -qO- "https://cmake.org/files/v3.20/cmake-3.20.5-linux-x86_64.tar.gz" \
+    | tar --strip-components=1 -xz -C /tmp/cmake.root
+  export PATH=/tmp/cmake.root/bin:$PATH
+  cmake --version
+}
+
 libzmq_install() {
     curl -L https://github.com/zeromq/libzmq/archive/v"${ZMQ_VERSION}".tar.gz \
       >zeromq.tar.gz
@@ -61,6 +68,8 @@ cppzmq_demo() {
     ctest -V
     popd
 }
+
+cmake_install
 
 if [ "${ZMQ_VERSION}" != "" ] ; then libzmq_install ; fi
 

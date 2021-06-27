@@ -109,5 +109,4 @@ matrix:
 # Build and check this project
 script:
   - eval "${MATRIX_EVAL}"
-  - cmake --version
   - ./ci_build.sh
