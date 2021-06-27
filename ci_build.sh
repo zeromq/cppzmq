@@ -14,9 +14,21 @@ JOBS=2
 
 cmake_install() {
   local CMAKE_INSTALL_DIR=/tmp/cmake.root
+  local CMAKE_SUFFIX="none"
+
+  if [ $TRAVIS_OS_NAME = "linux" ]; then
+    set CMAKE_SUFFIX="linux-x86_64"
+  elif [ $TRAVIS_OS_NAME = "osx" ]; then
+    set CMAKE_SUFFIX="macos-universal"
+  else
+    echo "TRAVIS_OS_NAME $TRAVIS_OS_NAME not expected"
+    exit 1
+  fi
+
   mkdir -p $CMAKE_INSTALL_DIR
-  wget -qO- "https://cmake.org/files/v3.20/cmake-3.20.5-linux-x86_64.tar.gz" \
+  wget -qO- "https://cmake.org/files/v3.20/cmake-3.20.5-$CMAKE_SUFFIX.tar.gz" \
     | tar --strip-components=1 -xz -C $CMAKE_INSTALL_DIR
+
   export PATH=$CMAKE_INSTALL_DIR/bin:$PATH
   cmake --version
 }
