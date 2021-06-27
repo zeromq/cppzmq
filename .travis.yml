@@ -106,7 +106,15 @@ matrix:
       # packages:
         # - clang-5.0
 
+before_script:
+  - mkdir -p /tmp/cmake.root
+  - [[ $TRAVIS_OS_SUFFIX = 'linux' ]]; then CMAKE_PKG_SUFFIX="linux-x86_64"; else CMAKE_PKG_SUFFIX="macos10.10-universal"; fi
+  - wget -qO- "https://cmake.org/files/v3.20/cmake-3.20.5-$CMAKE_PKG_SUFFIX.tar.gz" | tar --strip-components=1 -xz -C /tmp/cmake.root
+  - [[ $TRAVIS_OS_SUFFIX = 'linux' ]]; then CMAKE_BIN_DIR="CMake.app/Contents/bin"; else CMAKE_BIN_DIR="bin"; fi
+  - export PATH=/tmp/cmake.root/$CMAKE_BIN_DIR:$PATH
+
 # Build and check this project
 script:
   - eval "${MATRIX_EVAL}"
+  - cmake --version
   - ./ci_build.sh
