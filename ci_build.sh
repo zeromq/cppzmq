@@ -17,9 +17,9 @@ cmake_install() {
   local CMAKE_SUFFIX="none"
 
   if [ $TRAVIS_OS_NAME = "linux" ]; then
-    set CMAKE_SUFFIX="linux-x86_64"
+    CMAKE_SUFFIX="linux-x86_64"
   elif [ $TRAVIS_OS_NAME = "osx" ]; then
-    set CMAKE_SUFFIX="macos-universal"
+    CMAKE_SUFFIX="macos10.10-universal"
   else
     echo "TRAVIS_OS_NAME $TRAVIS_OS_NAME not expected"
     exit 1
