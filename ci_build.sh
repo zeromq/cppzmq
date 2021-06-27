@@ -29,7 +29,11 @@ cmake_install() {
   wget -qO- "https://cmake.org/files/v3.20/cmake-3.20.5-$CMAKE_SUFFIX.tar.gz" \
     | tar --strip-components=1 -xz -C $CMAKE_INSTALL_DIR
 
-  export PATH=$CMAKE_INSTALL_DIR/bin:$PATH
+  if [ $TRAVIS_OS_NAME = "linux" ]; then
+    export PATH=$CMAKE_INSTALL_DIR/bin:$PATH
+  elif [ $TRAVIS_OS_NAME = "osx" ]; then
+    export PATH=$CMAKE_INSTALL_DIR/CMake.app/Contents/bin:$PATH
+  fi
   cmake --version
 }
 
