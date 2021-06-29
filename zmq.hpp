@@ -299,7 +299,12 @@ class error_t : public std::exception
     int errnum;
 };
 
+#ifdef ZMQ_CPP11
+ZMQ_DEPRECATED("from 4.8.0, use poll taking std::chrono::duration instead of long")
+inline int poll(zmq_pollitem_t *items_, size_t nitems_, long timeout_)
+#else
 inline int poll(zmq_pollitem_t *items_, size_t nitems_, long timeout_ = -1)
+#endif
 {
     int rc = zmq_poll(items_, static_cast<int>(nitems_), timeout_);
     if (rc < 0)
@@ -337,19 +342,19 @@ inline int poll(std::vector<zmq_pollitem_t> const &items, long timeout_ = -1)
 }
 
 inline int
-poll(zmq_pollitem_t *items, size_t nitems, std::chrono::milliseconds timeout)
+poll(zmq_pollitem_t *items, size_t nitems, std::chrono::milliseconds timeout = std::chrono::milliseconds{-1})
 {
     return poll(items, nitems, static_cast<long>(timeout.count()));
 }
 
 inline int poll(std::vector<zmq_pollitem_t> &items,
-                std::chrono::milliseconds timeout)
+                std::chrono::milliseconds timeout = std::chrono::milliseconds{-1})
 {
     return poll(items.data(), items.size(), static_cast<long>(timeout.count()));
 }
 
-ZMQ_DEPRECATED("from 4.3.1, use poll taking std::chrono instead of long")
-inline int poll(std::vector<zmq_pollitem_t> &items, long timeout_ = -1)
+ZMQ_DEPRECATED("from 4.3.1, use poll taking std::chrono::duration instead of long")
+inline int poll(std::vector<zmq_pollitem_t> &items, long timeout_)
 {
     return poll(items.data(), items.size(), timeout_);
 }
