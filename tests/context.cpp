@@ -1,4 +1,4 @@
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <zmq.hpp>
 
 #if (__cplusplus >= 201703L)
@@ -75,10 +75,10 @@ TEST_CASE("context set/get options", "[context]")
 
     CHECK_THROWS_AS(
         context.set(static_cast<zmq::ctxopt>(-42), 5),
-        const zmq::error_t &);
+        zmq::error_t);
 
     CHECK_THROWS_AS(
         context.get(static_cast<zmq::ctxopt>(-42)),
-        const zmq::error_t &);
+        zmq::error_t);
 }
 #endif

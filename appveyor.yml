@@ -20,7 +20,6 @@ environment:
 
 cache:
     - libzmq -> appveyor.yml
-    - Build/catch -> tests/cmake/catch.cmake
 
 before_build:
     - if not exist libzmq (
@@ -35,6 +34,5 @@ build:
     verbosity: normal
 
 test_script:
-    - cp libzmq/bin/libzmq*.dll Build/bin/%configuration%/
     - cd Build
     - ctest -V -C %configuration%

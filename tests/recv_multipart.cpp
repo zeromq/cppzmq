@@ -1,4 +1,4 @@
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <zmq_addon.hpp>
 #ifdef ZMQ_CPP11
 
@@ -52,7 +52,7 @@ TEST_CASE("recv_multipart test", "[recv_multipart]")
         std::vector<zmq::message_t> msgs;
         CHECK_THROWS_AS(
             zmq::recv_multipart(zmq::socket_ref(), std::back_inserter(msgs)),
-            const zmq::error_t &);
+            zmq::error_t);
     }
 }
 
@@ -90,7 +90,7 @@ TEST_CASE("recv_multipart_n test", "[recv_multipart]")
         std::array<zmq::message_t, 1> msgs;
         CHECK_THROWS_AS(
             zmq::recv_multipart_n(output, msgs.data(), msgs.size()),
-            const std::runtime_error&);
+            std::runtime_error);
     }
     SECTION("recv 0") {
         input.send(zmq::str_buffer("hello"), zmq::send_flags::sndmore);
@@ -99,7 +99,7 @@ TEST_CASE("recv_multipart_n test", "[recv_multipart]")
         std::array<zmq::message_t, 1> msgs;
         CHECK_THROWS_AS(
             zmq::recv_multipart_n(output, msgs.data(), 0),
-            const std::runtime_error&);
+            std::runtime_error);
     }
     SECTION("send 2 messages") {
         input.send(zmq::str_buffer("hello"), zmq::send_flags::sndmore);
@@ -132,7 +132,7 @@ TEST_CASE("recv_multipart_n test", "[recv_multipart]")
         std::array<zmq::message_t, 1> msgs;
         CHECK_THROWS_AS(
             zmq::recv_multipart_n(zmq::socket_ref(), msgs.data(), msgs.size()),
-            const zmq::error_t &);
+            zmq::error_t);
     }
 }
 

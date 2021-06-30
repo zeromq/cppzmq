@@ -1,4 +1,4 @@
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <zmq.hpp>
 
 #if defined(ZMQ_CPP11) && !defined(ZMQ_CPP11_PARTIAL)

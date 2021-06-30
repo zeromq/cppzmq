@@ -93,7 +93,7 @@ TEST_CASE("add null handler fails", "[active_poller]")
     zmq::active_poller_t active_poller;
     zmq::active_poller_t::handler_type handler;
     CHECK_THROWS_AS(active_poller.add(socket, zmq::event_flags::pollin, handler),
-                    const std::invalid_argument &);
+                    std::invalid_argument);
 }
 
 #if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 3, 0)
@@ -107,7 +107,7 @@ TEST_CASE("add handler invalid events type", "[active_poller]")
     CHECK_THROWS_AS(
       active_poller.add(socket, static_cast<zmq::event_flags>(invalid_events_type),
                         no_op_handler),
-      const zmq::error_t &);
+      zmq::error_t);
     CHECK(active_poller.empty());
     CHECK(0u == active_poller.size());
 }
@@ -243,7 +243,7 @@ TEST_CASE("add invalid socket throws", "[active_poller]")
     zmq::socket_t a{context, zmq::socket_type::router};
     zmq::socket_t b{std::move(a)};
     CHECK_THROWS_AS(active_poller.add(a, zmq::event_flags::pollin, no_op_handler),
-                    const zmq::error_t &);
+                    zmq::error_t);
 }
 
 TEST_CASE("remove invalid socket throws", "[active_poller]")
@@ -256,7 +256,7 @@ TEST_CASE("remove invalid socket throws", "[active_poller]")
     CHECK(1u == active_poller.size());
     std::vector<zmq::socket_t> sockets;
     sockets.emplace_back(std::move(socket));
-    CHECK_THROWS_AS(active_poller.remove(socket), const zmq::error_t &);
+    CHECK_THROWS_AS(active_poller.remove(socket), zmq::error_t);
     CHECK(1u == active_poller.size());
 }
 
@@ -276,7 +276,7 @@ TEST_CASE("modify empty throws", "[active_poller]")
     zmq::socket_t socket{context, zmq::socket_type::push};
     zmq::active_poller_t active_poller;
     CHECK_THROWS_AS(active_poller.modify(socket, zmq::event_flags::pollin),
-                    const zmq::error_t &);
+                    zmq::error_t);
 }
 
 TEST_CASE("modify invalid socket throws", "[active_poller]")
@@ -286,7 +286,7 @@ TEST_CASE("modify invalid socket throws", "[active_poller]")
     zmq::socket_t b{std::move(a)};
     zmq::active_poller_t active_poller;
     CHECK_THROWS_AS(active_poller.modify(a, zmq::event_flags::pollin),
-                    const zmq::error_t &);
+                    zmq::error_t);
 }
 
 TEST_CASE("modify not added throws", "[active_poller]")
@@ -297,7 +297,7 @@ TEST_CASE("modify not added throws", "[active_poller]")
     zmq::active_poller_t active_poller;
     CHECK_NOTHROW(active_poller.add(a, zmq::event_flags::pollin, no_op_handler));
     CHECK_THROWS_AS(active_poller.modify(b, zmq::event_flags::pollin),
-                    const zmq::error_t &);
+                    zmq::error_t);
 }
 
 TEST_CASE("modify simple", "[active_poller]")
