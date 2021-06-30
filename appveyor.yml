@@ -20,7 +20,6 @@ environment:
 
 cache:
     - libzmq -> appveyor.yml
-    - Build/catch -> tests/cmake/catch.cmake
 
 before_build:
     - if not exist libzmq (
