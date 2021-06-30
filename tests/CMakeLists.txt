@@ -2,9 +2,7 @@ find_package(Threads)
 
 find_package(Catch2 QUIET)
 
-if (Catch2_FOUND)
-  include(Catch)
-else()
+if (NOT Catch2_FOUND)
   include(FetchContent)
 
   FetchContent_Declare(
