@@ -538,10 +538,10 @@ class message_t
 
     /** Dump content to string. Ascii chars are readable, the rest is printed as hex.
          *  Probably ridiculously slow.
-         *  If zero is passed to limit_printable_length, the the string, the message
+         *  If zero is passed to limit_printable_length, the message
          *  data will be printed in its entirety.
          */
-    std::string str(const unsigned int limit_printable_length = 1000) const
+    std::string str(const size_t limit_printable_length = 1000) const
     {
         // Partly mutuated from the same method in zmq::multipart_t
         std::stringstream os;
