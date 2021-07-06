@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        cppstd: [03, 11, 20]
+        cppstd: ["03", "11", "20"]
         buildtype: ["cmake"]
         drafts: ["ON"]
         libzmq: ["4.3.4"]
@@ -33,7 +33,7 @@ jobs:
       env:
         CC: gcc-10
         CXX: g++-10
-        CMAKE_CPP_STD: DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
+        CMAKE_CPP_STD: -DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
         BUILD_TYPE: ${{ matrix.buildtype }}
         ENABLE_DRAFTS: ${{ matrix.drafts }}
         ZMQ_VERSION: ${{ matrix.libzmq }}
