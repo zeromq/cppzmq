@@ -7,15 +7,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        cppstd: ["03", "11", "20"]
+        cppstd: ["98", "11", "20"]
         buildtype: ["cmake"]
         drafts: ["ON"]
         libzmq: ["4.3.4"]
         include:
           - cppstd: 11
             buildtype: "pkgconfig"
-            drafts: "ON"
-            libzmq: "4.2.0"
+            drafts: "OFF"
+            libzmq: "4.3.4"
           - cppstd: 20
             buildtype: "cmake"
             drafts: "OFF"
@@ -37,3 +37,4 @@ jobs:
         BUILD_TYPE: ${{ matrix.buildtype }}
         ENABLE_DRAFTS: ${{ matrix.drafts }}
         ZMQ_VERSION: ${{ matrix.libzmq }}
+        VERBOSE: 1
