@@ -1,0 +1,39 @@
+name: Linux
+
+on: [push, pull_request]
+
+jobs:
+  gcc10:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cppstd: [03, 11, 20]
+        buildtype: ["cmake"]
+        drafts: ["ON"]
+        libzmq: ["4.3.4"]
+        include:
+          - cppstd: 11
+            buildtype: "pkgconfig"
+            drafts: "ON"
+            libzmq: "4.2.0"
+          - cppstd: 20
+            buildtype: "cmake"
+            drafts: "OFF"
+            libzmq: "4.3.4"
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: install_deps
+      run: |
+        sudo apt update
+        sudo apt install gcc-10 g++-10
+      shell: bash
+    - name: build
+      run: ./ci_build.sh
+      env:
+        CC: gcc-10
+        CXX: g++-10
+        CMAKE_CPP_STD: DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
+        BUILD_TYPE: ${{ matrix.buildtype }}
+        ENABLE_DRAFTS: ${{ matrix.drafts }}
+        ZMQ_VERSION: ${{ matrix.libzmq }}
