@@ -8,17 +8,20 @@ jobs:
     strategy:
       matrix:
         cppstd: ["98", "11", "20"]
+        cc: ["gcc-10"]
         cxx: ["g++-10"]
         drafts: ["ON"]
         libzmq: ["4.3.4"]
         libzmqbuild: ["cmake"]
         include:
           - cppstd: 11
+            cc: "gcc-7"
             cxx: "g++-7"
             drafts: "OFF"
             libzmq: "4.2.0"
             libzmqbuild: "pkgconfig"
           - cppstd: 20
+            cc: "gcc-10"
             cxx: "g++-10"
             drafts: "OFF"
             libzmq: "4.3.4"
@@ -29,6 +32,7 @@ jobs:
     - name: build
       run: ./ci_build.sh
       env:
+        CC: ${{ matrix.cc }}
         CXX: ${{ matrix.cxx }}
         CMAKE_CPP_STD: -DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
         ENABLE_DRAFTS: ${{ matrix.drafts }}
