@@ -3,10 +3,11 @@ name: Linux
 on: [push, pull_request]
 
 jobs:
-  gcc10:
-    runs-on: ubuntu-latest
+  tests:
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: ["ubuntu-latest"]
         cppstd: ["98", "11", "20"]
         cc: ["gcc-10"]
         cxx: ["g++-10"]
@@ -14,16 +15,25 @@ jobs:
         libzmq: ["4.3.4"]
         libzmqbuild: ["cmake"]
         include:
-          - cppstd: 11
+          - os: "ubuntu-18.04"
+            cppstd: 11
             cc: "gcc-7"
             cxx: "g++-7"
             drafts: "OFF"
             libzmq: "4.2.0"
             libzmqbuild: "pkgconfig"
-          - cppstd: 20
+          - os: "ubuntu-latest"
+            cppstd: 20
             cc: "gcc-10"
             cxx: "g++-10"
             drafts: "OFF"
+            libzmq: "4.3.4"
+            libzmqbuild: "cmake"
+          - os: "ubuntu-latest"
+            cppstd: 17
+            cc: "clang-12"
+            cxx: "clang++-12"
+            drafts: "ON"
             libzmq: "4.3.4"
             libzmqbuild: "cmake"
 
