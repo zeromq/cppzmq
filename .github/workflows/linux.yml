@@ -15,37 +15,85 @@ jobs:
         libzmq: ["4.3.4"]
         libzmqbuild: ["cmake"]
         include:
+          # older libzmq and gcc without draft
           - os: "ubuntu-18.04"
-            cppstd: 11
+            cppstd: "11"
             cc: "gcc-7"
             cxx: "g++-7"
             drafts: "OFF"
             libzmq: "4.2.0"
             libzmqbuild: "pkgconfig"
+          # without draft
           - os: "ubuntu-latest"
-            cppstd: 20
+            cppstd: "20"
             cc: "gcc-10"
             cxx: "g++-10"
             drafts: "OFF"
             libzmq: "4.3.4"
             libzmqbuild: "cmake"
+          # clang
           - os: "ubuntu-latest"
-            cppstd: 17
+            cppstd: "17"
             cc: "clang-12"
             cxx: "clang++-12"
             drafts: "ON"
             libzmq: "4.3.4"
             libzmqbuild: "cmake"
 
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
+      VERBOSE: 1
+      THREADS: 2
+      LIBZMQ: /tmp/libzmq-build
+      CPPZMQ: /tmp/cppzmq-build
+      COVERAGE: "OFF" # TODO
+
     steps:
     - uses: actions/checkout@v2
+    - name: get_libzmq
+      run: |
+        curl -L https://github.com/zeromq/libzmq/archive/v${{ matrix.libzmq }}.tar.gz \
+          >zeromq.tar.gz
+        tar -xvzf zeromq.tar.gz
+
+    - name: build_libzmq_cmake
+      if: ${{ matrix.libzmqbuild == 'cmake' }}
+      run: |
+        cmake -Hlibzmq-${{ matrix.libzmq }} -B${LIBZMQ} \
+          -DWITH_PERF_TOOL=OFF \
+          -DZMQ_BUILD_TESTS=OFF \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DENABLE_DRAFTS=${{ matrix.drafts }}
+        cmake --build ${LIBZMQ} -- -j${THREADS}
+
+    - name: build_libzmq_pkgconfig
+      if: ${{ matrix.libzmqbuild == 'pkgconfig' }}
+      working-directory: libzmq-${{ matrix.libzmq }}
+      run: |
+        ./autogen.sh &&
+        ./configure --prefix=${LIBZMQ} &&
+        make -j${THREADS}
+        make install
+
     - name: build
-      run: ./ci_build.sh
       env:
-        CC: ${{ matrix.cc }}
-        CXX: ${{ matrix.cxx }}
-        CMAKE_CPP_STD: -DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
-        ENABLE_DRAFTS: ${{ matrix.drafts }}
-        ZMQ_VERSION: ${{ matrix.libzmq }}
-        BUILD_TYPE: ${{ matrix.libzmqbuild }}
-        VERBOSE: 1
+        CMAKE_PREFIX_PATH: ${{ env.LIBZMQ }}
+      run: |
+        cmake -H. -B${CPPZMQ} -DENABLE_DRAFTS=${{ matrix.drafts }} \
+                              -DCOVERAGE=${COVERAGE} \
+                              -DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
+        cmake --build ${CPPZMQ} -- -j${THREADS}
+
+    - name: test
+      working-directory: ${{ env.CPPZMQ }}
+      run: ctest -V -j${THREADS}
+
+    - name: demo
+      env:
+        CMAKE_PREFIX_PATH: ${{ env.LIBZMQ }}:${{ env.CPPZMQ }}
+      run: |
+        cmake -Hdemo -Bdemo/build
+        cmake --build demo/build
+        cd demo/build
+        ctest -V
