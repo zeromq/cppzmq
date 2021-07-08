@@ -8,33 +8,30 @@ jobs:
     strategy:
       matrix:
         cppstd: ["98", "11", "20"]
-        buildtype: ["cmake"]
+        cxx: ["g++-10"]
         drafts: ["ON"]
         libzmq: ["4.3.4"]
+        libzmqbuild: ["cmake"]
         include:
           - cppstd: 11
-            buildtype: "pkgconfig"
+            cxx: "g++-7"
             drafts: "OFF"
-            libzmq: "4.3.4"
+            libzmq: "4.2.0"
+            libzmqbuild: "pkgconfig"
           - cppstd: 20
-            buildtype: "cmake"
+            cxx: "g++-10"
             drafts: "OFF"
             libzmq: "4.3.4"
+            libzmqbuild: "cmake"
 
     steps:
-    - uses: actions/checkout@v1
-    - name: install_deps
-      run: |
-        sudo apt update
-        sudo apt install gcc-10 g++-10
-      shell: bash
+    - uses: actions/checkout@v2
     - name: build
       run: ./ci_build.sh
       env:
-        CC: gcc-10
-        CXX: g++-10
+        CXX: ${{ matrix.cxx }}
         CMAKE_CPP_STD: -DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
-        BUILD_TYPE: ${{ matrix.buildtype }}
         ENABLE_DRAFTS: ${{ matrix.drafts }}
         ZMQ_VERSION: ${{ matrix.libzmq }}
+        BUILD_TYPE: ${{ matrix.libzmqbuild }}
         VERBOSE: 1
