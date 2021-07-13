@@ -2,7 +2,7 @@
 
 #include "testutil.hpp"
 
-#if defined(ZMQ_CPP11) && defined(ZMQ_BUILD_DRAFT_API)
+#if defined(ZMQ_CPP11) && !defined(ZMQ_CPP11_PARTIAL) && defined(ZMQ_BUILD_DRAFT_API)
 
 #include <array>
 #include <memory>
