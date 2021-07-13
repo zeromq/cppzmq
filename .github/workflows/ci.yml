@@ -1,6 +1,10 @@
-name: Linux
+name: CI
 
 on: [push, pull_request]
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   tests:
@@ -14,6 +18,8 @@ jobs:
         drafts: ["ON"]
         libzmq: ["4.3.4"]
         libzmqbuild: ["cmake"]
+        platform: [""]
+        makeargs: ["-j2"]
         include:
           # older libzmq and gcc without draft
           - os: "ubuntu-18.04"
@@ -57,14 +63,34 @@ jobs:
             drafts: "ON"
             libzmq: "4.3.4"
             libzmqbuild: "cmake"
+          # windows
+          - os: "windows-2016"
+            cppstd: "14"
+            cc: "msbuild"
+            cxx: "msbuild"
+            drafts: "ON"
+            libzmq: "4.3.4"
+            libzmqbuild: "cmake"
+            platform: "-Ax64"
+            makeargs: ""
+          - os: "windows-latest"
+            cppstd: "20"
+            cc: "msbuild"
+            cxx: "msbuild"
+            drafts: "ON"
+            libzmq: "4.3.4"
+            libzmqbuild: "cmake"
+            platform: "-Ax64"
+            makeargs: ""
 
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
       VERBOSE: 1
       THREADS: 2
-      LIBZMQ: /tmp/libzmq-build
-      CPPZMQ: /tmp/cppzmq-build
+      LIBZMQ: ${{ env.GITHUB_WORKSPACE }}/libzmq-build
+      CPPZMQ: ${{ env.GITHUB_WORKSPACE }}/cppzmq-build
+      BUILDTYPE: "Debug"
       COVERAGE: "OFF" # TODO
 
     steps:
@@ -83,12 +109,12 @@ jobs:
     - name: build_libzmq_cmake
       if: ${{ matrix.libzmqbuild == 'cmake' }}
       run: |
-        cmake -Hlibzmq-${{ matrix.libzmq }} -B${LIBZMQ} \
+        cmake -Hlibzmq-${{ matrix.libzmq }} -B${LIBZMQ} ${{ matrix.platform}} \
           -DWITH_PERF_TOOL=OFF \
           -DZMQ_BUILD_TESTS=OFF \
           -DCMAKE_BUILD_TYPE=Release \
           -DENABLE_DRAFTS=${{ matrix.drafts }}
-        cmake --build ${LIBZMQ} -- -j${THREADS}
+        cmake --build ${LIBZMQ} -- ${{ matrix.makeargs }}
 
     - name: build_libzmq_pkgconfig
       if: ${{ matrix.libzmqbuild == 'pkgconfig' }}
@@ -96,21 +122,23 @@ jobs:
       run: |
         ./autogen.sh &&
         ./configure --prefix=${LIBZMQ} &&
-        make -j${THREADS}
+        make ${{ matrix.makeargs }}
         make install
 
     - name: build
       env:
         CMAKE_PREFIX_PATH: ${{ env.LIBZMQ }}
       run: |
-        cmake -H. -B${CPPZMQ} -DENABLE_DRAFTS=${{ matrix.drafts }} \
-                              -DCOVERAGE=${COVERAGE} \
-                              -DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
-        cmake --build ${CPPZMQ} -- -j${THREADS}
+        cmake -H. -B${CPPZMQ} ${{ matrix.platform}} \
+          -DCMAKE_BUILD_TYPE=${BUILDTYPE} \
+          -DENABLE_DRAFTS=${{ matrix.drafts }} \
+          -DCOVERAGE=${COVERAGE} \
+          -DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
+        cmake --build ${CPPZMQ} -- ${{ matrix.makeargs }}
 
     - name: test
       working-directory: ${{ env.CPPZMQ }}
-      run: ctest -V -j${THREADS}
+      run: ctest -V -C ${BUILDTYPE}
 
     - name: demo
       env:
@@ -119,4 +147,4 @@ jobs:
         cmake -Hdemo -Bdemo/build
         cmake --build demo/build
         cd demo/build
-        ctest -V
+        ctest -V -C ${BUILDTYPE}
