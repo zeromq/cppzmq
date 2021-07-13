@@ -1,6 +1,6 @@
 #include "testutil.hpp"
 
-#if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && defined(ZMQ_HAVE_POLLER)
+#if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && !defined(ZMQ_CPP11_PARTIAL) && defined(ZMQ_HAVE_POLLER)
 
 #include <array>
 #include <memory>
