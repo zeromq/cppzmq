@@ -23,6 +23,24 @@ jobs:
             drafts: "OFF"
             libzmq: "4.2.0"
             libzmqbuild: "pkgconfig"
+          # gcc 4.8
+          - os: "ubuntu-18.04"
+            cppstd: "11"
+            cc: "gcc-4.8"
+            cxx: "g++-4.8"
+            drafts: "ON"
+            libzmq: "4.3.4"
+            libzmqbuild: "cmake"
+            aptinstall: "gcc-4.8 g++-4.8"
+          # gcc 5
+          - os: "ubuntu-18.04"
+            cppstd: "11"
+            cc: "gcc-5"
+            cxx: "g++-5"
+            drafts: "ON"
+            libzmq: "4.3.4"
+            libzmqbuild: "cmake"
+            aptinstall: "gcc-5 g++-5"
           # without draft
           - os: "ubuntu-latest"
             cppstd: "20"
@@ -51,6 +69,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
+    - name: install_deps
+      if: matrix.aptinstall
+      run: sudo apt install ${{matrix.aptinstall}}
+
     - name: get_libzmq
       run: |
         curl -L https://github.com/zeromq/libzmq/archive/v${{ matrix.libzmq }}.tar.gz \
