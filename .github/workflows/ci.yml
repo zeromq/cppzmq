@@ -88,8 +88,6 @@ jobs:
       CXX: ${{ matrix.cxx }}
       VERBOSE: 1
       THREADS: 2
-      LIBZMQ: ${{ env.GITHUB_WORKSPACE }}/libzmq-build
-      CPPZMQ: ${{ env.GITHUB_WORKSPACE }}/cppzmq-build
       BUILDTYPE: "Debug"
       COVERAGE: "OFF" # TODO
 
@@ -109,42 +107,56 @@ jobs:
     - name: build_libzmq_cmake
       if: ${{ matrix.libzmqbuild == 'cmake' }}
       run: |
-        cmake -Hlibzmq-${{ matrix.libzmq }} -B${LIBZMQ} ${{ matrix.platform}} \
+        cmake -Hlibzmq-${{ matrix.libzmq }} -Blibzmq-build ${{ matrix.platform}} \
           -DWITH_PERF_TOOL=OFF \
           -DZMQ_BUILD_TESTS=OFF \
           -DCMAKE_BUILD_TYPE=Release \
           -DENABLE_DRAFTS=${{ matrix.drafts }}
-        cmake --build ${LIBZMQ} -- ${{ matrix.makeargs }}
+        cmake --build libzmq-build -- ${{ matrix.makeargs }}
+        echo "LIBZMQ=${PWD}/libzmq-build" >> ${GITHUB_ENV}
 
     - name: build_libzmq_pkgconfig
       if: ${{ matrix.libzmqbuild == 'pkgconfig' }}
       working-directory: libzmq-${{ matrix.libzmq }}
       run: |
         ./autogen.sh &&
-        ./configure --prefix=${LIBZMQ} &&
+        ./configure --prefix=${PWD}/libzmq-build &&
         make ${{ matrix.makeargs }}
         make install
+        echo "LIBZMQ=${PWD}/libzmq-build" >> ${GITHUB_ENV}
 
     - name: build
       env:
         CMAKE_PREFIX_PATH: ${{ env.LIBZMQ }}
       run: |
-        cmake -H. -B${CPPZMQ} ${{ matrix.platform}} \
+        cmake -H. -Bbuild ${{ matrix.platform}} \
           -DCMAKE_BUILD_TYPE=${BUILDTYPE} \
           -DENABLE_DRAFTS=${{ matrix.drafts }} \
           -DCOVERAGE=${COVERAGE} \
           -DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
-        cmake --build ${CPPZMQ} -- ${{ matrix.makeargs }}
+        cmake --build build -- ${{ matrix.makeargs }}
+        echo "CPPZMQ=${PWD}/build" >> ${GITHUB_ENV}
 
     - name: test
-      working-directory: ${{ env.CPPZMQ }}
-      run: ctest -V -C ${BUILDTYPE}
+      run: |
+        cd ${{ env.CPPZMQ }}
+        echo ${{ env.CPPZMQ }}
+        ctest -V -C ${BUILDTYPE}
 
     - name: demo
       env:
         CMAKE_PREFIX_PATH: ${{ env.LIBZMQ }}:${{ env.CPPZMQ }}
       run: |
-        cmake -Hdemo -Bdemo/build
-        cmake --build demo/build
-        cd demo/build
+        if [[ ${{ matrix.os }} == windows* ]]; then
+          DELIM=";"
+        else
+          DELIM=":"
+        fi
+        export CMAKE_PREFIX_PATH=${{ env.LIBZMQ }}${DELIM}${{ env.CPPZMQ }}
+        cd demo
+        cmake -H. -Bbuild ${{ matrix.platform}} \
+          -DCMAKE_BUILD_TYPE=${BUILDTYPE} \
+          -DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
+        cmake --build build -- ${{ matrix.makeargs }}
+        cd build
         ctest -V -C ${BUILDTYPE}
