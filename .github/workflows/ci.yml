@@ -135,11 +135,12 @@ jobs:
         echo "CPPZMQ=${PWD}/build" >> ${GITHUB_ENV}
 
     - name: test
+      # for unknown reason no tests are found and run on windows
+      # could be something to do with catch_discover_tests not working?
       run: |
         cd ${{ env.CPPZMQ }}
-        echo ${{ env.CPPZMQ }}
         ctest -V -C ${BUILDTYPE}
-        ctest -V -R "()"
+
     - name: demo
       # probably need to install libzmq and cppzmq for this to work on windows
       if: ${{ matrix.os == 'ubuntu*' }}
