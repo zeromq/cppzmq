@@ -19,7 +19,6 @@ jobs:
         libzmq: ["4.3.4"]
         libzmqbuild: ["cmake"]
         platform: [""]
-        makeargs: ["-j2"]
         include:
           # older libzmq and gcc without draft
           - os: "ubuntu-18.04"
@@ -72,7 +71,6 @@ jobs:
             libzmq: "4.3.4"
             libzmqbuild: "cmake"
             platform: "-Ax64"
-            makeargs: ""
           - os: "windows-latest"
             cppstd: "20"
             cc: "msbuild"
@@ -81,7 +79,6 @@ jobs:
             libzmq: "4.3.4"
             libzmqbuild: "cmake"
             platform: "-Ax64"
-            makeargs: ""
 
     env:
       CC: ${{ matrix.cc }}
@@ -112,7 +109,7 @@ jobs:
           -DZMQ_BUILD_TESTS=OFF \
           -DCMAKE_BUILD_TYPE=Release \
           -DENABLE_DRAFTS=${{ matrix.drafts }}
-        cmake --build libzmq-build -- ${{ matrix.makeargs }}
+        cmake --build libzmq-build --config ${BUILDTYPE} -j ${THREADS}
         echo "LIBZMQ=${PWD}/libzmq-build" >> ${GITHUB_ENV}
 
     - name: build_libzmq_pkgconfig
@@ -121,7 +118,7 @@ jobs:
       run: |
         ./autogen.sh &&
         ./configure --prefix=${PWD}/libzmq-build &&
-        make ${{ matrix.makeargs }}
+        make -j ${THREADS}
         make install
         echo "LIBZMQ=${PWD}/libzmq-build" >> ${GITHUB_ENV}
 
@@ -134,7 +131,7 @@ jobs:
           -DENABLE_DRAFTS=${{ matrix.drafts }} \
           -DCOVERAGE=${COVERAGE} \
           -DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
-        cmake --build build -- ${{ matrix.makeargs }}
+        cmake --build build --config ${BUILDTYPE} -j ${THREADS}
         echo "CPPZMQ=${PWD}/build" >> ${GITHUB_ENV}
 
     - name: test
@@ -153,6 +150,6 @@ jobs:
         cmake -H. -Bbuild ${{ matrix.platform}} \
           -DCMAKE_BUILD_TYPE=${BUILDTYPE} \
           -DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
-        cmake --build build -- ${{ matrix.makeargs }}
+        cmake --build build --config ${BUILDTYPE}
         cd build
         ctest -V -C ${BUILDTYPE}
