@@ -144,15 +144,11 @@ jobs:
         ctest -V -C ${BUILDTYPE}
 
     - name: demo
+      # probably need to install libzmq and cppzmq for this to work on windows
+      if: ${{ matrix.os == 'ubuntu*' }}
       env:
         CMAKE_PREFIX_PATH: ${{ env.LIBZMQ }}:${{ env.CPPZMQ }}
       run: |
-        if [[ ${{ matrix.os }} == windows* ]]; then
-          DELIM=";"
-        else
-          DELIM=":"
-        fi
-        export CMAKE_PREFIX_PATH=${{ env.LIBZMQ }}${DELIM}${{ env.CPPZMQ }}
         cd demo
         cmake -H. -Bbuild ${{ matrix.platform}} \
           -DCMAKE_BUILD_TYPE=${BUILDTYPE} \
