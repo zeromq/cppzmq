@@ -142,7 +142,7 @@ jobs:
         cd ${{ env.CPPZMQ }}
         echo ${{ env.CPPZMQ }}
         ctest -V -C ${BUILDTYPE}
-
+        ctest -V -R "()"
     - name: demo
       # probably need to install libzmq and cppzmq for this to work on windows
       if: ${{ matrix.os == 'ubuntu*' }}
