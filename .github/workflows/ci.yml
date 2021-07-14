@@ -1,6 +1,10 @@
-name: Linux
+name: CI
 
 on: [push, pull_request]
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   tests:
@@ -14,6 +18,7 @@ jobs:
         drafts: ["ON"]
         libzmq: ["4.3.4"]
         libzmqbuild: ["cmake"]
+        platform: [""]
         include:
           # older libzmq and gcc without draft
           - os: "ubuntu-18.04"
@@ -57,14 +62,30 @@ jobs:
             drafts: "ON"
             libzmq: "4.3.4"
             libzmqbuild: "cmake"
+          # windows
+          - os: "windows-2016"
+            cppstd: "14"
+            cc: "msbuild"
+            cxx: "msbuild"
+            drafts: "ON"
+            libzmq: "4.3.4"
+            libzmqbuild: "cmake"
+            platform: "-Ax64"
+          - os: "windows-latest"
+            cppstd: "20"
+            cc: "msbuild"
+            cxx: "msbuild"
+            drafts: "ON"
+            libzmq: "4.3.4"
+            libzmqbuild: "cmake"
+            platform: "-Ax64"
 
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
       VERBOSE: 1
       THREADS: 2
-      LIBZMQ: /tmp/libzmq-build
-      CPPZMQ: /tmp/cppzmq-build
+      BUILDTYPE: "Debug"
       COVERAGE: "OFF" # TODO
 
     steps:
@@ -83,40 +104,53 @@ jobs:
     - name: build_libzmq_cmake
       if: ${{ matrix.libzmqbuild == 'cmake' }}
       run: |
-        cmake -Hlibzmq-${{ matrix.libzmq }} -B${LIBZMQ} \
+        cmake -Hlibzmq-${{ matrix.libzmq }} -Blibzmq-build ${{ matrix.platform}} \
           -DWITH_PERF_TOOL=OFF \
           -DZMQ_BUILD_TESTS=OFF \
           -DCMAKE_BUILD_TYPE=Release \
           -DENABLE_DRAFTS=${{ matrix.drafts }}
-        cmake --build ${LIBZMQ} -- -j${THREADS}
+        cmake --build libzmq-build --config ${BUILDTYPE} -j ${THREADS}
+        echo "LIBZMQ=${PWD}/libzmq-build" >> ${GITHUB_ENV}
 
     - name: build_libzmq_pkgconfig
       if: ${{ matrix.libzmqbuild == 'pkgconfig' }}
       working-directory: libzmq-${{ matrix.libzmq }}
       run: |
         ./autogen.sh &&
-        ./configure --prefix=${LIBZMQ} &&
-        make -j${THREADS}
+        ./configure --prefix=${PWD}/libzmq-build &&
+        make -j ${THREADS}
         make install
+        echo "LIBZMQ=${PWD}/libzmq-build" >> ${GITHUB_ENV}
 
     - name: build
       env:
         CMAKE_PREFIX_PATH: ${{ env.LIBZMQ }}
       run: |
-        cmake -H. -B${CPPZMQ} -DENABLE_DRAFTS=${{ matrix.drafts }} \
-                              -DCOVERAGE=${COVERAGE} \
-                              -DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
-        cmake --build ${CPPZMQ} -- -j${THREADS}
+        cmake -H. -Bbuild ${{ matrix.platform}} \
+          -DCMAKE_BUILD_TYPE=${BUILDTYPE} \
+          -DENABLE_DRAFTS=${{ matrix.drafts }} \
+          -DCOVERAGE=${COVERAGE} \
+          -DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
+        cmake --build build --config ${BUILDTYPE} -j ${THREADS}
+        echo "CPPZMQ=${PWD}/build" >> ${GITHUB_ENV}
 
     - name: test
-      working-directory: ${{ env.CPPZMQ }}
-      run: ctest -V -j${THREADS}
+      # for unknown reason no tests are found and run on windows
+      # could be something to do with catch_discover_tests not working?
+      run: |
+        cd ${{ env.CPPZMQ }}
+        ctest -V -C ${BUILDTYPE}
 
     - name: demo
+      # probably need to install libzmq and cppzmq for this to work on windows
+      if: ${{ matrix.os == 'ubuntu*' }}
       env:
         CMAKE_PREFIX_PATH: ${{ env.LIBZMQ }}:${{ env.CPPZMQ }}
       run: |
-        cmake -Hdemo -Bdemo/build
-        cmake --build demo/build
-        cd demo/build
-        ctest -V
+        cd demo
+        cmake -H. -Bbuild ${{ matrix.platform}} \
+          -DCMAKE_BUILD_TYPE=${BUILDTYPE} \
+          -DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
+        cmake --build build --config ${BUILDTYPE}
+        cd build
+        ctest -V -C ${BUILDTYPE}
