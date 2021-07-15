@@ -18,7 +18,6 @@ jobs:
         drafts: ["ON"]
         libzmq: ["4.3.4"]
         libzmqbuild: ["cmake"]
-        platform: [""]
         include:
           # older libzmq and gcc without draft
           - os: "ubuntu-18.04"
@@ -54,6 +53,15 @@ jobs:
             drafts: "OFF"
             libzmq: "4.3.4"
             libzmqbuild: "cmake"
+          # coverage (gcc version should match gcov version)
+          - os: "ubuntu-latest"
+            cppstd: "17"
+            cc: "gcc-9"
+            cxx: "g++-9"
+            drafts: "ON"
+            libzmq: "4.3.4"
+            libzmqbuild: "cmake"
+            coverage: "-DCOVERAGE=ON"
           # clang
           - os: "ubuntu-latest"
             cppstd: "17"
@@ -126,10 +134,9 @@ jobs:
       env:
         CMAKE_PREFIX_PATH: ${{ env.LIBZMQ }}
       run: |
-        cmake -H. -Bbuild ${{ matrix.platform}} \
+        cmake -H. -Bbuild ${{ matrix.platform}} ${{ matrix.coverage }} \
           -DCMAKE_BUILD_TYPE=${BUILDTYPE} \
           -DENABLE_DRAFTS=${{ matrix.drafts }} \
-          -DCOVERAGE=${COVERAGE} \
           -DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
         cmake --build build --config ${BUILDTYPE} -j ${THREADS}
         echo "CPPZMQ=${PWD}/build" >> ${GITHUB_ENV}
@@ -154,3 +161,22 @@ jobs:
         cmake --build build --config ${BUILDTYPE}
         cd build
         ctest -V -C ${BUILDTYPE}
+
+    - name: lcov
+      if: ${{ matrix.coverage && success() }}
+      run: |
+        sudo apt install -y lcov
+        lcov --capture --directory . --output-file coverage.info
+        lcov --remove coverage.info -o coverage_filtered.info \
+          '/usr/include/*' \
+          '/usr/local/include/*' \
+          ${PWD}'/tests/*' \
+          ${PWD}'/build/*'
+      # to generate local html: genhtml coverage_filtered.info --output-directory .
+
+    - name: coveralls_upload
+      if: ${{ matrix.coverage && success() }}
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ./coverage_filtered.info
