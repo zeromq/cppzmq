@@ -62,6 +62,7 @@ jobs:
             libzmq: "4.3.4"
             libzmqbuild: "cmake"
             coverage: "-DCOVERAGE=ON"
+            aptinstall: "lcov"
           # clang
           - os: "ubuntu-latest"
             cppstd: "17"
@@ -70,6 +71,15 @@ jobs:
             drafts: "ON"
             libzmq: "4.3.4"
             libzmqbuild: "cmake"
+          # macos
+          - os: "macos-latest"
+            cppstd: "17"
+            cc: "clang"
+            cxx: "clang++"
+            drafts: "OFF"
+            libzmq: "4.3.4"
+            libzmqbuild: false
+            brewinstall: "zeromq"
           # windows
           - os: "windows-2016"
             cppstd: "14"
@@ -94,14 +104,18 @@ jobs:
       VERBOSE: 1
       THREADS: 2
       BUILDTYPE: "Debug"
-      COVERAGE: "OFF" # TODO
 
     steps:
     - uses: actions/checkout@v2
 
     - name: install_deps
-      if: matrix.aptinstall
-      run: sudo apt install ${{matrix.aptinstall}}
+      run: |
+        if [ ! -z "${{ matrix.aptinstall }}" ]; then
+          sudo apt install -y ${{ matrix.aptinstall }}
+        fi
+        if [ ! -z "${{ matrix.brewinstall }}" ]; then
+          brew install ${{ matrix.brewinstall }}
+        fi
 
     - name: get_libzmq
       run: |
@@ -165,7 +179,6 @@ jobs:
     - name: lcov
       if: ${{ matrix.coverage && success() }}
       run: |
-        sudo apt install -y lcov
         lcov --capture --directory . --output-file coverage.info
         lcov --remove coverage.info -o coverage_filtered.info \
           '/usr/include/*' \
