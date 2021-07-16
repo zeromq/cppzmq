@@ -1,5 +1,4 @@
-[![Travis-CI Status](https://img.shields.io/travis/zeromq/cppzmq/master.svg?label=Linux%20|%20OSX)](https://travis-ci.org/zeromq/cppzmq)
-[![Appveyor Status](https://img.shields.io/appveyor/ci/zeromq/cppzmq/master.svg?label=Windows)](https://ci.appveyor.com/project/zeromq/cppzmq/branch/master)
+[![CI](https://github.com/zeromq/cppzmq/actions/workflows/ci.yml/badge.svg)](https://github.com/zeromq/cppzmq/actions)
 [![Coverage Status](https://coveralls.io/repos/github/zeromq/cppzmq/badge.svg?branch=master)](https://coveralls.io/github/zeromq/cppzmq?branch=master)
 [![License](https://img.shields.io/github/license/zeromq/cppzmq.svg)](https://github.com/zeromq/cppzmq/blob/master/LICENSE)
 
@@ -25,14 +24,12 @@ Supported platforms
  - Only a subset of the platforms that are supported by libzmq itself are supported. Some features already require a compiler supporting C++11. In the future, probably all features will require C++11. To build and run the tests, CMake and Catch are required.
  - Any libzmq 4.x version is expected to work. DRAFT features may only work for the most recent tested version. Currently explicitly tested libzmq versions are
    - 4.2.0 (without DRAFT API)
-   - 4.2.5 (without DRAFT API)
-   - 4.3.1 (with and without DRAFT API)
+   - 4.3.4 (with and without DRAFT API)
  - Platforms with full support (i.e. CI executing build and tests)
-   - Ubuntu 14.04 x64 (with gcc 4.8.4) (without DRAFT API only)
-   - Ubuntu 14.04 x64 (with gcc 7.3.0)
-   - Visual Studio 2015 x86
-   - Visual Studio 2017 x86
-   - OSX (with clang xcode9.1) (without DRAFT API)
+   - Ubuntu 18.04 x64 (with gcc 4.8.5, 5.5.0, 7.5.0)
+   - Ubuntu 20.04 x64 (with gcc 9.3.0, 10.3.0 and clang 12)
+   - Visual Studio 2017 x64
+   - Visual Studio 2019 x64
  - Additional platforms that are known to work:
    - We have no current reports on additional platforms that are known to work yet. Please add your platform here. If CI can be provided for them with a cloud-based CI service working with GitHub, you are invited to add CI, and make it possible to be included in the list above.
  - Additional platforms that probably work:
