@@ -30,6 +30,7 @@ Supported platforms
    - Ubuntu 20.04 x64 (with gcc 9.3.0, 10.3.0 and clang 12)
    - Visual Studio 2017 x64
    - Visual Studio 2019 x64
+   - macOS 10.15 (with clang 12, without DRAFT API)
  - Additional platforms that are known to work:
    - We have no current reports on additional platforms that are known to work yet. Please add your platform here. If CI can be provided for them with a cloud-based CI service working with GitHub, you are invited to add CI, and make it possible to be included in the list above.
  - Additional platforms that probably work:
