@@ -44,7 +44,8 @@ OPTION (COVERAGE "Enable gcda file generation needed by lcov" OFF)
 
 if (COVERAGE)
     target_compile_options(unit_tests PRIVATE --coverage)
-    target_link_libraries(unit_tests PRIVATE --coverage)
+    target_link_options(unit_tests PRIVATE --coverage)
+    message(STATUS "Coverage enabled")
 endif()
 
 include(CTest)
