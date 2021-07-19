@@ -2397,8 +2397,7 @@ class monitor_t
             case ZMQ_EVENT_DISCONNECTED:
                 on_event_disconnected(*event, address.c_str());
                 break;
-#ifdef ZMQ_BUILD_DRAFT_API
-#if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 3)
+#if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 3, 0) || (defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 3))
             case ZMQ_EVENT_HANDSHAKE_FAILED_NO_DETAIL:
                 on_event_handshake_failed_no_detail(*event, address.c_str());
                 break;
@@ -2411,14 +2410,13 @@ class monitor_t
             case ZMQ_EVENT_HANDSHAKE_SUCCEEDED:
                 on_event_handshake_succeeded(*event, address.c_str());
                 break;
-#elif ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 1)
+#elif defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 1)
             case ZMQ_EVENT_HANDSHAKE_FAILED:
                 on_event_handshake_failed(*event, address.c_str());
                 break;
             case ZMQ_EVENT_HANDSHAKE_SUCCEED:
                 on_event_handshake_succeed(*event, address.c_str());
                 break;
-#endif
 #endif
             default:
                 on_event_unknown(*event, address.c_str());
