@@ -299,18 +299,30 @@ class error_t : public std::exception
     int errnum;
 };
 
-inline int poll(zmq_pollitem_t *items_, size_t nitems_, long timeout_ = -1)
+namespace detail {
+inline int poll(zmq_pollitem_t *items_, size_t nitems_, long timeout_)
 {
     int rc = zmq_poll(items_, static_cast<int>(nitems_), timeout_);
     if (rc < 0)
         throw error_t();
     return rc;
 }
+}
+
+#ifdef ZMQ_CPP11
+ZMQ_DEPRECATED("from 4.8.0, use poll taking std::chrono::duration instead of long")
+inline int poll(zmq_pollitem_t *items_, size_t nitems_, long timeout_)
+#else
+inline int poll(zmq_pollitem_t *items_, size_t nitems_, long timeout_ = -1)
+#endif
+{
+    return detail::poll(items_, nitems_, timeout_);
+}
 
 ZMQ_DEPRECATED("from 4.3.1, use poll taking non-const items")
 inline int poll(zmq_pollitem_t const *items_, size_t nitems_, long timeout_ = -1)
 {
-    return poll(const_cast<zmq_pollitem_t *>(items_), nitems_, timeout_);
+    return detail::poll(const_cast<zmq_pollitem_t *>(items_), nitems_, timeout_);
 }
 
 #ifdef ZMQ_CPP11
@@ -318,7 +330,7 @@ ZMQ_DEPRECATED("from 4.3.1, use poll taking non-const items")
 inline int
 poll(zmq_pollitem_t const *items, size_t nitems, std::chrono::milliseconds timeout)
 {
-    return poll(const_cast<zmq_pollitem_t *>(items), nitems,
+    return detail::poll(const_cast<zmq_pollitem_t *>(items), nitems,
                 static_cast<long>(timeout.count()));
 }
 
@@ -326,39 +338,39 @@ ZMQ_DEPRECATED("from 4.3.1, use poll taking non-const items")
 inline int poll(std::vector<zmq_pollitem_t> const &items,
                 std::chrono::milliseconds timeout)
 {
-    return poll(const_cast<zmq_pollitem_t *>(items.data()), items.size(),
+    return detail::poll(const_cast<zmq_pollitem_t *>(items.data()), items.size(),
                 static_cast<long>(timeout.count()));
 }
 
 ZMQ_DEPRECATED("from 4.3.1, use poll taking non-const items")
 inline int poll(std::vector<zmq_pollitem_t> const &items, long timeout_ = -1)
 {
-    return poll(const_cast<zmq_pollitem_t *>(items.data()), items.size(), timeout_);
+    return detail::poll(const_cast<zmq_pollitem_t *>(items.data()), items.size(), timeout_);
 }
 
 inline int
-poll(zmq_pollitem_t *items, size_t nitems, std::chrono::milliseconds timeout)
+poll(zmq_pollitem_t *items, size_t nitems, std::chrono::milliseconds timeout = std::chrono::milliseconds{-1})
 {
-    return poll(items, nitems, static_cast<long>(timeout.count()));
+    return detail::poll(items, nitems, static_cast<long>(timeout.count()));
 }
 
 inline int poll(std::vector<zmq_pollitem_t> &items,
-                std::chrono::milliseconds timeout)
+                std::chrono::milliseconds timeout = std::chrono::milliseconds{-1})
 {
-    return poll(items.data(), items.size(), static_cast<long>(timeout.count()));
+    return detail::poll(items.data(), items.size(), static_cast<long>(timeout.count()));
 }
 
-ZMQ_DEPRECATED("from 4.3.1, use poll taking std::chrono instead of long")
-inline int poll(std::vector<zmq_pollitem_t> &items, long timeout_ = -1)
+ZMQ_DEPRECATED("from 4.3.1, use poll taking std::chrono::duration instead of long")
+inline int poll(std::vector<zmq_pollitem_t> &items, long timeout_)
 {
-    return poll(items.data(), items.size(), timeout_);
+    return detail::poll(items.data(), items.size(), timeout_);
 }
 
 template<std::size_t SIZE>
 inline int poll(std::array<zmq_pollitem_t, SIZE> &items,
-                std::chrono::milliseconds timeout)
+                std::chrono::milliseconds timeout = std::chrono::milliseconds{-1})
 {
-    return poll(items.data(), items.size(), static_cast<long>(timeout.count()));
+    return detail::poll(items.data(), items.size(), static_cast<long>(timeout.count()));
 }
 #endif
 
@@ -2322,7 +2334,11 @@ class monitor_t
           {_monitor_socket.handle(), 0, ZMQ_POLLIN, 0},
         };
 
+        #ifdef ZMQ_CPP11
+        zmq::poll(&items[0], 1, std::chrono::milliseconds(timeout));
+        #else
         zmq::poll(&items[0], 1, timeout);
+        #endif
 
         if (items[0].revents & ZMQ_POLLIN) {
             int rc = zmq_msg_recv(eventMsg.handle(), _monitor_socket.handle(), 0);
