@@ -75,6 +75,21 @@ TEST_CASE("multipart legacy test", "[multipart]")
     assert(ok);
     assert(copy.equal(&multipart));
 
+    // Test equality operators
+    assert(copy == multipart);
+    assert(multipart == copy);
+
+    multipart.pop();
+
+    assert(copy != multipart);
+    assert(multipart != copy);
+
+    multipart_t emptyMessage1 {};
+    multipart_t emptyMessage2 {};
+
+    assert(emptyMessage1 == emptyMessage2);
+    assert(emptyMessage2 == emptyMessage1);
+
     multipart.clear();
     assert(multipart.empty());
 
