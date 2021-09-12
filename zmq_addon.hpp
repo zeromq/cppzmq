@@ -612,14 +612,24 @@ class multipart_t
     }
 
     // Check if equal to other multipart
-    bool equal(const multipart_t *other) const
+    bool equal(const multipart_t *other) const ZMQ_NOTHROW
     {
-        if (size() != other->size())
+        return *this == *other;
+    }
+
+    bool operator==(const multipart_t &other) const ZMQ_NOTHROW
+    {
+        if (size() != other.size())
             return false;
         for (size_t i = 0; i < size(); i++)
-            if (*peek(i) != *other->peek(i))
+            if (at(i) != other.at(i))
                 return false;
         return true;
+    }
+
+    bool operator!=(const multipart_t &other) const ZMQ_NOTHROW
+    {
+        return !(*this == other);
     }
 
 #ifdef ZMQ_CPP11
