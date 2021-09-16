@@ -67,6 +67,8 @@
 #define ZMQ_DEPRECATED(msg) __declspec(deprecated(msg))
 #elif defined(__GNUC__)
 #define ZMQ_DEPRECATED(msg) __attribute__((deprecated(msg)))
+#else
+#define ZMQ_DEPRECATED(msg)
 #endif
 
 #if defined(ZMQ_CPP17)
