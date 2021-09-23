@@ -88,6 +88,59 @@ int main()
 
 See the `examples` directory for more examples. When the project is compiled with tests enabled, each example gets compiled to an executable.
 
+
+API Overview
+============
+
+Bindings for libzmq in `zmq.hpp`:
+
+Types:
+* class `zmq::context_t`
+* enum `zmq::ctxopt`
+* class `zmq::socket_t`
+* class `zmq::socket_ref`
+* enum `zmq::socket_type`
+* enum `zmq::sockopt`
+* enum `zmq::send_flags`
+* enum `zmq::recv_flags`
+* class `zmq::message_t`
+* class `zmq::const_buffer`
+* class `zmq::mutable_buffer`
+* struct `zmq::recv_buffer_size`
+* alias `zmq::send_result_t`
+* alias `zmq::recv_result_t`
+* alias `zmq::recv_buffer_result_t`
+* class `zmq::error_t`
+* class `zmq::monitor_t`
+* struct `zmq_event_t`,
+* alias `zmq::free_fn`,
+* alias `zmq::pollitem_t`,
+* alias `zmq::fd_t`
+* class `zmq::poller_t` DRAFT
+* enum `zmq::event_flags` DRAFT
+* enum `zmq::poller_event` DRAFT
+
+Functions:
+* `zmq::version`
+* `zmq::poll`
+* `zmq::proxy`
+* `zmq::proxy_steerable`
+* `zmq::buffer`
+* `zmq::str_buffer`
+
+Extra high-level types and functions `zmq_addon.hpp`:
+
+Types:
+* class `zmq::multipart_t`
+* class `zmq::active_poller_t` DRAFT
+
+Functions:
+* `zmq::recv_multipart`
+* `zmq::send_multipart`
+* `zmq::send_multipart_n`
+* `zmq::encode`
+* `zmq::decode`
+
 Compatibility Guidelines
 ========================
 
