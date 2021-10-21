@@ -1376,6 +1376,39 @@ constexpr const_buffer operator"" _zbuf(const char32_t *str, size_t len) noexcep
 }
 }
 
+#ifdef ZMQ_CPP11
+enum class socket_type : int
+{
+    req = ZMQ_REQ,
+    rep = ZMQ_REP,
+    dealer = ZMQ_DEALER,
+    router = ZMQ_ROUTER,
+    pub = ZMQ_PUB,
+    sub = ZMQ_SUB,
+    xpub = ZMQ_XPUB,
+    xsub = ZMQ_XSUB,
+    push = ZMQ_PUSH,
+    pull = ZMQ_PULL,
+#if defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 0)
+    server = ZMQ_SERVER,
+    client = ZMQ_CLIENT,
+    radio = ZMQ_RADIO,
+    dish = ZMQ_DISH,
+    gather = ZMQ_GATHER,
+    scatter = ZMQ_SCATTER,
+    dgram = ZMQ_DGRAM,
+#endif
+#if defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 3, 3)
+    peer = ZMQ_PEER,
+    channel = ZMQ_CHANNEL,
+#endif
+#if ZMQ_VERSION_MAJOR >= 4
+    stream = ZMQ_STREAM,
+#endif
+    pair = ZMQ_PAIR
+};
+#endif
+
 namespace sockopt
 {
 // There are two types of options,
@@ -1615,7 +1648,10 @@ ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_TOS, tos, int);
 #endif
 #ifdef ZMQ_TYPE
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_TYPE, type, int);
-#endif
+#ifdef ZMQ_CPP11
+ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_TYPE, socket_type, socket_type);
+#endif // ZMQ_CPP11
+#endif // ZMQ_TYPE
 #ifdef ZMQ_UNSUBSCRIBE
 ZMQ_DEFINE_ARRAY_OPT(ZMQ_UNSUBSCRIBE, unsubscribe);
 #endif
@@ -1757,7 +1793,7 @@ class socket_base
     template<int Opt, class T, bool BoolUnit>
     ZMQ_NODISCARD T get(sockopt::integral_option<Opt, T, BoolUnit>) const
     {
-        static_assert(std::is_integral<T>::value, "T must be integral");
+        static_assert(std::is_scalar<T>::value, "T must be scalar");
         T val;
         size_t size = sizeof val;
         get_option(Opt, &val, &size);
@@ -2025,39 +2061,6 @@ class socket_base
     }
 };
 } // namespace detail
-
-#ifdef ZMQ_CPP11
-enum class socket_type : int
-{
-    req = ZMQ_REQ,
-    rep = ZMQ_REP,
-    dealer = ZMQ_DEALER,
-    router = ZMQ_ROUTER,
-    pub = ZMQ_PUB,
-    sub = ZMQ_SUB,
-    xpub = ZMQ_XPUB,
-    xsub = ZMQ_XSUB,
-    push = ZMQ_PUSH,
-    pull = ZMQ_PULL,
-#if defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 0)
-    server = ZMQ_SERVER,
-    client = ZMQ_CLIENT,
-    radio = ZMQ_RADIO,
-    dish = ZMQ_DISH,
-    gather = ZMQ_GATHER,
-    scatter = ZMQ_SCATTER,
-    dgram = ZMQ_DGRAM,
-#endif
-#if defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 3, 3)
-    peer = ZMQ_PEER,
-    channel = ZMQ_CHANNEL,
-#endif
-#if ZMQ_VERSION_MAJOR >= 4
-    stream = ZMQ_STREAM,
-#endif
-    pair = ZMQ_PAIR
-};
-#endif
 
 struct from_handle_t
 {
