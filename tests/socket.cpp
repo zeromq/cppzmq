@@ -406,7 +406,10 @@ TEST_CASE("socket check integral options", "[socket]")
 #endif
 #ifdef ZMQ_TYPE
     check_integral_opt_get<int>(zmq::sockopt::type, router, "type");
-#endif
+#ifdef ZMQ_CPP11
+    check_integral_opt_get<zmq::socket_type>(zmq::sockopt::socket_type, router, "socket_type");
+#endif // ZMQ_CPP11
+#endif // ZMQ_TYPE
 
 #ifdef ZMQ_HAVE_VMCI
 #ifdef ZMQ_VMCI_BUFFER_SIZE
