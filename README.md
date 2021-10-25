@@ -92,6 +92,8 @@ See the `examples` directory for more examples. When the project is compiled wit
 API Overview
 ============
 
+For an extensive overview of the `zmq.hpp` API in use, see this [Tour of CPPZMQ by @brettviren](https://brettviren.github.io/cppzmq-tour/index.html).
+
 Bindings for libzmq in `zmq.hpp`:
 
 Types:
