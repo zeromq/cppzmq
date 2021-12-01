@@ -37,8 +37,14 @@
 
 #ifdef CPPZMQ_NO_CPP_EXCEPTIONS
 #define THROW_ERROR_T std::abort()
+#define THROW_RETURN(v) return v
+#define NO_THROW_RETURN_TYPE(t) t
+#define NO_THROW_RETURN(v) return v
 #else
 #define THROW_ERROR_T throw error_t()
+#define THROW_RETURN(v) throw error_t()
+#define NO_THROW_RETURN_TYPE(t) void
+#define NO_THROW_RETURN(v)
 #endif
 
 #if defined(_MSVC_LANG)
@@ -314,7 +320,7 @@ inline int poll(zmq_pollitem_t *items_, size_t nitems_, long timeout_)
 {
     int rc = zmq_poll(items_, static_cast<int>(nitems_), timeout_);
     if (rc < 0)
-        THROW_ERROR_T;
+        THROW_RETURN(rc);
     return rc;
 }
 }
@@ -637,7 +643,7 @@ class message_t
     {
         int value = zmq_msg_get(&msg, property_);
         if (value == -1)
-            THROW_ERROR_T;
+            THROW_RETURN(value);
         return value;
     }
 #endif
@@ -647,7 +653,7 @@ class message_t
     {
         const char *value = zmq_msg_gets(&msg, property_);
         if (value == ZMQ_NULLPTR)
-            THROW_ERROR_T;
+            THROW_RETURN(value);
         return value;
     }
 #endif
@@ -864,7 +870,7 @@ class context_t
         // which is unfortunate, and may result in errors
         // that don't make sense
         if (rc == -1)
-            THROW_ERROR_T;
+            THROW_RETURN(rc);
         return rc;
     }
 #endif
@@ -1864,13 +1870,20 @@ class socket_base
     }
 #endif
 
-    void bind(std::string const &addr) { bind(addr.c_str()); }
+    NO_THROW_RETURN_TYPE(bool) bind(std::string const &addr)
+    {
+#ifdef CPPZMQ_NO_CPP_EXCEPTIONS
+        return
+#endif
+          bind(addr.c_str());
+    }
 
-    void bind(const char *addr_)
+    NO_THROW_RETURN_TYPE(bool) bind(const char *addr_)
     {
         int rc = zmq_bind(_handle, addr_);
         if (rc != 0)
-            THROW_ERROR_T;
+            THROW_RETURN(false);
+        NO_THROW_RETURN(true);
     }
 
     void unbind(std::string const &addr) { unbind(addr.c_str()); }
@@ -1882,13 +1895,20 @@ class socket_base
             THROW_ERROR_T;
     }
 
-    void connect(std::string const &addr) { connect(addr.c_str()); }
+    NO_THROW_RETURN_TYPE(bool) connect(std::string const &addr)
+    {
+#ifdef CPPZMQ_NO_CPP_EXCEPTIONS
+        return
+#endif
+          connect(addr.c_str());
+    }
 
-    void connect(const char *addr_)
+    NO_THROW_RETURN_TYPE(bool) connect(const char *addr_)
     {
         int rc = zmq_connect(_handle, addr_);
         if (rc != 0)
-            THROW_ERROR_T;
+            THROW_RETURN(false);
+        NO_THROW_RETURN(true);
     }
 
     void disconnect(std::string const &addr) { disconnect(addr.c_str()); }
