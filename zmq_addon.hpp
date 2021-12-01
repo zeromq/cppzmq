@@ -36,6 +36,14 @@
 #include <unordered_map>
 #endif
 
+/*
+#ifndef CPPZMQ_NO_CPP_EXCEPTIONS
+throw std::exception();
+#else
+std::abort();
+#endif
+*/
+
 namespace zmq
 {
 #ifdef ZMQ_CPP11
@@ -51,8 +59,12 @@ recv_multipart_n(socket_ref s, OutputIt out, size_t n, recv_flags flags)
     while (true) {
         if ZMQ_CONSTEXPR_IF (CheckN) {
             if (msg_count >= n)
+#ifndef CPPZMQ_NO_CPP_EXCEPTIONS
                 throw std::runtime_error(
                   "Too many message parts in recv_multipart_n");
+#else
+                std::abort();
+#endif
         }
         if (!s.recv(msg, flags)) {
             // zmq ensures atomic delivery of messages
@@ -103,11 +115,11 @@ inline uint32_t read_u32_network_order(const unsigned char *buf)
 } // namespace detail
 
 /*  Receive a multipart message.
-    
+
     Writes the zmq::message_t objects to OutputIterator out.
     The out iterator must handle an unspecified number of writes,
     e.g. by using std::back_inserter.
-    
+
     Returns: the number of messages received or nullopt (on EAGAIN).
     Throws: if recv throws. Any exceptions thrown
     by the out iterator will be propagated and the message
@@ -123,11 +135,11 @@ ZMQ_NODISCARD recv_result_t recv_multipart(socket_ref s,
 }
 
 /*  Receive a multipart message.
-    
+
     Writes at most n zmq::message_t objects to OutputIterator out.
     If the number of message parts of the incoming message exceeds n
     then an exception will be thrown.
-    
+
     Returns: the number of messages received or nullopt (on EAGAIN).
     Throws: if recv throws. Throws std::runtime_error if the number
     of message parts exceeds n (exactly n messages will have been written
@@ -146,12 +158,12 @@ ZMQ_NODISCARD recv_result_t recv_multipart_n(socket_ref s,
 }
 
 /*  Send a multipart message.
-    
+
     The range must be a ForwardRange of zmq::message_t,
     zmq::const_buffer or zmq::mutable_buffer.
-    The flags may be zmq::send_flags::sndmore if there are 
+    The flags may be zmq::send_flags::sndmore if there are
     more message parts to be sent after the call to this function.
-    
+
     Returns: the number of messages sent (exactly msgs.size()) or nullopt (on EAGAIN).
     Throws: if send throws. Any exceptions thrown
     by the msgs range will be propagated and the message
@@ -225,8 +237,12 @@ message_t encode(const Range &parts)
     for (const auto &part : parts) {
         const size_t part_size = part.size();
         if (part_size > std::numeric_limits<std::uint32_t>::max()) {
+#ifndef CPPZMQ_NO_CPP_EXCEPTIONS
             // Size value must fit into uint32_t.
             throw std::range_error("Invalid size, message part too large");
+#else
+            std::abort();
+#endif
         }
         const size_t count_size =
           part_size < std::numeric_limits<std::uint8_t>::max() ? 1 : 5;
@@ -281,8 +297,12 @@ template<class OutputIt> OutputIt decode(const message_t &encoded, OutputIt out)
         size_t part_size = *source++;
         if (part_size == std::numeric_limits<std::uint8_t>::max()) {
             if (static_cast<size_t>(limit - source) < sizeof(uint32_t)) {
+#ifndef CPPZMQ_NO_CPP_EXCEPTIONS
                 throw std::out_of_range(
                   "Malformed encoding, overflow in reading size");
+#else
+                std::abort();
+#endif
             }
             part_size = detail::read_u32_network_order(source);
             // the part size is allowed to be less than 0xFF
@@ -290,7 +310,11 @@ template<class OutputIt> OutputIt decode(const message_t &encoded, OutputIt out)
         }
 
         if (static_cast<size_t>(limit - source) < part_size) {
+#ifndef CPPZMQ_NO_CPP_EXCEPTIONS
             throw std::out_of_range("Malformed encoding, overflow in reading part");
+#else
+            std::abort();
+#endif
         }
         *out = message_t(source, part_size);
         ++out;
@@ -510,8 +534,12 @@ class multipart_t
         static_assert(!std::is_same<T, std::string>::value,
                       "Use popstr() instead of poptyp<std::string>()");
         if (sizeof(T) != m_parts.front().size())
+#ifndef CPPZMQ_NO_CPP_EXCEPTIONS
             throw std::runtime_error(
               "Invalid type, size does not match the message size");
+#else
+            std::abort();
+#endif
         T type = *m_parts.front().data<T>();
         m_parts.pop_front();
         return type;
@@ -555,8 +583,12 @@ class multipart_t
         static_assert(!std::is_same<T, std::string>::value,
                       "Use peekstr() instead of peektyp<std::string>()");
         if (sizeof(T) != m_parts[index].size())
+#ifndef CPPZMQ_NO_CPP_EXCEPTIONS
             throw std::runtime_error(
               "Invalid type, size does not match the message size");
+#else
+            std::abort();
+#endif
         T type = *m_parts[index].data<T>();
         return type;
     }
@@ -684,11 +716,20 @@ class active_poller_t
     void add(zmq::socket_ref socket, event_flags events, handler_type handler)
     {
         if (!handler)
+#ifndef CPPZMQ_NO_CPP_EXCEPTIONS
             throw std::invalid_argument("null handler in active_poller_t::add");
+#else
+            std::abort();
+#endif
         auto ret = handlers.emplace(
           socket, std::make_shared<handler_type>(std::move(handler)));
         if (!ret.second)
+#ifndef CPPZMQ_NO_CPP_EXCEPTIONS
             throw error_t(EINVAL); // already added
+#else
+            std::abort();
+#endif
+#ifndef CPPZMQ_NO_CPP_EXCEPTIONS
         try {
             base_poller.add(socket, events, ret.first->second.get());
             need_rebuild = true;
@@ -696,8 +737,13 @@ class active_poller_t
         catch (...) {
             // rollback
             handlers.erase(socket);
+
             throw;
         }
+#else
+        base_poller.add(socket, events, ret.first->second.get());
+        need_rebuild = true;
+#endif
     }
 
     void remove(zmq::socket_ref socket)
