@@ -285,8 +285,7 @@ TEST_CASE("modify invalid socket throws", "[active_poller]")
     zmq::socket_t a{context, zmq::socket_type::push};
     zmq::socket_t b{std::move(a)};
     zmq::active_poller_t active_poller;
-    CHECK_THROWS_AS(active_poller.modify(a, zmq::event_flags::pollin),
-                    zmq::error_t);
+    CHECK_THROWS_AS(active_poller.modify(a, zmq::event_flags::pollin), zmq::error_t);
 }
 
 TEST_CASE("modify not added throws", "[active_poller]")
@@ -296,8 +295,7 @@ TEST_CASE("modify not added throws", "[active_poller]")
     zmq::socket_t b{context, zmq::socket_type::push};
     zmq::active_poller_t active_poller;
     CHECK_NOTHROW(active_poller.add(a, zmq::event_flags::pollin, no_op_handler));
-    CHECK_THROWS_AS(active_poller.modify(b, zmq::event_flags::pollin),
-                    zmq::error_t);
+    CHECK_THROWS_AS(active_poller.modify(b, zmq::event_flags::pollin), zmq::error_t);
 }
 
 TEST_CASE("modify simple", "[active_poller]")

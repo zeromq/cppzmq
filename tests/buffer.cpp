@@ -120,10 +120,10 @@ TEST_CASE("mutable_buffer creation C array", "[buffer]")
     BT d[10] = {};
     zmq::mutable_buffer b = zmq::buffer(d);
     CHECK(b.size() == 10 * sizeof(BT));
-    CHECK(b.data() == static_cast<BT*>(d));
+    CHECK(b.data() == static_cast<BT *>(d));
     zmq::const_buffer b2 = zmq::buffer(d, 4);
     CHECK(b2.size() == 4);
-    CHECK(b2.data() == static_cast<BT*>(d));
+    CHECK(b2.data() == static_cast<BT *>(d));
 }
 
 TEST_CASE("const_buffer creation C array", "[buffer]")
@@ -131,10 +131,10 @@ TEST_CASE("const_buffer creation C array", "[buffer]")
     const BT d[10] = {};
     zmq::const_buffer b = zmq::buffer(d);
     CHECK(b.size() == 10 * sizeof(BT));
-    CHECK(b.data() == static_cast<const BT*>(d));
+    CHECK(b.data() == static_cast<const BT *>(d));
     zmq::const_buffer b2 = zmq::buffer(d, 4);
     CHECK(b2.size() == 4);
-    CHECK(b2.data() == static_cast<const BT*>(d));
+    CHECK(b2.data() == static_cast<const BT *>(d));
 }
 
 TEST_CASE("mutable_buffer creation array", "[buffer]")
@@ -241,13 +241,13 @@ TEST_CASE("const_buffer creation with str_buffer", "[buffer]")
     const wchar_t wd[10] = {};
     zmq::const_buffer b = zmq::str_buffer(wd);
     CHECK(b.size() == 9 * sizeof(wchar_t));
-    CHECK(b.data() == static_cast<const wchar_t*>(wd));
+    CHECK(b.data() == static_cast<const wchar_t *>(wd));
 
     zmq::const_buffer b2_null = zmq::buffer("hello");
     constexpr zmq::const_buffer b2 = zmq::str_buffer("hello");
     CHECK(b2_null.size() == 6);
     CHECK(b2.size() == 5);
-    CHECK(std::string(static_cast<const char*>(b2.data()), b2.size()) == "hello");
+    CHECK(std::string(static_cast<const char *>(b2.data()), b2.size()) == "hello");
 }
 
 TEST_CASE("const_buffer creation with zbuf string literal char", "[buffer]")
