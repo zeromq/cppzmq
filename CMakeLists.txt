@@ -87,6 +87,11 @@ write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Conf
                                  COMPATIBILITY AnyNewerVersion)
 set(CMAKE_SIZEOF_VOID_P ${CPPZMQ_SIZEOF_VOID_P})
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cppzmq.pc.in
+               ${CMAKE_CURRENT_BINARY_DIR}/cppzmq.pc @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cppzmq.pc
+              DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
 install(EXPORT ${PROJECT_NAME}-targets
         FILE ${PROJECT_NAME}Targets.cmake
         DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR})
