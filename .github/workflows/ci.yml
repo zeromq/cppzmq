@@ -132,7 +132,6 @@ jobs:
       run: |
         cmake -H. -Bbuild ${{ matrix.platform}} ${{ matrix.coverage }} \
           -DCMAKE_BUILD_TYPE=${BUILDTYPE} \
-          -DENABLE_DRAFTS=${{ matrix.drafts }} \
           -DCMAKE_CXX_STANDARD=${{ matrix.cppstd }}
         cmake --build build --config ${BUILDTYPE} -j ${THREADS}
         echo "CPPZMQ=${PWD}/build" >> ${GITHUB_ENV}
