@@ -1,6 +1,7 @@
 #include <future>
 #include <iostream>
 #include <string>
+#include <thread>
 
 #include "zmq.hpp"
 #include "zmq_addon.hpp"
