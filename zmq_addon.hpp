@@ -413,7 +413,7 @@ class multipart_t
     }
 
     // Send multipart message to socket
-    bool send(socket_ref socket, int flags = 0)
+    bool send(socket_ref socket, int flags = 0, bool need_clear = true)
     {
         flags &= ~(ZMQ_SNDMORE);
         bool more = size() > 0;
@@ -429,7 +429,9 @@ class multipart_t
                 return false;
 #endif
         }
-        clear();
+        if(need_clear){
+            clear();
+        }
         return true;
     }
 
