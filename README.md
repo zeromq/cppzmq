@@ -179,7 +179,7 @@ Build steps:
 3. Build cppzmq via [vcpkg](https://github.com/Microsoft/vcpkg/). This does an out of source build and installs the build files
    - git clone https://github.com/Microsoft/vcpkg.git
    - cd vcpkg
-   - ./bootstrap-vcpkg.sh
+   - ./bootstrap-vcpkg.sh # bootstrap-vcpkg.bat for Powershell
    - ./vcpkg integrate install
    - ./vcpkg install cmark
 
