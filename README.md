@@ -181,7 +181,7 @@ Build steps:
    - cd vcpkg
    - ./bootstrap-vcpkg.sh # bootstrap-vcpkg.bat for Powershell
    - ./vcpkg integrate install
-   - ./vcpkg install cmark
+   - ./vcpkg install cppzmq
 
 Using this:
 
