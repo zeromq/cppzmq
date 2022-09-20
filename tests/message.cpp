@@ -4,9 +4,9 @@
 
 #if defined(ZMQ_CPP11)
 static_assert(!std::is_copy_constructible<zmq::message_t>::value,
-    "message_t should not be copy-constructible");
+              "message_t should not be copy-constructible");
 static_assert(!std::is_copy_assignable<zmq::message_t>::value,
-    "message_t should not be copy-assignable");
+              "message_t should not be copy-assignable");
 #endif
 #if (__cplusplus >= 201703L)
 static_assert(std::is_nothrow_swappable<zmq::message_t>::value,
