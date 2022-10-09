@@ -9,11 +9,6 @@
 class mock_monitor_t : public zmq::monitor_t
 {
 public:
-    void on_event_connect_delayed(const zmq_event_t &, const char *) ZMQ_OVERRIDE
-    {
-        ++connect_delayed;
-        ++total;
-    }
 
     void on_event_connected(const zmq_event_t &, const char *) ZMQ_OVERRIDE
     {
@@ -22,7 +17,6 @@ public:
     }
 
     int total{0};
-    int connect_delayed{0};
     int connected{0};
 };
 
@@ -79,15 +73,14 @@ TEST_CASE("monitor init event count", "[monitor]")
     common_server_client_setup s{false};
     mock_monitor_t monitor;
 
-    const int expected_event_count = 2;
+    const int expected_event_count = 1;
     monitor.init(s.client, "inproc://foo");
 
     CHECK_FALSE(monitor.check_event(0));
     s.init();
 
-    while (monitor.check_event(100) && monitor.total < expected_event_count) {
+    while (monitor.check_event(1000) && monitor.total < expected_event_count) {
     }
-    CHECK(monitor.connect_delayed == 1);
     CHECK(monitor.connected == 1);
     CHECK(monitor.total == expected_event_count);
 }
@@ -137,7 +130,6 @@ TEST_CASE("monitor init abort", "[monitor]")
         CHECK(cond_var.wait_for(lock, std::chrono::seconds(1),
             [&done] { return done; }));
     }
-    CHECK(monitor.connect_delayed == 1);
     CHECK(monitor.connected == 1);
     monitor.abort();
     thread.join();
