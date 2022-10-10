@@ -538,6 +538,11 @@ class message_t
             throw error_t();
         memcpy(data(), data_, size_);
     }
+    
+    void rebuild(const std::string &str)
+    {
+        rebuild(str.data(), str.size());
+    }
 
     void rebuild(void *data_, size_t size_, free_fn *ffn_, void *hint_ = ZMQ_NULLPTR)
     {
