@@ -343,10 +343,10 @@ class multipart_t
     multipart_t(message_t &&message) { add(std::move(message)); }
 
     // Move constructor
-    multipart_t(multipart_t &&other) { m_parts = std::move(other.m_parts); }
+    multipart_t(multipart_t &&other) ZMQ_NOTHROW { m_parts = std::move(other.m_parts); }
 
     // Move assignment operator
-    multipart_t &operator=(multipart_t &&other)
+    multipart_t &operator=(multipart_t &&other) ZMQ_NOTHROW
     {
         m_parts = std::move(other.m_parts);
         return *this;
