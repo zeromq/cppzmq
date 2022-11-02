@@ -544,6 +544,13 @@ class message_t
         rebuild(str.data(), str.size());
     }
 
+#if CPPZMQ_HAS_STRING_VIEW
+    void rebuild(std::string_view str)
+    {
+        rebuild(str.data(), str.size());
+    }
+#endif
+
     void rebuild(void *data_, size_t size_, free_fn *ffn_, void *hint_ = ZMQ_NULLPTR)
     {
         int rc = zmq_msg_close(&msg);
