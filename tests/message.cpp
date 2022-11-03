@@ -181,19 +181,27 @@ TEST_CASE("message equality non equal lhs empty", "[message]")
 
 TEST_CASE("message rebuild with size", "[message]")
 {
-    const zmq::message_t msg();
-    msg.rebuild(5)
+    zmq::message_t msg;
+    msg.rebuild(5);
     CHECK(msg.size() == 5);
 }
 
 #if defined(ZMQ_CPP11) && !defined(ZMQ_CPP11_PARTIAL)
+TEST_CASE("message rebuild with string literal", "[message]")
+{
+    zmq::message_t hi_msg;
+    hi_msg.rebuild("Hi");
+    REQUIRE(2u == hi_msg.size());
+    CHECK(0 == memcmp(data, hi_msg.data(), 2));
+}
+
 TEST_CASE("message rebuild with strings", "[message]")
 {
     SECTION("string")
     {
         const std::string hi(data);
-        zmq::message_t hi_msg();
-        hi_msg.rebuild(hi)
+        zmq::message_t hi_msg;
+        hi_msg.rebuild(hi);
         CHECK(2u == hi_msg.size());
         CHECK(0 == memcmp(data, hi_msg.data(), 2));
     }
@@ -201,8 +209,8 @@ TEST_CASE("message rebuild with strings", "[message]")
     SECTION("string_view")
     {
         const std::string_view hi(data);
-        zmq::message_t hi_msg();
-        hi_msg.rebuild(hi)
+        zmq::message_t hi_msg;
+        hi_msg.rebuild(hi);
         CHECK(2u == hi_msg.size());
         CHECK(0 == memcmp(data, hi_msg.data(), 2));
     }
