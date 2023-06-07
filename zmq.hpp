@@ -2744,8 +2744,8 @@ template<typename T = no_user_data> class poller_t
     void add_impl(fd_t fd, event_flags events, T *user_data)
     {
         if (0
-            != zmq_poller_add(poller_ptr.get(), fd, user_data,
-                              static_cast<short>(events))) {
+            != zmq_poller_add_fd(poller_ptr.get(), fd, user_data,
+                                 static_cast<short>(events))) {
             throw error_t();
         }
     }
