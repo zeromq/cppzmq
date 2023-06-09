@@ -2663,6 +2663,17 @@ template<typename T = no_user_data> class poller_t
         add_impl(socket, events, nullptr);
     }
 
+    template<
+      typename Dummy = void,
+      typename =
+        typename std::enable_if<!std::is_same<T, no_user_data>::value, Dummy>::type>
+    void add(fd_t fd, event_flags events, T *user_data)
+    {
+        add_impl(fd, events, user_data);
+    }
+
+    void add(fd_t fd, event_flags events) { add_impl(fd, events, nullptr); }
+
     void remove(zmq::socket_ref socket)
     {
         if (0 != zmq_poller_remove(poller_ptr.get(), socket.handle())) {
@@ -2726,6 +2737,15 @@ template<typename T = no_user_data> class poller_t
         if (0
             != zmq_poller_add(poller_ptr.get(), socket.handle(), user_data,
                               static_cast<short>(events))) {
+            throw error_t();
+        }
+    }
+
+    void add_impl(fd_t fd, event_flags events, T *user_data)
+    {
+        if (0
+            != zmq_poller_add_fd(poller_ptr.get(), fd, user_data,
+                                 static_cast<short>(events))) {
             throw error_t();
         }
     }
