@@ -34,6 +34,7 @@
 #include <limits>
 #include <functional>
 #include <unordered_map>
+#include <variant>
 #endif
 
 namespace zmq
