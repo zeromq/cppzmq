@@ -683,10 +683,12 @@ class active_poller_t
 
     void add(zmq::socket_ref socket, event_flags events, handler_type handler)
     {
+        const Ref ref{socket};
+
         if (!handler)
-            throw std::invalid_argument("null handler in active_poller_t::add");
+            throw std::invalid_argument("null handler in active_poller_t::add (socket)");
         auto ret = handlers.emplace(
-          socket, std::make_shared<handler_type>(std::move(handler)));
+          ref, std::make_shared<handler_type>(std::move(handler)));
         if (!ret.second)
             throw error_t(EINVAL); // already added
         try {
@@ -695,7 +697,28 @@ class active_poller_t
         }
         catch (...) {
             // rollback
-            handlers.erase(socket);
+            handlers.erase(ref);
+            throw;
+        }
+    }
+
+    void add(fd_t fd, event_flags events, handler_type handler)
+    {
+        const Ref ref{fd};
+
+        if (!handler)
+            throw std::invalid_argument("null handler in active_poller_t::add (fd)");
+        auto ret = handlers.emplace(
+          ref, std::make_shared<handler_type>(std::move(handler)));
+        if (!ret.second)
+            throw error_t(EINVAL); // already added
+        try {
+            base_poller.add(fd, events, ret.first->second.get());
+            need_rebuild = true;
+        }
+        catch (...) {
+            // rollback
+            handlers.erase(ref);
             throw;
         }
     }
@@ -707,9 +730,21 @@ class active_poller_t
         need_rebuild = true;
     }
 
+    void remove(fd_t fd)
+    {
+        base_poller.remove(fd);
+        handlers.erase(fd);
+        need_rebuild = true;
+    }
+
     void modify(zmq::socket_ref socket, event_flags events)
     {
         base_poller.modify(socket, events);
+    }
+
+    void modify(fd_t fd, event_flags events)
+    {
+        base_poller.modify(fd, events);
     }
 
     size_t wait(std::chrono::milliseconds timeout)
@@ -741,7 +776,10 @@ class active_poller_t
     bool need_rebuild{false};
 
     poller_t<handler_type> base_poller{};
-    std::unordered_map<socket_ref, std::shared_ptr<handler_type>> handlers{};
+
+    using Ref = std::variant<socket_ref, fd_t>;
+    std::unordered_map<Ref, std::shared_ptr<handler_type>> handlers{};
+
     std::vector<decltype(base_poller)::event_type> poller_events{};
     std::vector<std::shared_ptr<handler_type>> poller_handlers{};
 };     // class active_poller_t
