@@ -34,8 +34,65 @@
 #include <limits>
 #include <functional>
 #include <unordered_map>
-#include <variant>
-#endif
+
+namespace zmq
+{
+	// socket ref or native file descriptor for poller
+	class poller_ref_t
+	{
+	public:
+		enum RefType
+		{
+			RT_SOCKET,
+			RT_FD
+		};
+
+		poller_ref_t() : poller_ref_t(socket_ref{})
+		{}
+
+		poller_ref_t(const zmq::socket_ref& socket) : data{RT_SOCKET, socket, {}}
+		{}
+
+		poller_ref_t(zmq::fd_t fd) : data{RT_FD, {}, fd}
+		{}
+
+		size_t hash() const ZMQ_NOTHROW	
+		{
+			std::size_t h = 0;
+			hash_combine(h, std::get<0>(data));
+        	hash_combine(h, std::get<1>(data));
+        	hash_combine(h, std::get<2>(data));
+			return h;
+		}
+
+		bool operator == (const poller_ref_t& o) const ZMQ_NOTHROW
+		{
+			return data == o.data;
+		}
+
+	private:
+		template <class T>
+		static void hash_combine(std::size_t& seed, const T& v) ZMQ_NOTHROW
+		{
+    		std::hash<T> hasher;
+    		seed ^= hasher(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+		}
+
+		std::tuple<int, zmq::socket_ref, zmq::fd_t> data;
+
+	}; // class poller_ref_t
+
+} // namespace zmq
+
+// std::hash<> specialization for std::unordered_map
+template <> struct std::hash<zmq::poller_ref_t>
+{
+	size_t operator()(const zmq::poller_ref_t& ref) const ZMQ_NOTHROW
+	{
+		return ref.hash();
+	}
+};
+#endif //  ZMQ_CPP11
 
 namespace zmq
 {
@@ -684,7 +741,7 @@ class active_poller_t
 
     void add(zmq::socket_ref socket, event_flags events, handler_type handler)
     {
-        const Ref ref{socket};
+        const poller_ref_t ref{socket};
 
         if (!handler)
             throw std::invalid_argument("null handler in active_poller_t::add (socket)");
@@ -705,7 +762,7 @@ class active_poller_t
 
     void add(fd_t fd, event_flags events, handler_type handler)
     {
-        const Ref ref{fd};
+        const poller_ref_t ref{fd};
 
         if (!handler)
             throw std::invalid_argument("null handler in active_poller_t::add (fd)");
@@ -778,8 +835,7 @@ class active_poller_t
 
     poller_t<handler_type> base_poller{};
 
-    using Ref = std::variant<socket_ref, fd_t>;
-    std::unordered_map<Ref, std::shared_ptr<handler_type>> handlers{};
+    std::unordered_map<zmq::poller_ref_t, std::shared_ptr<handler_type>> handlers{};
 
     std::vector<decltype(base_poller)::event_type> poller_events{};
     std::vector<std::shared_ptr<handler_type>> poller_handlers{};
