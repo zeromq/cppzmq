@@ -2681,10 +2681,26 @@ template<typename T = no_user_data> class poller_t
         }
     }
 
+    void remove(fd_t fd)
+    {
+        if (0 != zmq_poller_remove_fd(poller_ptr.get(), fd)) {
+            throw error_t();
+        }
+    }
+
     void modify(zmq::socket_ref socket, event_flags events)
     {
         if (0
             != zmq_poller_modify(poller_ptr.get(), socket.handle(),
+                                 static_cast<short>(events))) {
+            throw error_t();
+        }
+    }
+
+    void modify(fd_t fd, event_flags events)
+    {
+        if (0
+            != zmq_poller_modify_fd(poller_ptr.get(), fd,
                                  static_cast<short>(events))) {
             throw error_t();
         }
