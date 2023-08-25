@@ -172,7 +172,7 @@ TEST_CASE("poll monitor events using active poller", "[monitor]")
         void addToPoller(zmq::active_poller_t &inActivePoller)
         {
             inActivePoller.add(
-              _monitor_socket, zmq::event_flags::pollin,
+              monitor_socket(), zmq::event_flags::pollin,
               [&](zmq::event_flags ef) { process_event(static_cast<short>(ef)); });
         }
 

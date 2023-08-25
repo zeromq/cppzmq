@@ -2589,13 +2589,14 @@ class monitor_t
         return true;
     }
 
-    socket_t _monitor_socket;
+    socket_ref monitor_socket() {return _monitor_socket;}
 
   private:
     monitor_t(const monitor_t &) ZMQ_DELETED_FUNCTION;
     void operator=(const monitor_t &) ZMQ_DELETED_FUNCTION;
 
     socket_ref _socket;
+    socket_t _monitor_socket;
 
     void close() ZMQ_NOTHROW
     {
