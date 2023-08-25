@@ -2362,8 +2362,6 @@ class monitor_t
     {
         assert(_monitor_socket);
 
-        zmq::message_t eventMsg;
-
         zmq::pollitem_t items[] = {
           {_monitor_socket.handle(), 0, ZMQ_POLLIN, 0},
         };
@@ -2374,7 +2372,14 @@ class monitor_t
         zmq::poll(&items[0], 1, timeout);
         #endif
 
-        if (items[0].revents & ZMQ_POLLIN) {
+        return process_event(items[0].revents);
+    }
+    
+    bool process_event(short events)
+    {
+        zmq::message_t eventMsg;
+
+        if (events & ZMQ_POLLIN) {
             int rc = zmq_msg_recv(eventMsg.handle(), _monitor_socket.handle(), 0);
             if (rc == -1 && zmq_errno() == ETERM)
                 return false;
