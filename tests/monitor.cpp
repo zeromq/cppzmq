@@ -154,9 +154,6 @@ TEST_CASE("monitor from move assigned socket", "[monitor]")
 #if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11)                              \
   && !defined(ZMQ_CPP11_PARTIAL) && defined(ZMQ_HAVE_POLLER)
 #include "zmq_addon.hpp"
-#include <chrono>
-
-using namespace std::literals::chrono_literals;
 
 TEST_CASE("poll monitor events using active poller", "[monitor]")
 {
@@ -221,7 +218,7 @@ TEST_CASE("poll monitor events using active poller", "[monitor]")
 
     //Act
     for (int i = 0; i < 10; i++) {
-        poller.wait(10ms);
+        poller.wait(std::chrono::milliseconds(10));
     }
     CHECK(monitor.clientAccepted == 1);
     CHECK(monitor.clientDisconnected == 0);
@@ -229,7 +226,7 @@ TEST_CASE("poll monitor events using active poller", "[monitor]")
     sockets.client.close();
 
     for (int i = 0; i < 10; i++) {
-        poller.wait(10ms);
+        poller.wait(std::chrono::milliseconds(10));
     }
     sockets.server.close();
 
