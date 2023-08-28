@@ -154,6 +154,8 @@ TEST_CASE("monitor from move assigned socket", "[monitor]")
 #if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11)                              \
   && !defined(ZMQ_CPP11_PARTIAL) && defined(ZMQ_HAVE_POLLER)
 #include "zmq_addon.hpp"
+#include <chrono>
+
 using namespace std::literals::chrono_literals;
 
 TEST_CASE("poll monitor events using active poller", "[monitor]")
