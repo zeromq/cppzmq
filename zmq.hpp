@@ -106,7 +106,7 @@
 #define ZMQ_CONSTEXPR_VAR const
 #define ZMQ_CPP11_DEPRECATED(msg)
 #endif
-#if defined(ZMQ_CPP14) && (!defined(_MSC_VER) || _MSC_VER > 1900)
+#if defined(ZMQ_CPP14) && (!defined(_MSC_VER) || _MSC_VER > 1900) && (!defined(__GNUC__) || __GNUC__ > 5 || (__GNUC__ == 5 && __GNUC_MINOR__ > 3))
 #define ZMQ_EXTENDED_CONSTEXPR
 #endif
 #if defined(ZMQ_CPP17)
@@ -159,8 +159,8 @@
 
 /*  Version macros for compile-time API version detection                     */
 #define CPPZMQ_VERSION_MAJOR 4
-#define CPPZMQ_VERSION_MINOR 8
-#define CPPZMQ_VERSION_PATCH 1
+#define CPPZMQ_VERSION_MINOR 10
+#define CPPZMQ_VERSION_PATCH 0
 
 #define CPPZMQ_VERSION                                                              \
     ZMQ_MAKE_VERSION(CPPZMQ_VERSION_MAJOR, CPPZMQ_VERSION_MINOR,                    \
@@ -555,6 +555,11 @@ class message_t
         if (rc != 0)
             THROW_ERROR_T;
         memcpy(data(), data_, size_);
+    }
+    
+    void rebuild(const std::string &str)
+    {
+        rebuild(str.data(), str.size());
     }
 
     void rebuild(void *data_, size_t size_, free_fn *ffn_, void *hint_ = ZMQ_NULLPTR)
@@ -1503,6 +1508,9 @@ ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_CURVE_SERVER, curve_server, int);
 #ifdef ZMQ_CURVE_SERVERKEY
 ZMQ_DEFINE_ARRAY_OPT_BIN_OR_Z85(ZMQ_CURVE_SERVERKEY, curve_serverkey);
 #endif
+#ifdef ZMQ_DISCONNECT_MSG
+ZMQ_DEFINE_ARRAY_OPT_BINARY(ZMQ_DISCONNECT_MSG, disconnect_msg);
+#endif
 #ifdef ZMQ_EVENTS
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_EVENTS, events, int);
 #endif
@@ -1543,6 +1551,9 @@ ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_HEARTBEAT_TIMEOUT, heartbeat_timeout, int);
 #ifdef ZMQ_HEARTBEAT_TTL
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_HEARTBEAT_TTL, heartbeat_ttl, int);
 #endif
+#ifdef ZMQ_HELLO_MSG
+ZMQ_DEFINE_ARRAY_OPT_BINARY(ZMQ_HELLO_MSG, hello_msg);
+#endif
 #ifdef ZMQ_IMMEDIATE
 ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_IMMEDIATE, immediate, int);
 #endif
@@ -1576,6 +1587,9 @@ ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_MULTICAST_LOOP, multicast_loop, int);
 #ifdef ZMQ_MULTICAST_MAXTPDU
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_MULTICAST_MAXTPDU, multicast_maxtpdu, int);
 #endif
+#ifdef ZMQ_ONLY_FIRST_SUBSCRIBE
+ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_ONLY_FIRST_SUBSCRIBE, only_first_subscribe, int);
+#endif
 #ifdef ZMQ_PLAIN_SERVER
 ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_PLAIN_SERVER, plain_server, int);
 #endif
@@ -1584,6 +1598,9 @@ ZMQ_DEFINE_ARRAY_OPT(ZMQ_PLAIN_PASSWORD, plain_password);
 #endif
 #ifdef ZMQ_PLAIN_USERNAME
 ZMQ_DEFINE_ARRAY_OPT(ZMQ_PLAIN_USERNAME, plain_username);
+#endif
+#ifdef ZMQ_PRIORITY
+ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_PRIORITY, priority, int);
 #endif
 #ifdef ZMQ_USE_FD
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_USE_FD, use_fd, int);
@@ -1611,6 +1628,9 @@ ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_RECONNECT_IVL, reconnect_ivl, int);
 #endif
 #ifdef ZMQ_RECONNECT_IVL_MAX
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_RECONNECT_IVL_MAX, reconnect_ivl_max, int);
+#endif
+#ifdef ZMQ_RECONNECT_STOP
+ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_RECONNECT_STOP, reconnect_stop, int);
 #endif
 #ifdef ZMQ_RECOVERY_IVL
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_RECOVERY_IVL, recovery_ivl, int);
@@ -1642,8 +1662,14 @@ ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_SNDHWM, sndhwm, int);
 #ifdef ZMQ_SNDTIMEO
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_SNDTIMEO, sndtimeo, int);
 #endif
+#ifdef ZMQ_SOCKS_PASSWORD
+ZMQ_DEFINE_ARRAY_OPT(ZMQ_SOCKS_PASSWORD, socks_password);
+#endif
 #ifdef ZMQ_SOCKS_PROXY
 ZMQ_DEFINE_ARRAY_OPT(ZMQ_SOCKS_PROXY, socks_proxy);
+#endif
+#ifdef ZMQ_SOCKS_USERNAME
+ZMQ_DEFINE_ARRAY_OPT(ZMQ_SOCKS_USERNAME, socks_username);
 #endif
 #ifdef ZMQ_STREAM_NOTIFY
 ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_STREAM_NOTIFY, stream_notify, int);
@@ -1701,6 +1727,9 @@ ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_XPUB_VERBOSER, xpub_verboser, int);
 #endif
 #ifdef ZMQ_XPUB_MANUAL
 ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_XPUB_MANUAL, xpub_manual, int);
+#endif
+#ifdef ZMQ_XPUB_MANUAL_LAST_VALUE
+ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_XPUB_MANUAL_LAST_VALUE, xpub_manual_last_value, int);
 #endif
 #ifdef ZMQ_XPUB_NODROP
 ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_XPUB_NODROP, xpub_nodrop, int);
@@ -2681,10 +2710,28 @@ template<typename T = no_user_data> class poller_t
         add_impl(socket, events, nullptr);
     }
 
+    template<
+      typename Dummy = void,
+      typename =
+        typename std::enable_if<!std::is_same<T, no_user_data>::value, Dummy>::type>
+    void add(fd_t fd, event_flags events, T *user_data)
+    {
+        add_impl(fd, events, user_data);
+    }
+
+    void add(fd_t fd, event_flags events) { add_impl(fd, events, nullptr); }
+
     void remove(zmq::socket_ref socket)
     {
         if (0 != zmq_poller_remove(poller_ptr.get(), socket.handle())) {
             THROW_ERROR_T;
+        }
+    }
+
+    void remove(fd_t fd)
+    {
+        if (0 != zmq_poller_remove_fd(poller_ptr.get(), fd)) {
+            throw error_t();
         }
     }
 
@@ -2694,6 +2741,15 @@ template<typename T = no_user_data> class poller_t
             != zmq_poller_modify(poller_ptr.get(), socket.handle(),
                                  static_cast<short>(events))) {
             THROW_ERROR_T;
+        }
+    }
+
+    void modify(fd_t fd, event_flags events)
+    {
+        if (0
+            != zmq_poller_modify_fd(poller_ptr.get(), fd,
+                                 static_cast<short>(events))) {
+            throw error_t();
         }
     }
 
@@ -2745,6 +2801,15 @@ template<typename T = no_user_data> class poller_t
             != zmq_poller_add(poller_ptr.get(), socket.handle(), user_data,
                               static_cast<short>(events))) {
             THROW_ERROR_T;
+        }
+    }
+
+    void add_impl(fd_t fd, event_flags events, T *user_data)
+    {
+        if (0
+            != zmq_poller_add_fd(poller_ptr.get(), fd, user_data,
+                                 static_cast<short>(events))) {
+            throw error_t();
         }
     }
 };

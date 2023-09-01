@@ -176,6 +176,13 @@ Build steps:
    - cmake ..
    - sudo make -j4 install
 
+3. Build cppzmq via [vcpkg](https://github.com/Microsoft/vcpkg/). This does an out of source build and installs the build files
+   - git clone https://github.com/Microsoft/vcpkg.git
+   - cd vcpkg
+   - ./bootstrap-vcpkg.sh # bootstrap-vcpkg.bat for Powershell
+   - ./vcpkg integrate install
+   - ./vcpkg install cppzmq
+
 Using this:
 
 A cmake find package scripts is provided for you to easily include this library.

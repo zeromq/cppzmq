@@ -81,7 +81,7 @@ jobs:
             libzmqbuild: false
             brewinstall: "zeromq"
           # windows
-          - os: "windows-2016"
+          - os: "windows-2019"
             cppstd: "14"
             cc: "msbuild"
             cxx: "msbuild"

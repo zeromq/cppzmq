@@ -6,6 +6,11 @@
 
 #include <array>
 #include <memory>
+#include <cstring>
+
+#if !defined(_WIN32)
+  #include <unistd.h>
+#endif // !_WIN32
 
 TEST_CASE("create destroy", "[active_poller]")
 {
@@ -85,6 +90,85 @@ TEST_CASE("add handler", "[active_poller]")
     CHECK_NOTHROW(
       active_poller.add(socket, zmq::event_flags::pollin, no_op_handler));
 }
+
+TEST_CASE("add fd handler", "[active_poller]")
+{
+    int fd = 1;
+    zmq::active_poller_t active_poller;
+    CHECK_NOTHROW(
+      active_poller.add(fd, zmq::event_flags::pollin, no_op_handler));
+}
+
+TEST_CASE("remove fd handler", "[active_poller]")
+{
+    int fd = 1;
+    zmq::active_poller_t active_poller;
+    CHECK_NOTHROW(
+      active_poller.add(fd, zmq::event_flags::pollin, no_op_handler));
+    CHECK_NOTHROW(
+      active_poller.remove(fd));
+    CHECK_THROWS_ZMQ_ERROR(EINVAL, active_poller.remove(100));
+}
+
+#if !defined(_WIN32)
+// On Windows, these functions can only be used with WinSock sockets.
+
+TEST_CASE("mixed socket and fd handlers", "[active_poller]")
+{
+    int pipefd[2];
+    ::pipe(pipefd);
+	
+    zmq::context_t context;
+    constexpr char inprocSocketAddress[] = "inproc://mixed-handlers";
+    zmq::socket_t socket_rcv{context, zmq::socket_type::pair};
+    zmq::socket_t socket_snd{context, zmq::socket_type::pair};
+    socket_rcv.bind(inprocSocketAddress);
+    socket_snd.connect(inprocSocketAddress);
+
+    unsigned eventsFd = 0;
+    unsigned eventsSocket = 0;
+
+	constexpr char messageText[] = "message";
+	constexpr size_t messageSize = sizeof(messageText);
+
+    zmq::active_poller_t active_poller;
+    CHECK_NOTHROW(
+        active_poller.add(pipefd[0], zmq::event_flags::pollin, [&](zmq::event_flags flags) {
+            if (flags == zmq::event_flags::pollin)
+            {
+                char buffer[256];
+                CHECK(messageSize == ::read(pipefd[0], buffer, messageSize));
+                CHECK(0 == std::strcmp(buffer, messageText));
+                ++eventsFd;
+            }
+    }));
+    CHECK_NOTHROW(
+        active_poller.add(socket_rcv, zmq::event_flags::pollin, [&](zmq::event_flags flags) {
+            if (flags == zmq::event_flags::pollin)
+            {
+                zmq::message_t msg;
+                CHECK(socket_rcv.recv(msg, zmq::recv_flags::dontwait).has_value());
+                CHECK(messageSize == msg.size());
+                CHECK(0 == std::strcmp(messageText, msg.data<const char>()));
+                ++eventsSocket;
+            }
+    }));
+
+    // send/rcv socket pair
+    zmq::message_t msg{messageText, messageSize};
+    socket_snd.send(msg, zmq::send_flags::dontwait);
+    CHECK(1 == active_poller.wait(std::chrono::milliseconds{100}));
+    CHECK(0 == eventsFd);
+    CHECK(1 == eventsSocket);
+
+    // send/rcv pipe
+    ::write(pipefd[1], messageText, messageSize);
+    CHECK(1 == active_poller.wait(std::chrono::milliseconds{100}));
+    CHECK(1 == eventsFd);
+    CHECK(1 == eventsSocket);
+}
+
+#endif // !_WIN32
 
 TEST_CASE("add null handler fails", "[active_poller]")
 {

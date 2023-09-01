@@ -1,0 +1,9 @@
+prefix="@CMAKE_INSTALL_PREFIX@"
+includedir="@CMAKE_INSTALL_FULL_INCLUDEDIR@"
+
+Name: @PROJECT_NAME@
+Description: C++ binding for libzmq
+URL: https://github.com/zeromq/cppzmq
+Version: @PROJECT_VERSION@
+Requires: libzmq
+Cflags: -I"${includedir}" @pkg_config_defines@
