@@ -810,11 +810,20 @@ class active_poller_t
         const poller_ref_t ref{fd};
 
         if (!handler)
+#ifndef CPPZMQ_NO_CPP_EXCEPTIONS
             throw std::invalid_argument("null handler in active_poller_t::add (fd)");
+#else
+            std::abort();
+#endif
         auto ret = handlers.emplace(
           ref, std::make_shared<handler_type>(std::move(handler)));
         if (!ret.second)
+#ifndef CPPZMQ_NO_CPP_EXCEPTIONS
             throw error_t(EINVAL); // already added
+#else
+            std::abort();
+#endif
+#ifndef CPPZMQ_NO_CPP_EXCEPTIONS
         try {
             base_poller.add(fd, events, ret.first->second.get());
             need_rebuild = true;
@@ -824,7 +833,10 @@ class active_poller_t
             handlers.erase(ref);
             throw;
         }
-
+#else
+        base_poller.add(fd, events, ret.first->second.get());
+        need_rebuild = true;
+#endif
     }
 
     void remove(zmq::socket_ref socket)

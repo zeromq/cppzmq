@@ -556,7 +556,7 @@ class message_t
             THROW_ERROR_T;
         memcpy(data(), data_, size_);
     }
-    
+
     void rebuild(const std::string &str)
     {
         rebuild(str.data(), str.size());
@@ -2731,7 +2731,7 @@ template<typename T = no_user_data> class poller_t
     void remove(fd_t fd)
     {
         if (0 != zmq_poller_remove_fd(poller_ptr.get(), fd)) {
-            throw error_t();
+            THROW_ERROR_T;
         }
     }
 
@@ -2749,7 +2749,7 @@ template<typename T = no_user_data> class poller_t
         if (0
             != zmq_poller_modify_fd(poller_ptr.get(), fd,
                                  static_cast<short>(events))) {
-            throw error_t();
+            THROW_ERROR_T;
         }
     }
 
@@ -2809,7 +2809,7 @@ template<typename T = no_user_data> class poller_t
         if (0
             != zmq_poller_add_fd(poller_ptr.get(), fd, user_data,
                                  static_cast<short>(events))) {
-            throw error_t();
+            THROW_ERROR_T;
         }
     }
 };
