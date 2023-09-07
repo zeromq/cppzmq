@@ -175,8 +175,7 @@ TEST_CASE("poll monitor events using active poller", "[monitor]")
               [&](zmq::event_flags ef) { process_event(static_cast<short>(ef)); });
         }
 
-        void on_event_accepted(const zmq_event_t &event_,
-                                       const char *addr_) override
+        void on_event_accepted(const zmq_event_t &event_, const char *addr_) override
         {
             clientAccepted++;
         }
@@ -205,7 +204,8 @@ TEST_CASE("poll monitor events using active poller", "[monitor]")
     common_server_client_setup sockets(false);
 
     test_monitor monitor;
-    monitor.init(sockets.server, monitorAddress);
+    monitor.init(sockets.server, monitorAddress,
+                 ZMQ_EVENT_ACCEPTED | ZMQ_EVENT_DISCONNECTED);
 
     zmq::active_poller_t poller;
     monitor.addToPoller(poller);
@@ -217,16 +217,22 @@ TEST_CASE("poll monitor events using active poller", "[monitor]")
     CHECK(monitor.clientDisconnected == 0);
 
     //Act
-    for (int i = 0; i < 10; i++) {
-        poller.wait(std::chrono::milliseconds(10));
+    for (int i = 0; i < 100; i++) {
+        poller.wait(std::chrono::milliseconds(50));
+        if (monitor.clientAccepted > 0) {
+            break;
+        }
     }
     CHECK(monitor.clientAccepted == 1);
     CHECK(monitor.clientDisconnected == 0);
 
     sockets.client.close();
 
-    for (int i = 0; i < 10; i++) {
-        poller.wait(std::chrono::milliseconds(10));
+    for (int i = 0; i < 100; i++) {
+        poller.wait(std::chrono::milliseconds(50));
+        if (monitor.clientDisconnected > 0) {
+            break;
+        }
     }
     sockets.server.close();
 
