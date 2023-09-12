@@ -19,32 +19,14 @@ jobs:
         libzmq: ["4.3.4"]
         libzmqbuild: ["cmake"]
         include:
-          # older libzmq and gcc without draft
+          # older libzmq and without draft
           - os: "ubuntu-22.04"
             cppstd: "11"
-            cc: "gcc-7"
-            cxx: "g++-7"
+            cc: "gcc-11"
+            cxx: "g++-11"
             drafts: "OFF"
             libzmq: "4.2.0"
             libzmqbuild: "pkgconfig"
-          # gcc 4.8
-          - os: "ubuntu-22.04"
-            cppstd: "11"
-            cc: "gcc-4.8"
-            cxx: "g++-4.8"
-            drafts: "ON"
-            libzmq: "4.3.4"
-            libzmqbuild: "cmake"
-            aptinstall: "gcc-4.8 g++-4.8"
-          # gcc 5
-          - os: "ubuntu-22.04"
-            cppstd: "11"
-            cc: "gcc-5"
-            cxx: "g++-5"
-            drafts: "ON"
-            libzmq: "4.3.4"
-            libzmqbuild: "cmake"
-            aptinstall: "gcc-5 g++-5"
           # without draft
           - os: "ubuntu-latest"
             cppstd: "20"
