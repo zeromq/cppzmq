@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ["ubuntu-latest"]
+        os: ["ubuntu-20.04"]
         cppstd: ["98", "11", "20"]
         cc: ["gcc-10"]
         cxx: ["g++-10"]
@@ -19,42 +19,24 @@ jobs:
         libzmq: ["4.3.4"]
         libzmqbuild: ["cmake"]
         include:
-          # older libzmq and gcc without draft
-          - os: "ubuntu-18.04"
+          # older libzmq and without draft
+          - os: "ubuntu-20.04"
             cppstd: "11"
-            cc: "gcc-7"
-            cxx: "g++-7"
+            cc: "gcc-9"
+            cxx: "g++-9"
             drafts: "OFF"
             libzmq: "4.2.0"
             libzmqbuild: "pkgconfig"
-          # gcc 4.8
-          - os: "ubuntu-18.04"
-            cppstd: "11"
-            cc: "gcc-4.8"
-            cxx: "g++-4.8"
-            drafts: "ON"
-            libzmq: "4.3.4"
-            libzmqbuild: "cmake"
-            aptinstall: "gcc-4.8 g++-4.8"
-          # gcc 5
-          - os: "ubuntu-18.04"
-            cppstd: "11"
-            cc: "gcc-5"
-            cxx: "g++-5"
-            drafts: "ON"
-            libzmq: "4.3.4"
-            libzmqbuild: "cmake"
-            aptinstall: "gcc-5 g++-5"
           # without draft
-          - os: "ubuntu-latest"
+          - os: "ubuntu-22.04"
             cppstd: "20"
-            cc: "gcc-10"
-            cxx: "g++-10"
+            cc: "gcc-11"
+            cxx: "g++-11"
             drafts: "OFF"
             libzmq: "4.3.4"
             libzmqbuild: "cmake"
           # coverage (gcc version should match gcov version)
-          - os: "ubuntu-latest"
+          - os: "ubuntu-20.04"
             cppstd: "17"
             cc: "gcc-9"
             cxx: "g++-9"
@@ -64,7 +46,7 @@ jobs:
             coverage: "-DCOVERAGE=ON"
             aptinstall: "lcov"
           # clang
-          - os: "ubuntu-latest"
+          - os: "ubuntu-20.04"
             cppstd: "17"
             cc: "clang-12"
             cxx: "clang++-12"
@@ -89,7 +71,7 @@ jobs:
             libzmq: "4.3.4"
             libzmqbuild: "cmake"
             platform: "-Ax64"
-          - os: "windows-latest"
+          - os: "windows-2022"
             cppstd: "20"
             cc: "msbuild"
             cxx: "msbuild"
