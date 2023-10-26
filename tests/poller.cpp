@@ -192,6 +192,21 @@ TEST_CASE("poller poll basic", "[poller]")
     CHECK(&i == events[0].user_data);
 }
 
+TEST_CASE("poller poll basic static array", "[poller]")
+{
+    common_server_client_setup s;
+
+    CHECK_NOTHROW(s.client.send(zmq::message_t{hi_str}, zmq::send_flags::none));
+
+    zmq::poller_t<int> poller;
+    std::array<zmq::poller_event<int>, 1> events;
+    int i = 0;
+    CHECK_NOTHROW(poller.add(s.server, zmq::event_flags::pollin, &i));
+    CHECK(1 == poller.wait_all(events, std::chrono::milliseconds{-1}));
+    CHECK(s.server == events[0].socket);
+    CHECK(&i == events[0].user_data);
+}
+
 TEST_CASE("poller add invalid socket throws", "[poller]")
 {
     zmq::context_t context;

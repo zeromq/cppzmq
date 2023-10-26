@@ -108,6 +108,7 @@
 #include <cassert>
 #include <cstring>
 
+#include <type_traits>
 #include <algorithm>
 #include <exception>
 #include <iomanip>
@@ -2714,9 +2715,12 @@ template<typename T = no_user_data> class poller_t
         }
     }
 
-    size_t wait_all(std::vector<event_type> &poller_events,
+    template <typename Sequence>
+    size_t wait_all(Sequence &poller_events,
                     const std::chrono::milliseconds timeout)
     {
+        static_assert(std::is_same<typename Sequence::value_type, event_type>::value,
+                      "Sequence::value_type must be of poller_t::event_type");
         int rc = zmq_poller_wait_all(
           poller_ptr.get(),
           reinterpret_cast<zmq_poller_event_t *>(poller_events.data()),
