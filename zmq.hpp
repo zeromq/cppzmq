@@ -1919,7 +1919,7 @@ class socket_base
         int nbytes = zmq_send(_handle, buf_, len_, flags_);
         if (nbytes >= 0)
             return static_cast<size_t>(nbytes);
-        if (zmq_errno() == EAGAIN)
+        if (zmq_errno() == EAGAIN || zmq_errno() == EINTR)
             return 0;
         throw error_t();
     }
@@ -1931,7 +1931,7 @@ class socket_base
         int nbytes = zmq_msg_send(msg_.handle(), _handle, flags_);
         if (nbytes >= 0)
             return true;
-        if (zmq_errno() == EAGAIN)
+        if (zmq_errno() == EAGAIN || zmq_errno() == EINTR)
             return false;
         throw error_t();
     }
@@ -1946,7 +1946,7 @@ class socket_base
         int nbytes = zmq_msg_send(msg.handle(), _handle, flags_);
         if (nbytes >= 0)
             return true;
-        if (zmq_errno() == EAGAIN)
+        if (zmq_errno() == EAGAIN || zmq_errno() == EINTR)
             return false;
         throw error_t();
     }
@@ -1971,7 +1971,7 @@ class socket_base
           zmq_send(_handle, buf.data(), buf.size(), static_cast<int>(flags));
         if (nbytes >= 0)
             return static_cast<size_t>(nbytes);
-        if (zmq_errno() == EAGAIN)
+        if (zmq_errno() == EAGAIN || zmq_errno() == EINTR)
             return {};
         throw error_t();
     }
@@ -1981,7 +1981,7 @@ class socket_base
         int nbytes = zmq_msg_send(msg.handle(), _handle, static_cast<int>(flags));
         if (nbytes >= 0)
             return static_cast<size_t>(nbytes);
-        if (zmq_errno() == EAGAIN)
+        if (zmq_errno() == EAGAIN || zmq_errno() == EINTR)
             return {};
         throw error_t();
     }
@@ -1999,7 +1999,7 @@ class socket_base
         int nbytes = zmq_recv(_handle, buf_, len_, flags_);
         if (nbytes >= 0)
             return static_cast<size_t>(nbytes);
-        if (zmq_errno() == EAGAIN)
+        if (zmq_errno() == EAGAIN || zmq_errno() == EINTR)
             return 0;
         throw error_t();
     }
@@ -2011,7 +2011,7 @@ class socket_base
         int nbytes = zmq_msg_recv(msg_->handle(), _handle, flags_);
         if (nbytes >= 0)
             return true;
-        if (zmq_errno() == EAGAIN)
+        if (zmq_errno() == EAGAIN || zmq_errno() == EINTR)
             return false;
         throw error_t();
     }
@@ -2028,7 +2028,7 @@ class socket_base
               (std::min)(static_cast<size_t>(nbytes), buf.size()),
               static_cast<size_t>(nbytes)};
         }
-        if (zmq_errno() == EAGAIN)
+        if (zmq_errno() == EAGAIN || zmq_errno() == EINTR)
             return {};
         throw error_t();
     }
@@ -2042,7 +2042,7 @@ class socket_base
             assert(msg.size() == static_cast<size_t>(nbytes));
             return static_cast<size_t>(nbytes);
         }
-        if (zmq_errno() == EAGAIN)
+        if (zmq_errno() == EAGAIN || zmq_errno() == EINTR)
             return {};
         throw error_t();
     }
@@ -2730,7 +2730,7 @@ template<typename T = no_user_data> class poller_t
             return static_cast<size_t>(rc);
 
 #if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 3)
-        if (zmq_errno() == EAGAIN)
+        if (zmq_errno() == EAGAIN || zmq_errno() == EINTR)
 #else
         if (zmq_errno() == ETIMEDOUT)
 #endif
