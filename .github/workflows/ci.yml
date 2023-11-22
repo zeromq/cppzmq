@@ -16,7 +16,7 @@ jobs:
         cc: ["gcc-10"]
         cxx: ["g++-10"]
         drafts: ["ON"]
-        libzmq: ["4.3.4"]
+        libzmq: ["4.3.5"]
         libzmqbuild: ["cmake"]
         include:
           # older libzmq and without draft
@@ -33,7 +33,7 @@ jobs:
             cc: "gcc-11"
             cxx: "g++-11"
             drafts: "OFF"
-            libzmq: "4.3.4"
+            libzmq: "4.3.5"
             libzmqbuild: "cmake"
           # coverage (gcc version should match gcov version)
           - os: "ubuntu-20.04"
@@ -41,7 +41,7 @@ jobs:
             cc: "gcc-9"
             cxx: "g++-9"
             drafts: "ON"
-            libzmq: "4.3.4"
+            libzmq: "4.3.5"
             libzmqbuild: "cmake"
             coverage: "-DCOVERAGE=ON"
             aptinstall: "lcov"
@@ -51,7 +51,7 @@ jobs:
             cc: "clang-12"
             cxx: "clang++-12"
             drafts: "ON"
-            libzmq: "4.3.4"
+            libzmq: "4.3.5"
             libzmqbuild: "cmake"
           # macos
           - os: "macos-latest"
@@ -59,7 +59,7 @@ jobs:
             cc: "clang"
             cxx: "clang++"
             drafts: "OFF"
-            libzmq: "4.3.4"
+            libzmq: "4.3.5"
             libzmqbuild: false
             brewinstall: "zeromq"
           # windows
@@ -68,7 +68,7 @@ jobs:
             cc: "msbuild"
             cxx: "msbuild"
             drafts: "ON"
-            libzmq: "4.3.4"
+            libzmq: "4.3.5"
             libzmqbuild: "cmake"
             platform: "-Ax64"
           - os: "windows-2022"
@@ -76,7 +76,7 @@ jobs:
             cc: "msbuild"
             cxx: "msbuild"
             drafts: "ON"
-            libzmq: "4.3.4"
+            libzmq: "4.3.5"
             libzmqbuild: "cmake"
             platform: "-Ax64"
 
