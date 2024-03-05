@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include <zmq_addon.hpp>
 
 #ifdef ZMQ_CPP11
