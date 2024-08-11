@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include <zmq.hpp>
 
 #if (__cplusplus >= 201703L)
