@@ -26,18 +26,6 @@ if (NOT TARGET libzmq AND NOT TARGET libzmq-static)
   endif()
 endif()
 
-if (EXISTS "${CMAKE_SOURCE_DIR}/.git")
-    OPTION (ENABLE_DRAFTS "Build and install draft classes and methods" ON)
-else ()
-    OPTION (ENABLE_DRAFTS "Build and install draft classes and methods" OFF)
-endif ()
-if (ENABLE_DRAFTS)
-    ADD_DEFINITIONS (-DZMQ_BUILD_DRAFT_API)
-    set (pkg_config_defines "-DZMQ_BUILD_DRAFT_API=1")
-else (ENABLE_DRAFTS)
-    set (pkg_config_defines "")
-endif (ENABLE_DRAFTS)
-
 message(STATUS "cppzmq v${cppzmq_VERSION}")
 
 set(CPPZMQ_HEADERS
