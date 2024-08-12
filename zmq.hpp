@@ -2387,6 +2387,8 @@ class monitor_t
 
         _socket = socket_ref();
     }
+
+    virtual void on_monitor_stopped() {}
 #endif
     virtual void on_monitor_started() {}
     virtual void on_event_connected(const zmq_event_t &event_, const char *addr_)
@@ -2528,6 +2530,7 @@ class monitor_t
 
 #ifdef ZMQ_EVENT_MONITOR_STOPPED
         if (event->event == ZMQ_EVENT_MONITOR_STOPPED) {
+            on_monitor_stopped();
             return false;
         }
 
