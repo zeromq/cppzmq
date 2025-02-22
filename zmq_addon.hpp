@@ -451,44 +451,44 @@ class multipart_t
     bool empty() const { return m_parts.empty(); }
 
     // Receive multipart message from socket
-    bool recv(socket_ref socket, int flags = 0)
+    bool recv(socket_ref socket, recv_flags flags = recv_flags::none)
     {
         clear();
         bool more = true;
         while (more) {
             message_t message;
-#ifdef ZMQ_CPP11
-            if (!socket.recv(message, static_cast<recv_flags>(flags)))
-                return false;
-#else
             if (!socket.recv(&message, flags))
                 return false;
-#endif
             more = message.more();
             add(std::move(message));
         }
         return true;
     }
 
+    // Receive multipart message from socket (old)
+    bool recv(socket_ref socket, int flags = 0) {
+        return recv(socket, static_cast<recv_flags>(flags));
+    }
+
     // Send multipart message to socket
-    bool send(socket_ref socket, int flags = 0)
+    bool send(socket_ref socket, send_flags flags = send_flags::none)
     {
         flags &= ~(ZMQ_SNDMORE);
         bool more = size() > 0;
         while (more) {
             message_t message = pop();
             more = size() > 0;
-#ifdef ZMQ_CPP11
-            if (!socket.send(message, static_cast<send_flags>(
-                                        (more ? ZMQ_SNDMORE : 0) | flags)))
-                return false;
-#else
             if (!socket.send(message, (more ? ZMQ_SNDMORE : 0) | flags))
                 return false;
-#endif
         }
         clear();
         return true;
+    }
+
+    // Send multipart message to socket (old)
+    bool send(socket_ref socket, int flags = 0)
+    {
+        return send(socket, static_cast<send_flags>(flags));
     }
 
     // Concatenate other multipart to front
