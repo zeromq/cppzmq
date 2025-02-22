@@ -194,5 +194,5 @@ cpp zmq (which will also include libzmq for you).
 ```
 #find cppzmq wrapper, installed by make of cppzmq
 find_package(cppzmq)
-target_link_libraries(*Your Project Name* cppzmq)
+target_link_libraries(*Your Project Name* cppzmq-static)
 ```
