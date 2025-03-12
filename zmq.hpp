@@ -1364,19 +1364,19 @@ constexpr const_buffer str_buffer(const Char (&data)[N]) noexcept
 
 namespace literals
 {
-constexpr const_buffer operator"" _zbuf(const char *str, size_t len) noexcept
+constexpr const_buffer operator""_zbuf(const char *str, size_t len) noexcept
 {
     return const_buffer(str, len * sizeof(char));
 }
-constexpr const_buffer operator"" _zbuf(const wchar_t *str, size_t len) noexcept
+constexpr const_buffer operator""_zbuf(const wchar_t *str, size_t len) noexcept
 {
     return const_buffer(str, len * sizeof(wchar_t));
 }
-constexpr const_buffer operator"" _zbuf(const char16_t *str, size_t len) noexcept
+constexpr const_buffer operator""_zbuf(const char16_t *str, size_t len) noexcept
 {
     return const_buffer(str, len * sizeof(char16_t));
 }
-constexpr const_buffer operator"" _zbuf(const char32_t *str, size_t len) noexcept
+constexpr const_buffer operator""_zbuf(const char32_t *str, size_t len) noexcept
 {
     return const_buffer(str, len * sizeof(char32_t));
 }
