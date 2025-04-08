@@ -1,6 +1,6 @@
 #pragma once
 
-#include "zmq_addon.hpp"
+#include <zmq_addon.hpp>
 #include <boost/asio/any_io_executor.hpp>
 #include <boost/system/detail/error_code.hpp>
 #include <stdexcept>
@@ -11,17 +11,15 @@
 #if !defined(ZMQ_CPP20) && defined(CPPZMQ_ENABLE_CORRAL_COROUTINE)
 #error "Coroutine support enabled with a C++ standard lower than C++20"
 #endif
-#if defined(CPPZMQ_ENABLE_CORRAL_COROUTINE)
-#include <corral/Task.h>
-#include <boost/asio/posix/stream_descriptor.hpp>
-#include <boost/asio/windows/stream_handle.hpp>
-#endif
-
-
-#ifdef ZMQ_CPP20
+#if defined(ZMQ_CPP20) && defined(CPPZMQ_ENABLE_CORRAL_COROUTINE)
 // As coroutine support is only avaiable for C++20 and upward,
 // there is no point in using the ZMQ_XXX macros for compatibility.
 // Everything that's available in C++20 can be used here (e.g. inline, noexcept).
+
+#include <corral/Task.h>
+#include <boost/asio/posix/stream_descriptor.hpp>
+#include <boost/asio/windows/stream_handle.hpp>
+
 namespace zmq
 {
 
@@ -91,10 +89,6 @@ struct [[nodiscard]] async_send_awaitable_t
         m_is_sending_multipart(is_sending_multipart)
     {
     }
-
-  public /* interface */:
-    inline auto enable_flag(zmq::send_flags flag) { m_flags = m_flags | flag; }
-    inline auto disable_flag(zmq::send_flags flag) { m_flags = m_flags & (~flag); }
 
   public /* awaitable */:
     ///
