@@ -2,10 +2,12 @@
 
 #include <zmq_addon.hpp>
 #include <boost/asio/any_io_executor.hpp>
-#include <boost/system/detail/error_code.hpp>
 #include <stdexcept>
 #include <utility>
 #include <zmq.hpp>
+#include <coroutine>
+#include <boost/asio/posix/stream_descriptor.hpp>
+#include <boost/asio/windows/stream_handle.hpp>
 
 
 #if !defined(ZMQ_CPP20) && defined(CPPZMQ_ENABLE_CORRAL_COROUTINE)
@@ -16,9 +18,6 @@
 // there is no point in using the ZMQ_XXX macros for compatibility.
 // Everything that's available in C++20 can be used here (e.g. inline, noexcept).
 
-#include <corral/Task.h>
-#include <boost/asio/posix/stream_descriptor.hpp>
-#include <boost/asio/windows/stream_handle.hpp>
 
 namespace zmq
 {

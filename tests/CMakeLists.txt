@@ -52,6 +52,7 @@ if (CPPZMQ_TEST_COROUTINE)
     target_sources(
       unit_tests PRIVATE
       async/corral/message.cpp
+      async/corral/common.hpp
     )
 endif()
 
