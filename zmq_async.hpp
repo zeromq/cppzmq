@@ -35,8 +35,8 @@ using native_fd_watcher_t =
 class recv_error_t : public std::exception
 {
   public:
-    explicit recv_error_t() noexcept = default;
-    virtual const char *what() const noexcept override
+    inline explicit recv_error_t() noexcept = default;
+    inline virtual const char *what() const noexcept override
     {
         return "Failed receiving ZeroMQ message.";
     }
@@ -45,8 +45,8 @@ class recv_error_t : public std::exception
 class send_error_t : public std::exception
 {
   public:
-    explicit send_error_t() noexcept = default;
-    virtual const char *what() const noexcept override
+    inline explicit send_error_t() noexcept = default;
+    inline virtual const char *what() const noexcept override
     {
         return "Failed sending ZeroMQ message.";
     }
@@ -583,7 +583,7 @@ struct socket_t
     // Set integral socket option, e.g.
     // `socket.set(zmq::sockopt::linger, 0)`
     template<int Opt, class T, bool BoolUnit>
-    void set(sockopt::integral_option<Opt, T, BoolUnit> _, const T &val)
+    inline void set(sockopt::integral_option<Opt, T, BoolUnit> _, const T &val)
     {
         m_socket.set(_, val);
     }
@@ -591,7 +591,7 @@ struct socket_t
     // Set integral socket option from boolean, e.g.
     // `socket.set(zmq::sockopt::immediate, false)`
     template<int Opt, class T>
-    void set(sockopt::integral_option<Opt, T, true> _, bool val)
+    inline void set(sockopt::integral_option<Opt, T, true> _, bool val)
     {
         m_socket.set(_, val);
     }
@@ -599,7 +599,7 @@ struct socket_t
     // Set array socket option, e.g.
     // `socket.set(zmq::sockopt::plain_username, "foo123")`
     template<int Opt, int NullTerm>
-    void set(sockopt::array_option<Opt, NullTerm> _, const char *buf)
+    inline void set(sockopt::array_option<Opt, NullTerm> _, const char *buf)
     {
         m_socket.set(_, buf);
     }
@@ -607,7 +607,7 @@ struct socket_t
     // Set array socket option, e.g.
     // `socket.set(zmq::sockopt::routing_id, zmq::buffer(id))`
     template<int Opt, int NullTerm>
-    void set(sockopt::array_option<Opt, NullTerm> _, const_buffer buf)
+    inline void set(sockopt::array_option<Opt, NullTerm> _, const_buffer buf)
     {
         m_socket.set(_, buf);
     }
@@ -615,7 +615,7 @@ struct socket_t
     // Set array socket option, e.g.
     // `socket.set(zmq::sockopt::routing_id, id_str)`
     template<int Opt, int NullTerm>
-    void set(sockopt::array_option<Opt, NullTerm> _, const std::string &buf)
+    inline void set(sockopt::array_option<Opt, NullTerm> _, const std::string &buf)
     {
         m_socket.set(_, buf);
     }
@@ -623,7 +623,7 @@ struct socket_t
     // Set array socket option, e.g.
     // `socket.set(zmq::sockopt::routing_id, id_str)`
     template<int Opt, int NullTerm>
-    void set(sockopt::array_option<Opt, NullTerm> _, std::string_view buf)
+    inline void set(sockopt::array_option<Opt, NullTerm> _, std::string_view buf)
     {
         m_socket.set(_, buf);
     }
@@ -634,7 +634,7 @@ struct socket_t
         return m_socket.unbind(std::move(addr));
     }
 
-    auto &get_socket() { return m_socket; }
+    inline auto &get_socket() { return m_socket; }
 
   private:
     zmq::socket_t m_socket;
