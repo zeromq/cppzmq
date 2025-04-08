@@ -60,6 +60,9 @@
 #if CPPZMQ_LANG >= 201703L
 #define ZMQ_CPP17
 #endif
+#if CPPZMQ_LANG >= 202002L
+#define ZMQ_CPP20
+#endif
 
 #if defined(ZMQ_CPP14) && !defined(_MSC_VER)
 #define ZMQ_DEPRECATED(msg) [[deprecated(msg)]]

@@ -1,0 +1,3 @@
+[submodule "tests/third_party/corral"]
+	path = tests/third_party/corral
+	url = https://github.com/hudson-trading/corral

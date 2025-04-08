@@ -1,3 +1,6 @@
+OPTION (COVERAGE "Enable gcda file generation needed by lcov" OFF)
+OPTION (CPPZMQ_TEST_COROUTINE "Enable C++20 coroutine support test cases. This requires Boost.Asio" ON)
+
 find_package(Threads)
 
 find_package(Catch2 QUIET)
@@ -32,6 +35,26 @@ add_executable(
     utilities.cpp
 )
 
+if (CPPZMQ_TEST_COROUTINE)
+    target_compile_features(
+      unit_tests PRIVATE cxx_std_23
+    )
+    target_compile_definitions(
+      unit_tests PRIVATE
+      CPPZMQ_ENABLE_CORRAL_COROUTINE
+    )
+    find_package(Boost CONFIG REQUIRED COMPONENTS asio)
+    target_include_directories(unit_tests PRIVATE third_party/corral)
+        target_link_libraries(
+        unit_tests
+        PRIVATE Boost::asio
+    )
+    target_sources(
+      unit_tests PRIVATE
+      async/corral/message.cpp
+    )
+endif()
+
 target_include_directories(unit_tests PUBLIC ${CATCH_MODULE_PATH})
 target_link_libraries(
     unit_tests
@@ -40,7 +63,6 @@ target_link_libraries(
     PRIVATE ${CMAKE_THREAD_LIBS_INIT}
 )
 
-OPTION (COVERAGE "Enable gcda file generation needed by lcov" OFF)
 
 if (COVERAGE)
     target_compile_options(unit_tests PRIVATE --coverage)

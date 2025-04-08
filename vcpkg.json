@@ -1,0 +1,21 @@
+{
+  "name": "cppzmq",
+  "version-semver": "4.10.0",
+  "features": {
+    "coroutine": {
+      "description": "Dependencies for enabling C++ 20 coroutine support",
+      "dependencies": [
+        "boost-asio"
+      ]
+    },
+    "test": {
+      "description": "Dependencies for testing",
+      "dependencies": [
+        {
+          "name": "catch2",
+          "version>=": "3.5.3"
+        }
+      ]
+    }
+  }
+}
