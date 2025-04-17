@@ -2794,6 +2794,70 @@ inline std::ostream &operator<<(std::ostream &os, const message_t &msg)
     return os << msg.str();
 }
 
+using timer_id_t = int;
+
+class timers_t
+{
+  public:
+    timers_t() : _timers(zmq_timers_new())
+    {
+        if (_timers == nullptr)
+            throw error_t();
+    }
+
+    timers_t(timers_t &other) = delete;
+
+    ~timers_t() { ZMQ_ASSERT(zmq_timers_destroy(&_timers) == 0); }
+
+    timer_id_t
+    add(std::chrono::milliseconds interval, zmq_timer_fn handler, void *arg)
+    {
+        int timer_id = zmq_timers_add(_timers, interval.count(), handler, arg);
+        if (timer_id == -1)
+            throw zmq::error_t();
+        return timer_id;
+    }
+
+    void cancel(timer_id_t timer_id)
+    {
+        int rc = zmq_timers_cancel(_timers, timer_id);
+        if (rc == -1)
+            throw zmq::error_t();
+    }
+
+    void set_interval(timer_id_t timer_id, std::chrono::milliseconds interval)
+    {
+        int rc = zmq_timers_set_interval(_timers, timer_id, interval.count());
+        if (rc == -1)
+            throw zmq::error_t();
+    }
+
+    void reset(timer_id_t timer_id)
+    {
+        int rc = zmq_timers_reset(_timers, timer_id);
+        if (rc == -1)
+            throw zmq::error_t();
+    }
+
+    std::optional<std::chrono::milliseconds> timeout() const
+    {
+        int timeout = zmq_timers_timeout(_timers);
+        if (timeout == -1)
+            return std::nullopt;
+        return std::chrono::milliseconds{timeout};
+    }
+
+    void execute()
+    {
+        int rc = zmq_timers_execute(_timers);
+        if (rc == -1)
+            throw zmq::error_t();
+    }
+
+  private:
+    void *_timers;
+};
+
 } // namespace zmq
 
 #endif // __ZMQ_HPP_INCLUDED__
