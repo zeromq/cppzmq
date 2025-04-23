@@ -116,6 +116,12 @@ jobs:
         cmake --build libzmq-build --config ${BUILDTYPE} -j ${THREADS}
         echo "LIBZMQ=${PWD}/libzmq-build" >> ${GITHUB_ENV}
 
+    - name: post_build_libzmq_cmake
+      if: ${{ matrix.libzmqbuild == 'cmake' && matrix.os == 'windows*' }}
+      run: |
+        mkdir -p build/tests/${BUILDTYPE}
+        cp ${{ env.LIBZMQ }}/bin/${BUILDTYPE}/*.dll build/tests/${BUILDTYPE}
+
     - name: build_libzmq_pkgconfig
       if: ${{ matrix.libzmqbuild == 'pkgconfig' }}
       working-directory: libzmq-${{ matrix.libzmq }}
