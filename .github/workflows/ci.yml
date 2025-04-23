@@ -117,7 +117,7 @@ jobs:
         echo "LIBZMQ=${PWD}/libzmq-build" >> ${GITHUB_ENV}
 
     - name: post_build_libzmq_cmake
-      if: ${{ matrix.libzmqbuild == 'cmake' && matrix.os == 'windows*' }}
+      if: ${{ matrix.libzmqbuild == 'cmake' && startsWith(matrix.os, 'windows') }}
       run: |
         mkdir -p build/tests/${BUILDTYPE}
         cp ${{ env.LIBZMQ }}/bin/${BUILDTYPE}/*.dll build/tests/${BUILDTYPE}
@@ -151,7 +151,7 @@ jobs:
 
     - name: demo
       # probably need to install libzmq and cppzmq for this to work on windows
-      if: ${{ matrix.os == 'ubuntu*' }}
+      if: ${{ matrix.os == 'ubuntu-24.04' }}
       env:
         CMAKE_PREFIX_PATH: ${{ env.LIBZMQ }}:${{ env.CPPZMQ }}
       run: |
