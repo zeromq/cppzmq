@@ -30,6 +30,7 @@ add_executable(
     codec_multipart.cpp
     monitor.cpp
     utilities.cpp
+    timers.cpp
 )
 
 target_include_directories(unit_tests PUBLIC ${CATCH_MODULE_PATH})
