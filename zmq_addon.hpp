@@ -300,7 +300,7 @@ message_t encode(const Range &parts)
 
         if (part_size < (std::numeric_limits<std::uint8_t>::max)()) {
             // small part
-            *buf++ = (unsigned char) part_size;
+            *buf++ = static_cast<unsigned char>(part_size);
         } else {
             // big part
             *buf++ = (std::numeric_limits<uint8_t>::max)();
