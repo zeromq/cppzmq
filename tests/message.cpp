@@ -196,6 +196,24 @@ TEST_CASE("message to string", "[message]")
 #endif
 }
 
+TEST_CASE("message to debug string", "[message]")
+{
+    const zmq::message_t a;
+    const zmq::message_t b("Foo", 3);
+    const zmq::message_t c("ascii\x01\x02\x03%%%\x04\x05\x06###", 17);
+    const zmq::message_t d("\x01\x02\x03|||", 6);
+    CHECK(a.str() == "zmq::message_t [size 000] ()");
+    CHECK(b.str() == "zmq::message_t [size 003] (Foo)");
+    CHECK(c.str() == "zmq::message_t [size 017] (ascii 010203 %%% 040506 ###)");
+    CHECK(d.str() == "zmq::message_t [size 006] (010203 |||)");
+    // With max_size
+    CHECK(a.str(100) == "zmq::message_t [size 000] ()");
+    CHECK(b.str(2) == "zmq::message_t [size 003] (Fo... too big to print)");
+    CHECK(c.str(10)
+          == "zmq::message_t [size 017] (ascii 010203 %%... too big to print)");
+    CHECK(d.str(2) == "zmq::message_t [size 006] (0102... too big to print)");
+}
+
 #if defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 0)
 TEST_CASE("message routing id persists", "[message]")
 {
