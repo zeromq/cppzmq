@@ -697,19 +697,16 @@ class message_t
         std::stringstream os;
 
         const unsigned char *msg_data = this->data<unsigned char>();
-        unsigned char byte;
-        size_t size_to_print = std::min(this->size(), max_size);
+        size_t size_to_print = (std::min)(this->size(), max_size);
         int is_ascii[2] = {0, 0};
         // Set is_ascii for the first character
-        if (size_to_print > 0) {
-            byte = *msg_data;
-            is_ascii[0] = (byte >= 32 && byte < 127);
-        }
+        if (size_to_print > 0)
+            is_ascii[0] = (*msg_data >= 32 && *msg_data < 127);
 
         os << "zmq::message_t [size " << std::dec << std::setw(3)
            << std::setfill('0') << this->size() << "] (";
         while (size_to_print--) {
-            byte = *msg_data++;
+            const unsigned char byte = *msg_data++;
 
             is_ascii[1] = (byte >= 32 && byte < 127);
             if (is_ascii[1] != is_ascii[0])
