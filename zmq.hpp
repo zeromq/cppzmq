@@ -691,39 +691,40 @@ class message_t
     *   Use to_string() or to_string_view() for
     *   interpreting the message as a string.
     */
-    std::string str() const
+    std::string str(size_t max_size = 1000) const
     {
         // Partly mutuated from the same method in zmq::multipart_t
         std::stringstream os;
 
         const unsigned char *msg_data = this->data<unsigned char>();
-        unsigned char byte;
-        size_t size = this->size();
+        size_t size_to_print = (std::min)(this->size(), max_size);
         int is_ascii[2] = {0, 0};
+        // Set is_ascii for the first character
+        if (size_to_print > 0)
+            is_ascii[0] = (*msg_data >= 32 && *msg_data < 127);
 
         os << "zmq::message_t [size " << std::dec << std::setw(3)
-           << std::setfill('0') << size << "] (";
-        // Totally arbitrary
-        if (size >= 1000) {
-            os << "... too big to print)";
-        } else {
-            while (size--) {
-                byte = *msg_data++;
+           << std::setfill('0') << this->size() << "] (";
+        while (size_to_print--) {
+            const unsigned char byte = *msg_data++;
 
-                is_ascii[1] = (byte >= 32 && byte < 127);
-                if (is_ascii[1] != is_ascii[0])
-                    os << " "; // Separate text/non text
+            is_ascii[1] = (byte >= 32 && byte < 127);
+            if (is_ascii[1] != is_ascii[0])
+                os << " "; // Separate text/non text
 
-                if (is_ascii[1]) {
-                    os << byte;
-                } else {
-                    os << std::hex << std::uppercase << std::setw(2)
-                       << std::setfill('0') << static_cast<short>(byte);
-                }
-                is_ascii[0] = is_ascii[1];
+            if (is_ascii[1]) {
+                os << byte;
+            } else {
+                os << std::hex << std::uppercase << std::setw(2) << std::setfill('0')
+                   << static_cast<short>(byte);
             }
-            os << ")";
+            is_ascii[0] = is_ascii[1];
         }
+        // Elide the rest if the message is too large
+        if (max_size < this->size())
+            os << "... too big to print)";
+        else
+            os << ")";
         return os.str();
     }
 
