@@ -84,8 +84,8 @@ TEST_CASE("multipart legacy test", "[multipart]")
     assert(copy != multipart);
     assert(multipart != copy);
 
-    multipart_t emptyMessage1 {};
-    multipart_t emptyMessage2 {};
+    multipart_t emptyMessage1{};
+    multipart_t emptyMessage2{};
 
     assert(emptyMessage1 == emptyMessage2);
     assert(emptyMessage2 == emptyMessage1);

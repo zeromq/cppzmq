@@ -365,8 +365,7 @@ TEST_CASE("socket check integral options", "[socket]")
                             "router_mandatory", true);
 #endif
 #ifdef ZMQ_ROUTER_RAW
-    check_integral_opt<int>(zmq::sockopt::router_raw, router, "router_raw", 
-                            true);
+    check_integral_opt<int>(zmq::sockopt::router_raw, router, "router_raw", true);
 #endif
 #ifdef ZMQ_ROUTER_NOTIFY
     check_integral_opt<int>(zmq::sockopt::router_notify, router, "router_notify");
@@ -411,7 +410,8 @@ TEST_CASE("socket check integral options", "[socket]")
 #ifdef ZMQ_TYPE
     check_integral_opt_get<int>(zmq::sockopt::type, router, "type");
 #ifdef ZMQ_CPP11
-    check_integral_opt_get<zmq::socket_type>(zmq::sockopt::socket_type, router, "socket_type");
+    check_integral_opt_get<zmq::socket_type>(zmq::sockopt::socket_type, router,
+                                             "socket_type");
 #endif // ZMQ_CPP11
 #endif // ZMQ_TYPE
 
