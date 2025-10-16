@@ -805,7 +805,8 @@ class active_poller_t
         base_poller.modify(fd, events);
     }
 
-    size_t wait(std::chrono::milliseconds timeout)
+    template<typename Duration = std::chrono::milliseconds>
+    size_t wait(Duration timeout)
     {
         if (need_rebuild) {
             poller_events.resize(handlers.size());
@@ -816,7 +817,8 @@ class active_poller_t
             }
             need_rebuild = false;
         }
-        const auto count = base_poller.wait_all(poller_events, timeout);
+        auto timeout_ms = std::chrono::duration_cast<Duration>(timeout);
+        const auto count = base_poller.wait_all(poller_events, timeout_ms);
         std::for_each(poller_events.begin(),
                       poller_events.begin() + static_cast<ptrdiff_t>(count),
                       [](decltype(base_poller)::event_type &event) {
