@@ -2366,6 +2366,63 @@ class monitor_t
         on_monitor_started();
     }
 
+    operator void *() ZMQ_NOTHROW { return handle(); }
+
+    operator void const *() const ZMQ_NOTHROW { return handle(); }
+
+    ZMQ_NODISCARD void *handle() ZMQ_NOTHROW { return _monitor_socket.handle(); }
+
+    ZMQ_NODISCARD const void *handle() const ZMQ_NOTHROW { return _monitor_socket.handle(); }
+
+    operator socket_ref() ZMQ_NOTHROW { return (zmq::socket_ref) _monitor_socket; }
+
+#if ZMQ_VERSION_MAJOR >= 4
+    bool get_event(zmq_event_t& eventMsg, std::string& address, zmq::recv_flags flags = zmq::recv_flags::none)
+    {
+        assert(_monitor_socket);
+
+        eventMsg.event = 0;
+        eventMsg.value = 0;
+        address = std::string();
+
+        {
+            message_t msg;
+            int rc = zmq_msg_recv(msg.handle(), _monitor_socket.handle(),
+                static_cast<int>(flags));
+
+            if (rc == -1)
+            {
+                if (zmq_errno() == ETERM || zmq_errno() == EAGAIN)
+                    return false;
+                else
+                    throw error_t();
+            }
+
+            const char *data = msg.data<char>();
+            memcpy(&eventMsg.event, data, sizeof(uint16_t));
+            data += sizeof(uint16_t);
+            memcpy(&eventMsg.value, data, sizeof(int32_t));
+        }
+
+        message_t addrMsg;
+        int rc = zmq_msg_recv(addrMsg.handle(), _monitor_socket.handle(),
+            static_cast<int>(flags));
+
+        if (rc == -1)
+        {
+            if (zmq_errno() == ETERM)
+                return false;
+            else
+                throw error_t();
+        }
+
+        const char *str = addrMsg.data<char>();
+        address = std::string(str, str + addrMsg.size());
+
+        return true;
+    }
+#endif
+
     bool check_event(int timeout = 0)
     {
         assert(_monitor_socket);
@@ -2394,6 +2451,15 @@ class monitor_t
 
     virtual void on_monitor_stopped() {}
 #endif
+
+    void close() ZMQ_NOTHROW
+    {
+#ifdef ZMQ_EVENT_MONITOR_STOPPED
+        abort();
+#endif
+        _monitor_socket = socket_t();
+    }
+
     virtual void on_monitor_started() {}
     virtual void on_event_connected(const zmq_event_t &event_, const char *addr_)
     {
@@ -2608,13 +2674,6 @@ class monitor_t
 
     socket_ref _socket;
     socket_t _monitor_socket;
-
-    void close() ZMQ_NOTHROW
-    {
-        if (_socket)
-            zmq_socket_monitor(_socket.handle(), ZMQ_NULLPTR, 0);
-        _monitor_socket.close();
-    }
 };
 
 #if defined(ZMQ_BUILD_DRAFT_API) && defined(ZMQ_CPP11) && defined(ZMQ_HAVE_POLLER)

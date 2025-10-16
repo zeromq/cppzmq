@@ -68,7 +68,7 @@ TEST_CASE("monitor move assign", "[monitor]")
     }
 }
 
-TEST_CASE("monitor init event count", "[monitor]")
+TEST_CASE("monitor init check event count", "[monitor]")
 {
     common_server_client_setup s{false};
     mock_monitor_t monitor;
@@ -83,6 +83,93 @@ TEST_CASE("monitor init event count", "[monitor]")
     }
     CHECK(monitor.connected == 1);
     CHECK(monitor.total == expected_event_count);
+}
+
+TEST_CASE("monitor init get event count", "[monitor]")
+{
+    common_server_client_setup s{ false };
+    zmq::monitor_t monitor;
+
+    const int expected_event_count = 2;
+    monitor.init(s.client, "inproc://foo");
+
+    int total{ 0 };
+    int connect_delayed{ 0 };
+    int connected{ 0 };
+
+    auto lbd_count_event = [&](const zmq_event_t& event) {
+        switch (event.event)
+        {
+        case ZMQ_EVENT_CONNECT_DELAYED:
+            connect_delayed++;
+            total++;
+            break;
+
+        case ZMQ_EVENT_CONNECTED:
+            connected++;
+            total++;
+            break;
+        }
+    };
+
+    zmq_event_t eventMsg;
+    std::string address;
+    CHECK_FALSE(monitor.get_event(eventMsg, address, zmq::recv_flags::dontwait));
+    s.init();
+
+    SECTION("get_event")
+    {
+        while (total < expected_event_count)
+        {
+            if (!monitor.get_event(eventMsg, address))
+                continue;
+
+            lbd_count_event(eventMsg);
+        }
+
+    }
+
+    SECTION("poll get_event")
+    {
+        while (total < expected_event_count)
+        {
+            zmq::pollitem_t items[] = {
+                { monitor.handle(), 0, ZMQ_POLLIN, 0 },
+            };
+
+            zmq::poll(&items[0], 1, 100);
+
+            if (!(items[0].revents & ZMQ_POLLIN)) {
+                continue;
+            }
+
+            CHECK(monitor.get_event(eventMsg, address));
+
+            lbd_count_event(eventMsg);
+        }
+    }
+
+    SECTION("poller_t get_event")
+    {
+        zmq::poller_t<> poller;
+        CHECK_NOTHROW(poller.add(monitor, zmq::event_flags::pollin));
+
+        while (total < expected_event_count)
+        {
+            std::vector<zmq::poller_event<>> events(1);
+            if(0 == poller.wait_all(events, std::chrono::milliseconds{ 100 }))
+                continue;
+
+            CHECK(zmq::event_flags::pollin == events[0].events);
+            CHECK(monitor.get_event(eventMsg, address));
+
+            lbd_count_event(eventMsg);
+        }
+    }
+
+    CHECK(connect_delayed == 1);
+    CHECK(connected == 1);
+    CHECK(total == expected_event_count);
 }
 
 TEST_CASE("monitor init abort", "[monitor]")
