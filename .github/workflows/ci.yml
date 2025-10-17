@@ -134,7 +134,8 @@ jobs:
 
     - name: format
       run: |
-         git ls-files | grep -E '\.(cpp|hpp)' | xargs clang-format --dry-run --Werror
+        clang-format --version
+        git ls-files | grep -E '\.(cpp|hpp)' | xargs clang-format --dry-run --Werror
 
     - name: build
       env:

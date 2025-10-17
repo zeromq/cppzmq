@@ -30,6 +30,15 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
+// To avoid the `(std::min)` workaround for when a min macro is defined
+#ifdef min
+#define WINDOWS_MIN min
+#undef min
+#endif
+#ifdef max
+#define WINDOWS_MAX max
+#undef max
+#endif
 #endif
 
 // included here for _HAS_CXX* macros
@@ -701,7 +710,7 @@ class message_t
         std::stringstream os;
 
         const unsigned char *msg_data = this->data<unsigned char>();
-        size_t size_to_print = (std::min) (this->size(), max_size);
+        size_t size_to_print = std::min(this->size(), max_size);
         int is_ascii[2] = {0, 0};
         // Set is_ascii for the first character
         if (size_to_print > 0)
@@ -1101,8 +1110,7 @@ class mutable_buffer
     constexpr size_t size() const noexcept { return _size; }
     mutable_buffer &operator+=(size_t n) noexcept
     {
-        // (std::min) is a workaround for when a min macro is defined
-        const auto shift = (std::min) (n, _size);
+        const auto shift = std::min(n, _size);
         _data = static_cast<char *>(_data) + shift;
         _size -= shift;
         return *this;
@@ -1115,8 +1123,8 @@ class mutable_buffer
 
 inline mutable_buffer operator+(const mutable_buffer &mb, size_t n) noexcept
 {
-    return mutable_buffer(static_cast<char *>(mb.data()) + (std::min) (n, mb.size()),
-                          mb.size() - (std::min) (n, mb.size()));
+    return mutable_buffer(static_cast<char *>(mb.data()) + std::min(n, mb.size()),
+                          mb.size() - std::min(n, mb.size()));
 }
 inline mutable_buffer operator+(size_t n, const mutable_buffer &mb) noexcept
 {
@@ -1142,7 +1150,7 @@ class const_buffer
     constexpr size_t size() const noexcept { return _size; }
     const_buffer &operator+=(size_t n) noexcept
     {
-        const auto shift = (std::min) (n, _size);
+        const auto shift = std::min(n, _size);
         _data = static_cast<const char *>(_data) + shift;
         _size -= shift;
         return *this;
@@ -1156,8 +1164,8 @@ class const_buffer
 inline const_buffer operator+(const const_buffer &cb, size_t n) noexcept
 {
     return const_buffer(static_cast<const char *>(cb.data())
-                          + (std::min) (n, cb.size()),
-                        cb.size() - (std::min) (n, cb.size()));
+                          + std::min(n, cb.size()),
+                        cb.size() - std::min(n, cb.size()));
 }
 inline const_buffer operator+(size_t n, const const_buffer &cb) noexcept
 {
@@ -1180,7 +1188,7 @@ constexpr mutable_buffer buffer(const mutable_buffer &mb) noexcept
 }
 inline mutable_buffer buffer(const mutable_buffer &mb, size_t n) noexcept
 {
-    return mutable_buffer(mb.data(), (std::min) (mb.size(), n));
+    return mutable_buffer(mb.data(), std::min(mb.size(), n));
 }
 constexpr const_buffer buffer(const const_buffer &cb) noexcept
 {
@@ -1188,7 +1196,7 @@ constexpr const_buffer buffer(const const_buffer &cb) noexcept
 }
 inline const_buffer buffer(const const_buffer &cb, size_t n) noexcept
 {
-    return const_buffer(cb.data(), (std::min) (cb.size(), n));
+    return const_buffer(cb.data(), std::min(cb.size(), n));
 }
 
 namespace detail
@@ -1241,7 +1249,7 @@ auto buffer_contiguous_sequence(Seq &&seq, size_t n_bytes) noexcept
 
     const auto size = seq_size(seq);
     return buffer(size != 0u ? std::addressof(*std::begin(seq)) : nullptr,
-                  (std::min) (size * sizeof(T), n_bytes));
+                  std::min(size * sizeof(T), n_bytes));
 }
 
 } // namespace detail
@@ -2050,7 +2058,7 @@ class socket_base
           zmq_recv(_handle, buf.data(), buf.size(), static_cast<int>(flags));
         if (nbytes >= 0) {
             return recv_buffer_size{
-              (std::min) (static_cast<size_t>(nbytes), buf.size()),
+              std::min(static_cast<size_t>(nbytes), buf.size()),
               static_cast<size_t>(nbytes)};
         }
         if (zmq_errno() == EAGAIN)
@@ -2778,7 +2786,7 @@ template<typename T = no_user_data> class poller_t
     {
         int rc = zmq_poller_size(const_cast<void *>(poller_ptr.get()));
         ZMQ_ASSERT(rc >= 0);
-        return static_cast<size_t>((std::max) (rc, 0));
+        return static_cast<size_t>(std::max(rc, 0));
     }
 #endif
 
@@ -2899,5 +2907,16 @@ class timers
 #endif // defined(ZMQ_CPP11) && defined(ZMQ_HAVE_TIMERS)
 
 } // namespace zmq
+
+#ifdef _WIN32
+#ifdef WINDOWS_MIN
+#define min WINDOWS_MIN
+#undef WINDOWS_MIN
+#endif
+#ifdef WINDOWS_MAX
+#define max WINDOWS_MAX
+#undef WINDOWS_MAX
+#endif
+#endif
 
 #endif // __ZMQ_HPP_INCLUDED__
