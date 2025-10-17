@@ -30,6 +30,15 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
+// To avoid the `(std::min)` workaround for when a min macro is defined
+#ifdef min
+#define WINDOWS_MIN min
+#undef min
+#endif
+#ifdef max
+#define WINDOWS_MAX max
+#undef max
+#endif
 #endif
 
 // included here for _HAS_CXX* macros
@@ -94,7 +103,8 @@
 #define ZMQ_CONSTEXPR_VAR const
 #define ZMQ_CPP11_DEPRECATED(msg)
 #endif
-#if defined(ZMQ_CPP14) && (!defined(_MSC_VER) || _MSC_VER > 1900) && (!defined(__GNUC__) || __GNUC__ > 5 || (__GNUC__ == 5 && __GNUC_MINOR__ > 3))
+#if defined(ZMQ_CPP14) && (!defined(_MSC_VER) || _MSC_VER > 1900)                   \
+  && (!defined(__GNUC__) || __GNUC__ > 5 || (__GNUC__ == 5 && __GNUC_MINOR__ > 3))
 #define ZMQ_EXTENDED_CONSTEXPR
 #endif
 #if defined(ZMQ_CPP17)
@@ -251,8 +261,8 @@ template<class Iter>
 using iter_value_t = typename std::iterator_traits<Iter>::value_type;
 
 template<class Range>
-using range_iter_t = decltype(
-  ranges::begin(std::declval<typename std::remove_reference<Range>::type &>()));
+using range_iter_t = decltype(ranges::begin(
+  std::declval<typename std::remove_reference<Range>::type &>()));
 
 template<class Range> using range_value_t = iter_value_t<range_iter_t<Range>>;
 
@@ -263,9 +273,10 @@ template<class T, class = void> struct is_range : std::false_type
 template<class T>
 struct is_range<
   T,
-  void_t<decltype(
-    ranges::begin(std::declval<typename std::remove_reference<T>::type &>())
-    == ranges::end(std::declval<typename std::remove_reference<T>::type &>()))>>
+  void_t<decltype(ranges::begin(
+                    std::declval<typename std::remove_reference<T>::type &>())
+                  == ranges::end(
+                    std::declval<typename std::remove_reference<T>::type &>()))>>
     : std::true_type
 {
 };
@@ -302,7 +313,8 @@ class error_t : public std::exception
     int errnum;
 };
 
-namespace detail {
+namespace detail
+{
 inline int poll(zmq_pollitem_t *items_, size_t nitems_, long timeout_)
 {
     int rc = zmq_poll(items_, static_cast<int>(nitems_), timeout_);
@@ -334,7 +346,7 @@ inline int
 poll(zmq_pollitem_t const *items, size_t nitems, std::chrono::milliseconds timeout)
 {
     return detail::poll(const_cast<zmq_pollitem_t *>(items), nitems,
-                static_cast<long>(timeout.count()));
+                        static_cast<long>(timeout.count()));
 }
 
 ZMQ_DEPRECATED("from 4.3.1, use poll taking non-const items")
@@ -342,17 +354,19 @@ inline int poll(std::vector<zmq_pollitem_t> const &items,
                 std::chrono::milliseconds timeout)
 {
     return detail::poll(const_cast<zmq_pollitem_t *>(items.data()), items.size(),
-                static_cast<long>(timeout.count()));
+                        static_cast<long>(timeout.count()));
 }
 
 ZMQ_DEPRECATED("from 4.3.1, use poll taking non-const items")
 inline int poll(std::vector<zmq_pollitem_t> const &items, long timeout_ = -1)
 {
-    return detail::poll(const_cast<zmq_pollitem_t *>(items.data()), items.size(), timeout_);
+    return detail::poll(const_cast<zmq_pollitem_t *>(items.data()), items.size(),
+                        timeout_);
 }
 
-inline int
-poll(zmq_pollitem_t *items, size_t nitems, std::chrono::milliseconds timeout = std::chrono::milliseconds{-1})
+inline int poll(zmq_pollitem_t *items,
+                size_t nitems,
+                std::chrono::milliseconds timeout = std::chrono::milliseconds{-1})
 {
     return detail::poll(items, nitems, static_cast<long>(timeout.count()));
 }
@@ -360,7 +374,8 @@ poll(zmq_pollitem_t *items, size_t nitems, std::chrono::milliseconds timeout = s
 inline int poll(std::vector<zmq_pollitem_t> &items,
                 std::chrono::milliseconds timeout = std::chrono::milliseconds{-1})
 {
-    return detail::poll(items.data(), items.size(), static_cast<long>(timeout.count()));
+    return detail::poll(items.data(), items.size(),
+                        static_cast<long>(timeout.count()));
 }
 
 ZMQ_DEPRECATED("from 4.3.1, use poll taking std::chrono::duration instead of long")
@@ -373,7 +388,8 @@ template<std::size_t SIZE>
 inline int poll(std::array<zmq_pollitem_t, SIZE> &items,
                 std::chrono::milliseconds timeout = std::chrono::milliseconds{-1})
 {
-    return detail::poll(items.data(), items.size(), static_cast<long>(timeout.count()));
+    return detail::poll(items.data(), items.size(),
+                        static_cast<long>(timeout.count()));
 }
 #endif
 
@@ -539,11 +555,8 @@ class message_t
             throw error_t();
         memcpy(data(), data_, size_);
     }
-    
-    void rebuild(const std::string &str)
-    {
-        rebuild(str.data(), str.size());
-    }
+
+    void rebuild(const std::string &str) { rebuild(str.data(), str.size()); }
 
     void rebuild(void *data_, size_t size_, free_fn *ffn_, void *hint_ = ZMQ_NULLPTR)
     {
@@ -697,7 +710,7 @@ class message_t
         std::stringstream os;
 
         const unsigned char *msg_data = this->data<unsigned char>();
-        size_t size_to_print = (std::min)(this->size(), max_size);
+        size_t size_to_print = std::min(this->size(), max_size);
         int is_ascii[2] = {0, 0};
         // Set is_ascii for the first character
         if (size_to_print > 0)
@@ -1097,8 +1110,7 @@ class mutable_buffer
     constexpr size_t size() const noexcept { return _size; }
     mutable_buffer &operator+=(size_t n) noexcept
     {
-        // (std::min) is a workaround for when a min macro is defined
-        const auto shift = (std::min)(n, _size);
+        const auto shift = std::min(n, _size);
         _data = static_cast<char *>(_data) + shift;
         _size -= shift;
         return *this;
@@ -1111,8 +1123,8 @@ class mutable_buffer
 
 inline mutable_buffer operator+(const mutable_buffer &mb, size_t n) noexcept
 {
-    return mutable_buffer(static_cast<char *>(mb.data()) + (std::min)(n, mb.size()),
-                          mb.size() - (std::min)(n, mb.size()));
+    return mutable_buffer(static_cast<char *>(mb.data()) + std::min(n, mb.size()),
+                          mb.size() - std::min(n, mb.size()));
 }
 inline mutable_buffer operator+(size_t n, const mutable_buffer &mb) noexcept
 {
@@ -1138,7 +1150,7 @@ class const_buffer
     constexpr size_t size() const noexcept { return _size; }
     const_buffer &operator+=(size_t n) noexcept
     {
-        const auto shift = (std::min)(n, _size);
+        const auto shift = std::min(n, _size);
         _data = static_cast<const char *>(_data) + shift;
         _size -= shift;
         return *this;
@@ -1152,8 +1164,8 @@ class const_buffer
 inline const_buffer operator+(const const_buffer &cb, size_t n) noexcept
 {
     return const_buffer(static_cast<const char *>(cb.data())
-                          + (std::min)(n, cb.size()),
-                        cb.size() - (std::min)(n, cb.size()));
+                          + std::min(n, cb.size()),
+                        cb.size() - std::min(n, cb.size()));
 }
 inline const_buffer operator+(size_t n, const const_buffer &cb) noexcept
 {
@@ -1176,7 +1188,7 @@ constexpr mutable_buffer buffer(const mutable_buffer &mb) noexcept
 }
 inline mutable_buffer buffer(const mutable_buffer &mb, size_t n) noexcept
 {
-    return mutable_buffer(mb.data(), (std::min)(mb.size(), n));
+    return mutable_buffer(mb.data(), std::min(mb.size(), n));
 }
 constexpr const_buffer buffer(const const_buffer &cb) noexcept
 {
@@ -1184,7 +1196,7 @@ constexpr const_buffer buffer(const const_buffer &cb) noexcept
 }
 inline const_buffer buffer(const const_buffer &cb, size_t n) noexcept
 {
-    return const_buffer(cb.data(), (std::min)(cb.size(), n));
+    return const_buffer(cb.data(), std::min(cb.size(), n));
 }
 
 namespace detail
@@ -1210,7 +1222,7 @@ template<class C> constexpr auto seq_size(const C &c) noexcept -> decltype(c.siz
     return c.size();
 }
 template<class T, size_t N>
-constexpr size_t seq_size(const T (&/*array*/)[N]) noexcept
+constexpr size_t seq_size(const T (& /*array*/)[N]) noexcept
 {
     return N;
 }
@@ -1237,7 +1249,7 @@ auto buffer_contiguous_sequence(Seq &&seq, size_t n_bytes) noexcept
 
     const auto size = seq_size(seq);
     return buffer(size != 0u ? std::addressof(*std::begin(seq)) : nullptr,
-                  (std::min)(size * sizeof(T), n_bytes));
+                  std::min(size * sizeof(T), n_bytes));
 }
 
 } // namespace detail
@@ -1437,19 +1449,29 @@ template<int Opt, int NullTerm = 1> struct array_option
 
 #define ZMQ_DEFINE_INTEGRAL_OPT(OPT, NAME, TYPE)                                    \
     using NAME##_t = integral_option<OPT, TYPE, false>;                             \
-    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME {}
+    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME                                  \
+    {                                                                               \
+    }
 #define ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(OPT, NAME, TYPE)                          \
     using NAME##_t = integral_option<OPT, TYPE, true>;                              \
-    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME {}
+    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME                                  \
+    {                                                                               \
+    }
 #define ZMQ_DEFINE_ARRAY_OPT(OPT, NAME)                                             \
     using NAME##_t = array_option<OPT>;                                             \
-    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME {}
+    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME                                  \
+    {                                                                               \
+    }
 #define ZMQ_DEFINE_ARRAY_OPT_BINARY(OPT, NAME)                                      \
     using NAME##_t = array_option<OPT, 0>;                                          \
-    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME {}
+    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME                                  \
+    {                                                                               \
+    }
 #define ZMQ_DEFINE_ARRAY_OPT_BIN_OR_Z85(OPT, NAME)                                  \
     using NAME##_t = array_option<OPT, 2>;                                          \
-    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME {}
+    ZMQ_INLINE_VAR ZMQ_CONSTEXPR_VAR NAME##_t NAME                                  \
+    {                                                                               \
+    }
 
 // deprecated, use zmq::fd_t
 using cppzmq_fd_t = ::zmq::fd_t;
@@ -1567,7 +1589,9 @@ ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_MULTICAST_LOOP, multicast_loop, int);
 ZMQ_DEFINE_INTEGRAL_OPT(ZMQ_MULTICAST_MAXTPDU, multicast_maxtpdu, int);
 #endif
 #ifdef ZMQ_ONLY_FIRST_SUBSCRIBE
-ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_ONLY_FIRST_SUBSCRIBE, only_first_subscribe, int);
+ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_ONLY_FIRST_SUBSCRIBE,
+                                  only_first_subscribe,
+                                  int);
 #endif
 #ifdef ZMQ_PLAIN_SERVER
 ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_PLAIN_SERVER, plain_server, int);
@@ -1711,7 +1735,9 @@ ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_XPUB_VERBOSER, xpub_verboser, int);
 ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_XPUB_MANUAL, xpub_manual, int);
 #endif
 #ifdef ZMQ_XPUB_MANUAL_LAST_VALUE
-ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_XPUB_MANUAL_LAST_VALUE, xpub_manual_last_value, int);
+ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_XPUB_MANUAL_LAST_VALUE,
+                                  xpub_manual_last_value,
+                                  int);
 #endif
 #ifdef ZMQ_XPUB_NODROP
 ZMQ_DEFINE_INTEGRAL_BOOL_UNIT_OPT(ZMQ_XPUB_NODROP, xpub_nodrop, int);
@@ -2032,7 +2058,7 @@ class socket_base
           zmq_recv(_handle, buf.data(), buf.size(), static_cast<int>(flags));
         if (nbytes >= 0) {
             return recv_buffer_size{
-              (std::min)(static_cast<size_t>(nbytes), buf.size()),
+              std::min(static_cast<size_t>(nbytes), buf.size()),
               static_cast<size_t>(nbytes)};
         }
         if (zmq_errno() == EAGAIN)
@@ -2144,27 +2170,33 @@ inline bool operator!=(std::nullptr_t /*p*/, socket_ref sr) ZMQ_NOTHROW
 }
 #endif
 
-inline bool operator==(const detail::socket_base& a, const detail::socket_base& b) ZMQ_NOTHROW
+inline bool operator==(const detail::socket_base &a,
+                       const detail::socket_base &b) ZMQ_NOTHROW
 {
     return std::equal_to<const void *>()(a.handle(), b.handle());
 }
-inline bool operator!=(const detail::socket_base& a, const detail::socket_base& b) ZMQ_NOTHROW
+inline bool operator!=(const detail::socket_base &a,
+                       const detail::socket_base &b) ZMQ_NOTHROW
 {
     return !(a == b);
 }
-inline bool operator<(const detail::socket_base& a, const detail::socket_base& b) ZMQ_NOTHROW
+inline bool operator<(const detail::socket_base &a,
+                      const detail::socket_base &b) ZMQ_NOTHROW
 {
     return std::less<const void *>()(a.handle(), b.handle());
 }
-inline bool operator>(const detail::socket_base& a, const detail::socket_base& b) ZMQ_NOTHROW
+inline bool operator>(const detail::socket_base &a,
+                      const detail::socket_base &b) ZMQ_NOTHROW
 {
     return b < a;
 }
-inline bool operator<=(const detail::socket_base& a, const detail::socket_base& b) ZMQ_NOTHROW
+inline bool operator<=(const detail::socket_base &a,
+                       const detail::socket_base &b) ZMQ_NOTHROW
 {
     return !(a > b);
 }
-inline bool operator>=(const detail::socket_base& a, const detail::socket_base& b) ZMQ_NOTHROW
+inline bool operator>=(const detail::socket_base &a,
+                       const detail::socket_base &b) ZMQ_NOTHROW
 {
     return !(a < b);
 }
@@ -2374,11 +2406,11 @@ class monitor_t
           {_monitor_socket.handle(), 0, ZMQ_POLLIN, 0},
         };
 
-        #ifdef ZMQ_CPP11
+#ifdef ZMQ_CPP11
         zmq::poll(&items[0], 1, std::chrono::milliseconds(timeout));
-        #else
+#else
         zmq::poll(&items[0], 1, timeout);
-        #endif
+#endif
 
         return process_event(items[0].revents);
     }
@@ -2492,7 +2524,7 @@ class monitor_t
         (void) addr_;
     }
 
-  protected:    
+  protected:
     bool process_event(short events)
     {
         zmq::message_t eventMsg;
@@ -2571,7 +2603,8 @@ class monitor_t
             case ZMQ_EVENT_DISCONNECTED:
                 on_event_disconnected(*event, address.c_str());
                 break;
-#if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 3, 0) || (defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 3))
+#if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 3, 0)                                        \
+  || (defined(ZMQ_BUILD_DRAFT_API) && ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 2, 3))
             case ZMQ_EVENT_HANDSHAKE_FAILED_NO_DETAIL:
                 on_event_handshake_failed_no_detail(*event, address.c_str());
                 break;
@@ -2600,7 +2633,7 @@ class monitor_t
         return true;
     }
 
-    socket_ref monitor_socket() {return _monitor_socket;}
+    socket_ref monitor_socket() { return _monitor_socket; }
 
   private:
     monitor_t(const monitor_t &) ZMQ_DELETED_FUNCTION;
@@ -2720,14 +2753,13 @@ template<typename T = no_user_data> class poller_t
     {
         if (0
             != zmq_poller_modify_fd(poller_ptr.get(), fd,
-                                 static_cast<short>(events))) {
+                                    static_cast<short>(events))) {
             throw error_t();
         }
     }
 
-    template <typename Sequence>
-    size_t wait_all(Sequence &poller_events,
-                    const std::chrono::milliseconds timeout)
+    template<typename Sequence>
+    size_t wait_all(Sequence &poller_events, const std::chrono::milliseconds timeout)
     {
         static_assert(std::is_same<typename Sequence::value_type, event_type>::value,
                       "Sequence::value_type must be of poller_t::event_type");
@@ -2754,7 +2786,7 @@ template<typename T = no_user_data> class poller_t
     {
         int rc = zmq_poller_size(const_cast<void *>(poller_ptr.get()));
         ZMQ_ASSERT(rc >= 0);
-        return static_cast<size_t>((std::max)(rc, 0));
+        return static_cast<size_t>(std::max(rc, 0));
     }
 #endif
 
@@ -2875,5 +2907,16 @@ class timers
 #endif // defined(ZMQ_CPP11) && defined(ZMQ_HAVE_TIMERS)
 
 } // namespace zmq
+
+#ifdef _WIN32
+#ifdef WINDOWS_MIN
+#define min WINDOWS_MIN
+#undef WINDOWS_MIN
+#endif
+#ifdef WINDOWS_MAX
+#define max WINDOWS_MAX
+#undef WINDOWS_MAX
+#endif
+#endif
 
 #endif // __ZMQ_HPP_INCLUDED__

@@ -51,15 +51,13 @@ TEST_CASE("context - use socket after shutdown", "[context]")
     zmq::context_t context;
     zmq::socket_t sock(context, zmq::socket_type::rep);
     context.shutdown();
-    try
-    {
+    try {
         sock.connect("inproc://test");
         zmq::message_t msg;
-        (void)sock.recv(msg, zmq::recv_flags::dontwait);
+        (void) sock.recv(msg, zmq::recv_flags::dontwait);
         REQUIRE(false);
     }
-    catch (const zmq::error_t& e)
-    {
+    catch (const zmq::error_t &e) {
         REQUIRE(e.num() == ETERM);
     }
 }
@@ -73,12 +71,8 @@ TEST_CASE("context set/get options", "[context]")
     CHECK(context.get(zmq::ctxopt::io_threads) == 5);
 #endif
 
-    CHECK_THROWS_AS(
-        context.set(static_cast<zmq::ctxopt>(-42), 5),
-        zmq::error_t);
+    CHECK_THROWS_AS(context.set(static_cast<zmq::ctxopt>(-42), 5), zmq::error_t);
 
-    CHECK_THROWS_AS(
-        context.get(static_cast<zmq::ctxopt>(-42)),
-        zmq::error_t);
+    CHECK_THROWS_AS(context.get(static_cast<zmq::ctxopt>(-42)), zmq::error_t);
 }
 #endif

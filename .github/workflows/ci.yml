@@ -132,6 +132,13 @@ jobs:
         make install
         echo "LIBZMQ=${PWD}/libzmq-build" >> ${GITHUB_ENV}
 
+    - name: format
+      if: ${{ startsWith(matrix.os, 'ubuntu-24') }}
+      run: |
+        sudo apt install -y clang-format-20
+        clang-format-20 --version
+        git ls-files | grep -E '\.(cpp|hpp)' | xargs clang-format-20 --dry-run --Werror
+
     - name: build
       env:
         CMAKE_PREFIX_PATH: ${{ env.LIBZMQ }}
