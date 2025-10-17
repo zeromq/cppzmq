@@ -44,7 +44,7 @@ jobs:
             libzmq: "4.3.5"
             libzmqbuild: "cmake"
             coverage: "-DCOVERAGE=ON"
-            aptinstall: "lcov clang-format"
+            aptinstall: "lcov"
           # clang
           - os: "ubuntu-22.04"
             cppstd: "17"
@@ -61,7 +61,7 @@ jobs:
             drafts: "OFF"
             libzmq: "4.3.5"
             libzmqbuild: false
-            brewinstall: "zeromq clang-format"
+            brewinstall: "zeromq"
           # windows
           #- os: "windows-2019"
           #  cppstd: "14"
@@ -133,9 +133,11 @@ jobs:
         echo "LIBZMQ=${PWD}/libzmq-build" >> ${GITHUB_ENV}
 
     - name: format
+      if: ${{ startsWith(matrix.os, 'ubuntu-24') }}
       run: |
-        clang-format --version
-        git ls-files | grep -E '\.(cpp|hpp)' | xargs clang-format --dry-run --Werror
+        sudo apt install -y clang-format-20
+        clang-format-20 --version
+        git ls-files | grep -E '\.(cpp|hpp)' | xargs clang-format-20 --dry-run --Werror
 
     - name: build
       env:
