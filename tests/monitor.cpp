@@ -85,6 +85,24 @@ TEST_CASE("monitor init event count", "[monitor]")
     CHECK(monitor.total == expected_event_count);
 }
 
+#if __cplusplus >= 202002L
+static_assert(requires {
+    [](){
+        mock_monitor_t monitor;
+        monitor.check_event();
+        monitor.check_event(0);
+        monitor.check_event(100);
+        monitor.check_event(std::chrono::milliseconds{0});
+        monitor.check_event(std::chrono::milliseconds{100});
+        monitor.check_event(std::chrono::microseconds{100});
+        monitor.check_event(std::chrono::nanoseconds{100});
+        monitor.check_event(std::chrono::seconds{100});
+        monitor.check_event(std::chrono::minutes{100});
+        monitor.check_event(std::chrono::hours{100});
+    }();
+});
+#endif
+
 TEST_CASE("monitor init abort", "[monitor]")
 {
     class mock_monitor : public mock_monitor_t

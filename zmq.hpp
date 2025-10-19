@@ -2374,7 +2374,7 @@ class monitor_t
     template<typename Duration = std::chrono::milliseconds>
     bool check_event(Duration timeout = std::chrono::milliseconds{0})
     {
-        return check_event(std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count());
+        return check_event(static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count()));
     }
 #endif
 
