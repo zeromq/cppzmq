@@ -2816,11 +2816,9 @@ class timers
     using fn_t = zmq_timer_fn;
 
 #if CPPZMQ_HAS_OPTIONAL
-    template<typename Duration = std::chrono::milliseconds>
-    using timeout_result_t = std::optional<Duration>;
+    using timeout_result_t = std::optional<std::chrono::milliseconds>;
 #else
-    template<typename Duration = std::chrono::milliseconds>
-    using timeout_result_t = detail::trivial_optional<Duration>;
+    using timeout_result_t = detail::trivial_optional<std::chrono::milliseconds>;
 #endif
 
     timers() : _timers(zmq_timers_new())
@@ -2872,11 +2870,11 @@ class timers
     }
 
     template<typename Duration = std::chrono::milliseconds>
-    timeout_result_t<Duration> timeout() const
+    timeout_result_t timeout() const
     {
         int timeout = zmq_timers_timeout(_timers);
         if (timeout == -1)
-            return timeout_result_t<Duration>{};
+            return timeout_result_t{};
         return std::chrono::duration_cast<Duration>(std::chrono::milliseconds{timeout});
     }
 
