@@ -107,6 +107,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <cstdint>
 
 #include <type_traits>
 #include <algorithm>
@@ -539,7 +540,7 @@ class message_t
             throw error_t();
         memcpy(data(), data_, size_);
     }
-    
+
     void rebuild(const std::string &str)
     {
         rebuild(str.data(), str.size());
@@ -2492,7 +2493,7 @@ class monitor_t
         (void) addr_;
     }
 
-  protected:    
+  protected:
     bool process_event(short events)
     {
         zmq::message_t eventMsg;
@@ -2873,6 +2874,53 @@ class timers
 };
 
 #endif // defined(ZMQ_CPP11) && defined(ZMQ_HAVE_TIMERS)
+
+#ifdef ZMQ_HAVE_CURVE
+
+inline std::pair<std::string, std::string> curve_keypair()
+{
+    char public_key_buffer[41];
+    char secret_key_buffer[41];
+    int rc = zmq_curve_keypair(public_key_buffer, secret_key_buffer);
+    if (rc == -1)
+        throw zmq::error_t();
+    return {public_key_buffer, secret_key_buffer};
+}
+
+inline std::string curve_public(const std::string& secret)
+{
+    if (secret.size() != 40)
+        throw std::runtime_error("Invalid secret string size");
+    char public_key_buffer[41];
+    int rc = zmq_curve_public(public_key_buffer, secret.c_str());
+    if (rc == -1)
+        throw zmq::error_t();
+    return public_key_buffer;
+}
+
+#endif
+
+inline std::string z85_encode(const std::vector<uint8_t>& data)
+{
+    size_t buffer_size = data.size() * size_t{6} / size_t{5} + 1;
+    std::string buffer(buffer_size, '\0');
+    auto *result = zmq_z85_encode(&buffer[0], data.data(), data.size());
+    if (result == nullptr)
+        throw zmq::error_t();
+    while (buffer.back() == '\0')
+        buffer.pop_back();
+    return buffer;
+}
+
+inline std::vector<uint8_t> z85_decode(const std::string& encoded)
+{
+    size_t dest_size = encoded.size() * size_t{4} / size_t{5};
+    std::vector<uint8_t> dest(dest_size);
+    auto *result = zmq_z85_decode(dest.data(), encoded.c_str());
+    if (result == nullptr)
+        throw zmq::error_t();
+    return dest;
+}
 
 } // namespace zmq
 
