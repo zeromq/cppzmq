@@ -69,6 +69,8 @@ TEST_CASE("message constructor with char array", "[message]")
     CHECK(0 == memcmp(data, hi_msg.data(), 2));
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #if defined(ZMQ_CPP11) && !defined(ZMQ_CPP11_PARTIAL)
 TEST_CASE("message constructor with container - deprecated", "[message]")
 {
@@ -76,6 +78,7 @@ TEST_CASE("message constructor with container - deprecated", "[message]")
     REQUIRE(3u == hi_msg.size());
     CHECK(0 == memcmp(data, hi_msg.data(), 3));
 }
+#pragma GCC diagnostic pop
 
 TEST_CASE("message constructor with container of trivial data", "[message]")
 {
@@ -189,11 +192,14 @@ TEST_CASE("message to string", "[message]")
     CHECK(b.to_string_view() == "Foo");
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #if defined(ZMQ_CPP11) && !defined(ZMQ_CPP11_PARTIAL)
     const zmq::message_t depr("Foo"); // deprecated
     CHECK(depr.to_string() != "Foo");
     CHECK(depr.to_string() == std::string("Foo", 4));
 #endif
+#pragma GCC diagnostic pop
 }
 
 TEST_CASE("message to debug string", "[message]")
