@@ -352,19 +352,15 @@ inline int poll(std::vector<zmq_pollitem_t> const &items, long timeout_ = -1)
     return detail::poll(const_cast<zmq_pollitem_t *>(items.data()), items.size(), timeout_);
 }
 
-template<typename Duration = std::chrono::milliseconds>
-int
-poll(zmq_pollitem_t *items, size_t nitems, Duration timeout = std::chrono::milliseconds{-1})
+inline int
+poll(zmq_pollitem_t *items, size_t nitems, std::chrono::milliseconds timeout = std::chrono::milliseconds{-1})
 {
-    auto timeout_ms = std::chrono::duration_cast<std::chrono::milliseconds>(timeout);
-    return detail::poll(items, nitems, static_cast<long>(timeout_ms.count()));
+    return detail::poll(items, nitems, static_cast<long>(timeout.count()));
 }
 
-template<typename Duration = std::chrono::milliseconds>
-int poll(std::vector<zmq_pollitem_t> &items, Duration timeout = std::chrono::milliseconds{-1})
+inline int poll(std::vector<zmq_pollitem_t> &items, std::chrono::milliseconds timeout = std::chrono::milliseconds{-1})
 {
-    auto timeout_ms = std::chrono::duration_cast<std::chrono::milliseconds>(timeout);
-    return detail::poll(items.data(), items.size(), static_cast<long>(timeout_ms.count()));
+    return detail::poll(items.data(), items.size(), static_cast<long>(timeout.count()));
 }
 
 ZMQ_DEPRECATED("from 4.3.1, use poll taking std::chrono::duration instead of long")
