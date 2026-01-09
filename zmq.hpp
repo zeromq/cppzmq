@@ -492,8 +492,11 @@ class message_t
              typename = typename std::enable_if<
                detail::is_range<Range>::value
                && ZMQ_IS_TRIVIALLY_COPYABLE(detail::range_value_t<Range>)
-               && !detail::is_char_type<detail::range_value_t<Range>>::value
-               && !std::is_same<Range, message_t>::value>::type>
+               && !std::is_same<Range, message_t>::value
+#if CPPZMQ_HAS_STRING_VIEW
+               && !std::is_same<Range, std::string_view>::value
+#endif
+               && !std::is_same<Range, std::string>::value>::type>
     explicit message_t(const Range &rng) :
         message_t(detail::ranges::begin(rng), detail::ranges::end(rng))
     {
