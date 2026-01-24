@@ -32,11 +32,11 @@
 #endif
 // To avoid the `(std::min)` workaround for when a min macro is defined
 #ifdef min
-#define WINDOWS_MIN min
+#define CPPZMQ_WINDOWS_MIN min
 #undef min
 #endif
 #ifdef max
-#define WINDOWS_MAX max
+#define CPPZMQ_WINDOWS_MAX max
 #undef max
 #endif
 #endif
@@ -2909,13 +2909,13 @@ class timers
 } // namespace zmq
 
 #ifdef _WIN32
-#ifdef WINDOWS_MIN
-#define min WINDOWS_MIN
-#undef WINDOWS_MIN
+#ifdef CPPZMQ_WINDOWS_MIN
+#define min CPPZMQ_WINDOWS_MIN
+#undef CPPZMQ_WINDOWS_MIN
 #endif
-#ifdef WINDOWS_MAX
-#define max WINDOWS_MAX
-#undef WINDOWS_MAX
+#ifdef CPPZMQ_WINDOWS_MAX
+#define max CPPZMQ_WINDOWS_MAX
+#undef CPPZMQ_WINDOWS_MAX
 #endif
 #endif
 
