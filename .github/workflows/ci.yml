@@ -16,14 +16,15 @@ jobs:
         cc: ["gcc-10"]
         cxx: ["g++-10"]
         drafts: ["ON"]
+        curve: ["OFF"]
         libzmq: ["4.3.5"]
         libzmqbuild: ["cmake"]
         include:
           # older libzmq and without draft
           - os: "ubuntu-22.04"
             cppstd: "11"
-            cc: "gcc-9"
-            cxx: "g++-9"
+            cc: "gcc-11"
+            cxx: "g++-11"
             drafts: "OFF"
             libzmq: "4.2.0"
             libzmqbuild: "pkgconfig"
@@ -35,12 +36,21 @@ jobs:
             drafts: "OFF"
             libzmq: "4.3.5"
             libzmqbuild: "cmake"
+          # with curve
+          - os: "ubuntu-24.04"
+            cppstd: "23"
+            cc: "gcc-13"
+            cxx: "g++-13"
+            curve: "ON"
+            libzmq: "4.3.5"
+            libzmqbuild: "cmake"
           # coverage (gcc version should match gcov version)
           - os: "ubuntu-22.04"
             cppstd: "17"
-            cc: "gcc-9"
-            cxx: "g++-9"
+            cc: "gcc-11"
+            cxx: "g++-11"
             drafts: "ON"
+            curve: "ON"
             libzmq: "4.3.5"
             libzmqbuild: "cmake"
             coverage: "-DCOVERAGE=ON"
@@ -108,11 +118,17 @@ jobs:
     - name: build_libzmq_cmake
       if: ${{ matrix.libzmqbuild == 'cmake' }}
       run: |
+        if [ ! "${{ matrix.os }}" = 'windows-2022' ]; then
+          export CXXFLAGS="-Wno-error=stringop-truncation -Wno-stringop-overflow"
+          export CFLAGS="-Wno-error=stringop-truncation -Wno-stringop-overflow"
+        fi
         cmake -Hlibzmq-${{ matrix.libzmq }} -Blibzmq-build ${{ matrix.platform}} \
           -DWITH_PERF_TOOL=OFF \
           -DZMQ_BUILD_TESTS=OFF \
+          -DLIBZMQ_WERROR=OFF \
           -DCMAKE_BUILD_TYPE=Release \
-          -DENABLE_DRAFTS=${{ matrix.drafts }}
+          -DENABLE_DRAFTS=${{ matrix.drafts }} \
+          -DENABLE_CURVE=${{ matrix.curve }}
         cmake --build libzmq-build --config ${BUILDTYPE} -j ${THREADS}
         echo "LIBZMQ=${PWD}/libzmq-build" >> ${GITHUB_ENV}
 
@@ -126,6 +142,8 @@ jobs:
       if: ${{ matrix.libzmqbuild == 'pkgconfig' }}
       working-directory: libzmq-${{ matrix.libzmq }}
       run: |
+        export CXXFLAGS="-Wno-error=stringop-truncation -Wno-stringop-overflow"
+        export CFLAGS="-Wno-error=stringop-truncation -Wno-stringop-overflow"
         ./autogen.sh &&
         ./configure --prefix=${PWD}/libzmq-build &&
         make -j ${THREADS}

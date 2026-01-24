@@ -31,6 +31,7 @@ add_executable(
     monitor.cpp
     utilities.cpp
     timers.cpp
+    curve.cpp
 )
 
 target_include_directories(unit_tests PUBLIC ${CATCH_MODULE_PATH})
