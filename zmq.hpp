@@ -2919,7 +2919,7 @@ inline std::pair<std::string, std::string> curve_keypair()
     return {public_key_buffer, secret_key_buffer};
 }
 
-inline std::string curve_public(const std::string& secret)
+inline std::string curve_public(const std::string &secret)
 {
     if (secret.size() != 40)
         throw std::runtime_error("Invalid secret string size");
@@ -2932,7 +2932,7 @@ inline std::string curve_public(const std::string& secret)
 
 #endif
 
-inline std::string z85_encode(const std::vector<uint8_t>& data)
+inline std::string z85_encode(const std::vector<uint8_t> &data)
 {
     size_t buffer_size = data.size() * size_t{6} / size_t{5} + 1;
     std::string buffer(buffer_size, '\0');
@@ -2944,7 +2944,7 @@ inline std::string z85_encode(const std::vector<uint8_t>& data)
     return buffer;
 }
 
-inline std::vector<uint8_t> z85_decode(const std::string& encoded)
+inline std::vector<uint8_t> z85_decode(const std::string &encoded)
 {
     size_t dest_size = encoded.size() * size_t{4} / size_t{5};
     std::vector<uint8_t> dest(dest_size);

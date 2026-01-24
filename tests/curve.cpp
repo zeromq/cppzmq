@@ -23,7 +23,7 @@ TEST_CASE("curve_public", "[curve]")
 
 TEST_CASE("z85_encode", "[curve]")
 {
-    std::vector<uint8_t> data{1,2,3,4,5,6,7,8};
+    std::vector<uint8_t> data{1, 2, 3, 4, 5, 6, 7, 8};
     auto encoded = zmq::z85_encode(data);
     CHECK(encoded.size() == std::string("0rJua1Qkhq").size());
     CHECK(encoded == "0rJua1Qkhq");
@@ -32,5 +32,5 @@ TEST_CASE("z85_encode", "[curve]")
 TEST_CASE("z85_decode", "[curve]")
 {
     auto decoded = zmq::z85_decode("0rJua1Qkhq");
-    CHECK(decoded == std::vector<uint8_t>{1,2,3,4,5,6,7,8});
+    CHECK(decoded == std::vector<uint8_t>{1, 2, 3, 4, 5, 6, 7, 8});
 }
