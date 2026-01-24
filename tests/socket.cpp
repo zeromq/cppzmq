@@ -619,12 +619,16 @@ TEST_CASE("socket send recv message_t by pointer", "[socket]")
     CHECK(*res_send == 10);
     CHECK(smsg.size() == 0);
 
+#ifndef _WIN32
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
     zmq::message_t rmsg;
     const bool res = s.recv(&rmsg);
     CHECK(res);
+#ifndef _WIN32
 #pragma GCC diagnostic pop
+#endif
 }
 
 TEST_CASE("socket recv dontwait", "[socket]")
