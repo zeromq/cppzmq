@@ -24,10 +24,15 @@ TEST_CASE("timers add/execute", "[timers]")
     bool handler_ran = false;
     timers.add(4ms, [](auto, void *arg) { *(bool *) arg = true; }, &handler_ran);
     CHECK(timers.timeout().has_value());
+    // Check any std::chrono duration support
+    std::chrono::microseconds _ = timers.timeout().value();
     CHECK(!handler_ran);
     std::this_thread::sleep_for(10ms);
     timers.execute();
     CHECK(handler_ran);
+    // Check any std::chrono duration support
+    auto id2 =
+      timers.add(std::chrono::seconds{4}, [](auto, void *arg) { *(bool *) arg = true; }, &handler_ran);
 }
 
 TEST_CASE("timers add/cancel", "[timers]")
@@ -59,6 +64,12 @@ TEST_CASE("timers set_interval", "[timers]")
     std::this_thread::sleep_for(10ms);
     timers.execute();
     CHECK(handler_ran);
+    handler_ran = false;
+    // Check any std::chrono duration support
+    timers.set_interval(id, std::chrono::microseconds{1000});
+    std::this_thread::sleep_for(3ms);
+    timers.execute();
+    CHECK(handler_ran);
 }
 
 TEST_CASE("timers reset", "[timers]")
@@ -74,7 +85,6 @@ TEST_CASE("timers reset", "[timers]")
     timers.reset(id);
     CHECK(timers.timeout().has_value());
     CHECK(!handler_ran);
-
 }
 
 #endif // defined(ZMQ_CPP11) && defined(ZMQ_HAVE_TIMERS)

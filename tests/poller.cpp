@@ -131,6 +131,8 @@ TEST_CASE("poller wait with no handlers throws", "[poller]")
     /// \todo the actual error code should be checked
     CHECK_THROWS_AS(poller.wait_all(events, std::chrono::milliseconds{10}),
                     zmq::error_t);
+    CHECK_THROWS_AS(poller.wait_all(events, std::chrono::microseconds{10000}),
+                    zmq::error_t);
 }
 
 #if ZMQ_VERSION >= ZMQ_MAKE_VERSION(4, 3, 3)

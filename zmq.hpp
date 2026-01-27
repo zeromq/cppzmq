@@ -358,8 +358,7 @@ poll(zmq_pollitem_t *items, size_t nitems, std::chrono::milliseconds timeout = s
     return detail::poll(items, nitems, static_cast<long>(timeout.count()));
 }
 
-inline int poll(std::vector<zmq_pollitem_t> &items,
-                std::chrono::milliseconds timeout = std::chrono::milliseconds{-1})
+inline int poll(std::vector<zmq_pollitem_t> &items, std::chrono::milliseconds timeout = std::chrono::milliseconds{-1})
 {
     return detail::poll(items.data(), items.size(), static_cast<long>(timeout.count()));
 }
@@ -370,11 +369,11 @@ inline int poll(std::vector<zmq_pollitem_t> &items, long timeout_)
     return detail::poll(items.data(), items.size(), timeout_);
 }
 
-template<std::size_t SIZE>
-inline int poll(std::array<zmq_pollitem_t, SIZE> &items,
-                std::chrono::milliseconds timeout = std::chrono::milliseconds{-1})
+template<std::size_t SIZE, typename Duration>
+int poll(std::array<zmq_pollitem_t, SIZE> &items, Duration timeout = std::chrono::milliseconds{-1})
 {
-    return detail::poll(items.data(), items.size(), static_cast<long>(timeout.count()));
+    auto timeout_ms = std::chrono::duration_cast<std::chrono::milliseconds>(timeout);
+    return detail::poll(items.data(), items.size(), static_cast<long>(timeout_ms.count()));
 }
 #endif
 
@@ -2367,6 +2366,14 @@ class monitor_t
         on_monitor_started();
     }
 
+#ifdef ZMQ_CPP11
+    template<typename Duration = std::chrono::milliseconds>
+    bool check_event(Duration timeout = std::chrono::milliseconds{0})
+    {
+        return check_event(static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count()));
+    }
+#endif
+
     bool check_event(int timeout = 0)
     {
         assert(_monitor_socket);
@@ -2726,9 +2733,9 @@ template<typename T = no_user_data> class poller_t
         }
     }
 
-    template <typename Sequence>
+    template <typename Sequence, typename Duration = std::chrono::milliseconds>
     size_t wait_all(Sequence &poller_events,
-                    const std::chrono::milliseconds timeout)
+                    const Duration timeout)
     {
         static_assert(std::is_same<typename Sequence::value_type, event_type>::value,
                       "Sequence::value_type must be of poller_t::event_type");
@@ -2736,7 +2743,7 @@ template<typename T = no_user_data> class poller_t
           poller_ptr.get(),
           reinterpret_cast<zmq_poller_event_t *>(poller_events.data()),
           static_cast<int>(poller_events.size()),
-          static_cast<long>(timeout.count()));
+          static_cast<long>(std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count()));
         if (rc > 0)
             return static_cast<size_t>(rc);
 
@@ -2825,9 +2832,11 @@ class timers
         ZMQ_ASSERT(rc == 0);
     }
 
-    id_t add(std::chrono::milliseconds interval, zmq_timer_fn handler, void *arg)
+    template<typename Duration = std::chrono::milliseconds>
+    id_t add(Duration interval, zmq_timer_fn handler, void *arg)
     {
-        id_t timer_id = zmq_timers_add(_timers, interval.count(), handler, arg);
+        auto interval_ms = std::chrono::duration_cast<std::chrono::milliseconds>(interval);
+        id_t timer_id = zmq_timers_add(_timers, interval_ms.count(), handler, arg);
         if (timer_id == -1)
             throw zmq::error_t();
         return timer_id;
@@ -2840,9 +2849,11 @@ class timers
             throw zmq::error_t();
     }
 
-    void set_interval(id_t timer_id, std::chrono::milliseconds interval)
+    template<typename Duration = std::chrono::milliseconds>
+    void set_interval(id_t timer_id, Duration interval)
     {
-        int rc = zmq_timers_set_interval(_timers, timer_id, interval.count());
+        auto interval_ms = std::chrono::duration_cast<std::chrono::milliseconds>(interval);
+        int rc = zmq_timers_set_interval(_timers, timer_id, interval_ms.count());
         if (rc == -1)
             throw zmq::error_t();
     }
@@ -2854,12 +2865,13 @@ class timers
             throw zmq::error_t();
     }
 
+    template<typename Duration = std::chrono::milliseconds>
     timeout_result_t timeout() const
     {
         int timeout = zmq_timers_timeout(_timers);
         if (timeout == -1)
             return timeout_result_t{};
-        return std::chrono::milliseconds{timeout};
+        return std::chrono::duration_cast<Duration>(std::chrono::milliseconds{timeout});
     }
 
     void execute()
