@@ -365,7 +365,7 @@ TEST_CASE("socket check integral options", "[socket]")
                             "router_mandatory", true);
 #endif
 #ifdef ZMQ_ROUTER_RAW
-    check_integral_opt<int>(zmq::sockopt::router_raw, router, "router_raw", 
+    check_integral_opt<int>(zmq::sockopt::router_raw, router, "router_raw",
                             true);
 #endif
 #ifdef ZMQ_ROUTER_NOTIFY
@@ -619,9 +619,16 @@ TEST_CASE("socket send recv message_t by pointer", "[socket]")
     CHECK(*res_send == 10);
     CHECK(smsg.size() == 0);
 
+#ifndef _WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
     zmq::message_t rmsg;
     const bool res = s.recv(&rmsg);
     CHECK(res);
+#ifndef _WIN32
+#pragma GCC diagnostic pop
+#endif
 }
 
 TEST_CASE("socket recv dontwait", "[socket]")
