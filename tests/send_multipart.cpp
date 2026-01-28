@@ -12,13 +12,15 @@ TEST_CASE("send_multipart test", "[send_multipart]")
     output.bind("inproc://multipart.test");
     input.connect("inproc://multipart.test");
 
-    SECTION("send 0 messages") {
+    SECTION("send 0 messages")
+    {
         std::vector<zmq::message_t> imsgs;
         auto iret = zmq::send_multipart(input, imsgs);
         REQUIRE(iret);
         CHECK(*iret == 0);
     }
-    SECTION("send 1 message") {
+    SECTION("send 1 message")
+    {
         std::array<zmq::message_t, 1> imsgs = {zmq::message_t(3)};
         auto iret = zmq::send_multipart(input, imsgs);
         REQUIRE(iret);
@@ -31,7 +33,8 @@ TEST_CASE("send_multipart test", "[send_multipart]")
         REQUIRE(omsgs.size() == 1);
         CHECK(omsgs[0].size() == 3);
     }
-    SECTION("send 2 messages") {
+    SECTION("send 2 messages")
+    {
         std::array<zmq::message_t, 2> imsgs = {zmq::message_t(3), zmq::message_t(4)};
         auto iret = zmq::send_multipart(input, imsgs);
         REQUIRE(iret);
@@ -45,7 +48,8 @@ TEST_CASE("send_multipart test", "[send_multipart]")
         CHECK(omsgs[0].size() == 3);
         CHECK(omsgs[1].size() == 4);
     }
-    SECTION("send 2 messages, const_buffer") {
+    SECTION("send 2 messages, const_buffer")
+    {
         std::array<zmq::const_buffer, 2> imsgs = {zmq::str_buffer("foo"),
                                                   zmq::str_buffer("bar!")};
         auto iret = zmq::send_multipart(input, imsgs);
@@ -60,10 +64,11 @@ TEST_CASE("send_multipart test", "[send_multipart]")
         CHECK(omsgs[0].size() == 3);
         CHECK(omsgs[1].size() == 4);
     }
-    SECTION("send 2 messages, mutable_buffer") {
+    SECTION("send 2 messages, mutable_buffer")
+    {
         char buf[4] = {};
-        std::array<zmq::mutable_buffer, 2> imsgs = {
-            zmq::buffer(buf, 3), zmq::buffer(buf)};
+        std::array<zmq::mutable_buffer, 2> imsgs = {zmq::buffer(buf, 3),
+                                                    zmq::buffer(buf)};
         auto iret = zmq::send_multipart(input, imsgs);
         REQUIRE(iret);
         CHECK(*iret == 2);
@@ -76,7 +81,8 @@ TEST_CASE("send_multipart test", "[send_multipart]")
         CHECK(omsgs[0].size() == 3);
         CHECK(omsgs[1].size() == 4);
     }
-    SECTION("send 2 messages, dontwait") {
+    SECTION("send 2 messages, dontwait")
+    {
         zmq::socket_t push(context, ZMQ_PUSH);
         push.bind("inproc://multipart.test.push");
 
@@ -84,7 +90,8 @@ TEST_CASE("send_multipart test", "[send_multipart]")
         auto iret = zmq::send_multipart(push, imsgs, zmq::send_flags::dontwait);
         REQUIRE_FALSE(iret);
     }
-    SECTION("send, misc. containers") {
+    SECTION("send, misc. containers")
+    {
         std::vector<zmq::message_t> msgs_vec;
         msgs_vec.emplace_back(3);
         msgs_vec.emplace_back(4);
@@ -105,17 +112,16 @@ TEST_CASE("send_multipart test", "[send_multipart]")
         REQUIRE(iret);
         CHECK(*iret == 2);
         // rvalue
-        iret = zmq::send_multipart(input,
-                                   std::initializer_list<zmq::const_buffer>{
-                                       zmq::str_buffer("foo"),
-                                       zmq::str_buffer("bar!")});
+        iret = zmq::send_multipart(
+          input, std::initializer_list<zmq::const_buffer>{zmq::str_buffer("foo"),
+                                                          zmq::str_buffer("bar!")});
         REQUIRE(iret);
         CHECK(*iret == 2);
     }
-    SECTION("send with invalid socket") {
+    SECTION("send with invalid socket")
+    {
         std::vector<zmq::message_t> msgs(1);
-        CHECK_THROWS_AS(zmq::send_multipart(zmq::socket_ref(), msgs),
-                        zmq::error_t);
+        CHECK_THROWS_AS(zmq::send_multipart(zmq::socket_ref(), msgs), zmq::error_t);
     }
 }
 #endif

@@ -8,7 +8,7 @@ static_assert(std::is_nothrow_swappable_v<zmq::socket_ref>);
 static_assert(sizeof(zmq::socket_ref) == sizeof(void *), "size mismatch");
 static_assert(alignof(zmq::socket_ref) == alignof(void *), "alignment mismatch");
 static_assert(ZMQ_IS_TRIVIALLY_COPYABLE(zmq::socket_ref),
-    "needs to be trivially copyable");
+              "needs to be trivially copyable");
 
 TEST_CASE("socket_ref default init", "[socket_ref]")
 {

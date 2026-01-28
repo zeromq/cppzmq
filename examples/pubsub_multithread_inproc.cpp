@@ -6,7 +6,8 @@
 #include "zmq.hpp"
 #include "zmq_addon.hpp"
 
-void PublisherThread(zmq::context_t *ctx) {
+void PublisherThread(zmq::context_t *ctx)
+{
     //  Prepare publisher
     zmq::socket_t publisher(*ctx, zmq::socket_type::pub);
     publisher.bind("inproc://#1");
@@ -26,7 +27,8 @@ void PublisherThread(zmq::context_t *ctx) {
     }
 }
 
-void SubscriberThread1(zmq::context_t *ctx) {
+void SubscriberThread1(zmq::context_t *ctx)
+{
     //  Prepare subscriber
     zmq::socket_t subscriber(*ctx, zmq::socket_type::sub);
     subscriber.connect("inproc://#1");
@@ -48,7 +50,8 @@ void SubscriberThread1(zmq::context_t *ctx) {
     }
 }
 
-void SubscriberThread2(zmq::context_t *ctx) {
+void SubscriberThread2(zmq::context_t *ctx)
+{
     //  Prepare our context and subscriber
     zmq::socket_t subscriber(*ctx, zmq::socket_type::sub);
     subscriber.connect("inproc://#1");
@@ -69,7 +72,8 @@ void SubscriberThread2(zmq::context_t *ctx) {
     }
 }
 
-int main() {
+int main()
+{
     /*
      * No I/O threads are involved in passing messages using the inproc transport.
      * Therefore, if you are using a ØMQ context for in-process messaging only you

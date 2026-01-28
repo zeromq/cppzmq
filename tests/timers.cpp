@@ -74,7 +74,6 @@ TEST_CASE("timers reset", "[timers]")
     timers.reset(id);
     CHECK(timers.timeout().has_value());
     CHECK(!handler_ran);
-
 }
 
 #endif // defined(ZMQ_CPP11) && defined(ZMQ_HAVE_TIMERS)
