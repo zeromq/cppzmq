@@ -48,6 +48,23 @@ TEST_CASE("message constructor with iterators", "[message]")
     CHECK(0 == memcmp(data, hi_msg.data(), 2));
 }
 
+TEST_CASE("message constructor with ranges", "[message]")
+{
+    SECTION("trivial type")
+    {
+        const std::vector<int> v{1, 2, 3};
+        const zmq::message_t msg(v);
+        CHECK(3u * sizeof(int) == msg.size());
+    }
+    SECTION("char type")
+    {
+        const std::vector<char> hi{'H', 'i'};
+        const zmq::message_t hi_msg(hi);
+        CHECK(2u == hi_msg.size());
+        CHECK(0 == memcmp(data, hi_msg.data(), 2));
+    }
+}
+
 TEST_CASE("message constructor with size", "[message]")
 {
     const zmq::message_t msg(5);
