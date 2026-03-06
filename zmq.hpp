@@ -2762,6 +2762,18 @@ template<typename T = no_user_data> class poller_t
         }
     }
 
+    event_type wait(std::chrono::milliseconds timeout = std::chrono::milliseconds{
+                      -1})
+    {
+        event_type event;
+        int rc = zmq_poller_wait(poller_ptr.get(),
+                                 reinterpret_cast<zmq_poller_event_t *>(&event),
+                                 static_cast<long>(timeout.count()));
+        if (rc == -1)
+            throw error_t();
+        return event;
+    }
+
     template<typename Sequence>
     size_t wait_all(Sequence &poller_events, const std::chrono::milliseconds timeout)
     {

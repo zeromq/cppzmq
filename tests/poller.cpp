@@ -178,6 +178,19 @@ TEST_CASE("poller remove registered non empty", "[poller]")
 
 const std::string hi_str = "Hi";
 
+
+TEST_CASE("poller wait", "[poller]")
+{
+    common_server_client_setup s;
+    CHECK_NOTHROW(s.client.send(zmq::message_t{hi_str}, zmq::send_flags::none));
+    zmq::poller_t<int> poller;
+    int i = 42;
+    CHECK_NOTHROW(poller.add(s.server, zmq::event_flags::pollin, &i));
+    auto event = poller.wait();
+    CHECK(s.server == event.socket);
+    CHECK(&i == event.user_data);
+}
+
 TEST_CASE("poller poll basic", "[poller]")
 {
     common_server_client_setup s;
