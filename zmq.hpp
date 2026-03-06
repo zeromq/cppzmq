@@ -2029,6 +2029,25 @@ class socket_base
     }
 #endif
 
+    send_result_t send_static(const_buffer buf, send_flags flags = send_flags::none)
+    {
+        int nbytes =
+          zmq_send_const(_handle, buf.data(), buf.size(), static_cast<int>(flags));
+        if (nbytes >= 0)
+            return static_cast<size_t>(nbytes);
+        if (zmq_errno() == EAGAIN)
+            return {};
+        throw error_t();
+    }
+
+#if CPPZMQ_HAS_STRING_VIEW
+    send_result_t send_static(std::string_view str,
+                              send_flags flags = send_flags::none)
+    {
+        return send_static(zmq::buffer(str), flags);
+    }
+#endif
+
     ZMQ_CPP11_DEPRECATED(
       "from 4.3.1, use recv taking a mutable_buffer and recv_flags")
     size_t recv(void *buf_, size_t len_, int flags_ = 0)
