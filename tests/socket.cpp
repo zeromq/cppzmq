@@ -507,6 +507,47 @@ TEST_CASE("socket sends and receives const buffer", "[socket]")
     CHECK(0 == memcmp(buf, str, 2));
 }
 
+TEST_CASE("socket send_static", "[socket]")
+{
+    zmq::context_t context;
+    zmq::socket_t sender(context, ZMQ_PAIR);
+    zmq::socket_t receiver(context, ZMQ_PAIR);
+    receiver.bind("inproc://test");
+    sender.connect("inproc://test");
+    SECTION("send_static with const_buffer")
+    {
+        CHECK(6 == *sender.send_static(zmq::buffer("hello")));
+        char buf[6];
+        const auto res = receiver.recv(zmq::buffer(buf));
+        CHECK(res);
+        CHECK(!res->truncated());
+        CHECK(6 == res->size);
+        CHECK(0 == memcmp(buf, "hello", 6));
+    }
+#if CPPZMQ_HAS_STRING_VIEW
+    SECTION("send_static with std::string_view")
+    {
+        CHECK(5 == *sender.send_static(std::string_view{"hello"}));
+        char buf[5];
+        const auto res = receiver.recv(zmq::buffer(buf));
+        CHECK(res);
+        CHECK(!res->truncated());
+        CHECK(5 == res->size);
+        CHECK(0 == memcmp(buf, "hello", 5));
+    }
+    SECTION("send_static with char literal")
+    {
+        CHECK(5 == *sender.send_static("hello"));
+        char buf[5];
+        const auto res = receiver.recv(zmq::buffer(buf));
+        CHECK(res);
+        CHECK(!res->truncated());
+        CHECK(5 == res->size);
+        CHECK(0 == memcmp(buf, "hello", 5));
+    }
+#endif
+}
+
 #ifdef ZMQ_CPP11
 
 TEST_CASE("socket send none sndmore", "[socket]")
