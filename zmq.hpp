@@ -2698,6 +2698,11 @@ template<typename T = no_user_data> class poller_t
 {
   public:
     using event_type = poller_event<T>;
+#if CPPZMQ_HAS_OPTIONAL
+    using wait_result_t = std::optional<event_type>;
+#else
+    using wait_result_t = detail::trivial_optional<event_type>;
+#endif
 
     poller_t() : poller_ptr(zmq_poller_new())
     {
@@ -2762,15 +2767,19 @@ template<typename T = no_user_data> class poller_t
         }
     }
 
-    event_type wait(std::chrono::milliseconds timeout = std::chrono::milliseconds{
-                      -1})
+    wait_result_t wait(std::chrono::milliseconds timeout = std::chrono::milliseconds{
+                         -1})
     {
         event_type event;
         int rc = zmq_poller_wait(poller_ptr.get(),
                                  reinterpret_cast<zmq_poller_event_t *>(&event),
                                  static_cast<long>(timeout.count()));
-        if (rc == -1)
-            throw error_t();
+        if (rc == -1) {
+            if (zmq_errno() == EAGAIN)
+                return {};
+            else
+                throw error_t();
+        }
         return event;
     }
 
