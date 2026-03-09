@@ -178,7 +178,7 @@ TEST_CASE("poller remove registered non empty", "[poller]")
 
 const std::string hi_str = "Hi";
 
-
+#if CPPZMQ_HAS_OPTIONAL
 TEST_CASE("poller wait", "[poller]")
 {
     common_server_client_setup s;
@@ -201,6 +201,7 @@ TEST_CASE("poller wait timeout", "[poller]")
     auto event = poller.wait(std::chrono::milliseconds{3});
     CHECK(!event.has_value());
 }
+#endif
 
 TEST_CASE("poller poll basic", "[poller]")
 {
