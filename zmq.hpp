@@ -2928,7 +2928,7 @@ class timers
 
     timeout_result_t timeout() const
     {
-        int timeout = zmq_timers_timeout(_timers);
+        long timeout = zmq_timers_timeout(_timers);
         if (timeout == -1)
             return timeout_result_t{};
         return std::chrono::milliseconds{timeout};
