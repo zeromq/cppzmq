@@ -19,22 +19,19 @@ static_assert(std::is_invocable<decltype(&zmq::multipart_t::recv),
 #endif
 static_assert(std::is_constructible<zmq::multipart_t, zmq::socket_ref>::value,
               "Can't construct with socket_ref");
-static_assert(
-  std::is_same<decltype(std::declval<zmq::multipart_t &>().front()),
-               const zmq::message_t &>::value,
-  "multipart_t::front() should keep returning const message_t&");
+static_assert(std::is_same<decltype(std::declval<zmq::multipart_t &>().front()),
+                           const zmq::message_t &>::value,
+              "multipart_t::front() should keep returning const message_t&");
 static_assert(
   std::is_same<decltype(std::declval<const zmq::multipart_t &>().front()),
                const zmq::message_t &>::value,
   "multipart_t::front() const should return const message_t&");
-static_assert(
-  std::is_same<decltype(std::declval<zmq::multipart_t &>().back()),
-               const zmq::message_t &>::value,
-  "multipart_t::back() should keep returning const message_t&");
-static_assert(
-  std::is_same<decltype(std::declval<const zmq::multipart_t &>().back()),
-               const zmq::message_t &>::value,
-  "multipart_t::back() const should return const message_t&");
+static_assert(std::is_same<decltype(std::declval<zmq::multipart_t &>().back()),
+                           const zmq::message_t &>::value,
+              "multipart_t::back() should keep returning const message_t&");
+static_assert(std::is_same<decltype(std::declval<const zmq::multipart_t &>().back()),
+                           const zmq::message_t &>::value,
+              "multipart_t::back() const should return const message_t&");
 
 /// \todo split this up into separate test cases
 ///
