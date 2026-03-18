@@ -1,6 +1,8 @@
 #include <catch2/catch_all.hpp>
 #include <zmq_addon.hpp>
 
+#include <utility>
+
 #ifdef ZMQ_HAS_RVALUE_REFS
 
 #ifdef ZMQ_CPP17
@@ -17,6 +19,22 @@ static_assert(std::is_invocable<decltype(&zmq::multipart_t::recv),
 #endif
 static_assert(std::is_constructible<zmq::multipart_t, zmq::socket_ref>::value,
               "Can't construct with socket_ref");
+static_assert(
+  std::is_same<decltype(std::declval<zmq::multipart_t &>().front()),
+               const zmq::message_t &>::value,
+  "multipart_t::front() should keep returning const message_t&");
+static_assert(
+  std::is_same<decltype(std::declval<const zmq::multipart_t &>().front()),
+               const zmq::message_t &>::value,
+  "multipart_t::front() const should return const message_t&");
+static_assert(
+  std::is_same<decltype(std::declval<zmq::multipart_t &>().back()),
+               const zmq::message_t &>::value,
+  "multipart_t::back() should keep returning const message_t&");
+static_assert(
+  std::is_same<decltype(std::declval<const zmq::multipart_t &>().back()),
+               const zmq::message_t &>::value,
+  "multipart_t::back() const should return const message_t&");
 
 /// \todo split this up into separate test cases
 ///
@@ -106,11 +124,18 @@ TEST_CASE("multipart legacy test", "[multipart]")
     multipart.pushmem("Frame0", 6);
     assert(multipart.size() == 10);
 
-    const message_t &front_msg = multipart.front();
+    const message_t &front_msg_nonconst = multipart.front();
+    assert(&front_msg_nonconst == &multipart[0]);
+
+    const multipart_t &const_multipart = multipart;
+    const message_t &front_msg = const_multipart.front();
     assert(multipart.size() == 10);
     assert(std::string(front_msg.data<char>(), front_msg.size()) == "Frame0");
 
-    const message_t &back_msg = multipart.back();
+    const message_t &back_msg_nonconst = multipart.back();
+    assert(&back_msg_nonconst == &multipart[multipart.size() - 1]);
+
+    const message_t &back_msg = const_multipart.back();
     assert(multipart.size() == 10);
     assert(std::string(back_msg.data<char>(), back_msg.size()) == "Frame9");
 
