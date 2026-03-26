@@ -105,7 +105,7 @@
 #endif
 #if defined(ZMQ_CPP14) && (!defined(_MSC_VER) || _MSC_VER > 1900)                   \
   && (!defined(__GNUC__) || __GNUC__ > 5 || (__GNUC__ == 5 && __GNUC_MINOR__ > 3))
-#define ZMQ_EXTENDED_CONSTEXPR
+#define ZMQ_EXTENDED_CONSTEXPR constexpr
 #endif
 #if defined(ZMQ_CPP17)
 #define ZMQ_INLINE_VAR inline
@@ -929,7 +929,7 @@ class context_t
 #endif
 
     ZMQ_DEPRECATED("from 4.7.0, use handle() != nullptr instead")
-    operator bool() const ZMQ_NOTHROW { return ptr != ZMQ_NULLPTR; }
+    ZMQ_CONSTEXPR_FN operator bool() const ZMQ_NOTHROW { return ptr != ZMQ_NULLPTR; }
 
     void swap(context_t &other) ZMQ_NOTHROW { std::swap(ptr, other.ptr); }
 
@@ -952,7 +952,7 @@ struct recv_buffer_size
     size_t size;             // number of bytes written to buffer
     size_t untruncated_size; // untruncated message size in bytes
 
-    ZMQ_NODISCARD bool truncated() const noexcept
+    ZMQ_NODISCARD ZMQ_CONSTEXPR_FN bool truncated() const noexcept
     {
         return size != untruncated_size;
     }
@@ -977,7 +977,7 @@ template<class T> class trivial_optional
     using value_type = T;
 
     trivial_optional() = default;
-    trivial_optional(T value) noexcept : _value(value), _has_value(true) {}
+    ZMQ_CONSTEXPR_FN trivial_optional(T value) noexcept : _value(value), _has_value(true) {}
 
     const T *operator->() const noexcept
     {
@@ -1014,8 +1014,8 @@ template<class T> class trivial_optional
         return _value;
     }
 
-    explicit operator bool() const noexcept { return _has_value; }
-    bool has_value() const noexcept { return _has_value; }
+    ZMQ_CONSTEXPR_FN explicit operator bool() const noexcept { return _has_value; }
+    ZMQ_CONSTEXPR_FN bool has_value() const noexcept { return _has_value; }
 
   private:
     T _value{};
@@ -1960,7 +1960,10 @@ class socket_base
     }
 
     ZMQ_DEPRECATED("from 4.7.1, use handle() != nullptr or operator bool")
-    bool connected() const ZMQ_NOTHROW { return (_handle != ZMQ_NULLPTR); }
+    ZMQ_CONSTEXPR_FN bool connected() const ZMQ_NOTHROW
+    {
+        return (_handle != ZMQ_NULLPTR);
+    }
 
     ZMQ_CPP11_DEPRECATED("from 4.3.1, use send taking a const_buffer and send_flags")
     size_t send(const void *buf_, size_t len_, int flags_ = 0)
@@ -2132,13 +2135,27 @@ class socket_base
     }
 #endif
 
+#ifdef ZMQ_EXTENDED_CONSTEXPR
+    ZMQ_NODISCARD ZMQ_EXTENDED_CONSTEXPR void *handle() ZMQ_NOTHROW { return _handle; }
+#else
     ZMQ_NODISCARD void *handle() ZMQ_NOTHROW { return _handle; }
-    ZMQ_NODISCARD const void *handle() const ZMQ_NOTHROW { return _handle; }
+#endif
+    ZMQ_NODISCARD ZMQ_CONSTEXPR_FN const void *handle() const ZMQ_NOTHROW { return _handle; }
 
-    ZMQ_EXPLICIT operator bool() const ZMQ_NOTHROW { return _handle != ZMQ_NULLPTR; }
+    ZMQ_EXPLICIT ZMQ_CONSTEXPR_FN operator bool() const ZMQ_NOTHROW
+    {
+        return _handle != ZMQ_NULLPTR;
+    }
     // note: non-const operator bool can be removed once
     // operator void* is removed from socket_t
-    ZMQ_EXPLICIT operator bool() ZMQ_NOTHROW { return _handle != ZMQ_NULLPTR; }
+#ifdef ZMQ_EXTENDED_CONSTEXPR
+    ZMQ_EXPLICIT ZMQ_EXTENDED_CONSTEXPR operator bool() ZMQ_NOTHROW
+#else
+    ZMQ_EXPLICIT operator bool() ZMQ_NOTHROW
+#endif
+    {
+        return _handle != ZMQ_NULLPTR;
+    }
 
   protected:
     void *_handle;
@@ -2187,31 +2204,35 @@ class socket_ref : public detail::socket_base
 };
 
 #ifdef ZMQ_CPP11
-inline bool operator==(socket_ref sr, std::nullptr_t /*p*/) ZMQ_NOTHROW
+inline ZMQ_CONSTEXPR_FN bool operator==(const socket_ref sr,
+                                        std::nullptr_t /*p*/) ZMQ_NOTHROW
 {
     return sr.handle() == nullptr;
 }
-inline bool operator==(std::nullptr_t /*p*/, socket_ref sr) ZMQ_NOTHROW
+inline ZMQ_CONSTEXPR_FN bool operator==(std::nullptr_t /*p*/,
+                                        const socket_ref sr) ZMQ_NOTHROW
 {
     return sr.handle() == nullptr;
 }
-inline bool operator!=(socket_ref sr, std::nullptr_t /*p*/) ZMQ_NOTHROW
+inline ZMQ_CONSTEXPR_FN bool operator!=(const socket_ref sr,
+                                        std::nullptr_t /*p*/) ZMQ_NOTHROW
 {
     return !(sr == nullptr);
 }
-inline bool operator!=(std::nullptr_t /*p*/, socket_ref sr) ZMQ_NOTHROW
+inline ZMQ_CONSTEXPR_FN bool operator!=(std::nullptr_t /*p*/,
+                                        const socket_ref sr) ZMQ_NOTHROW
 {
     return !(sr == nullptr);
 }
 #endif
 
-inline bool operator==(const detail::socket_base &a,
-                       const detail::socket_base &b) ZMQ_NOTHROW
+inline ZMQ_CONSTEXPR_FN bool operator==(const detail::socket_base &a,
+                                        const detail::socket_base &b) ZMQ_NOTHROW
 {
-    return std::equal_to<const void *>()(a.handle(), b.handle());
+    return a.handle() == b.handle();
 }
-inline bool operator!=(const detail::socket_base &a,
-                       const detail::socket_base &b) ZMQ_NOTHROW
+inline ZMQ_CONSTEXPR_FN bool operator!=(const detail::socket_base &a,
+                                        const detail::socket_base &b) ZMQ_NOTHROW
 {
     return !(a == b);
 }

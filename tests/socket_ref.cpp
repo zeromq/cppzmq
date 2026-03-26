@@ -23,7 +23,8 @@ TEST_CASE("socket_ref default init", "[socket_ref]")
 TEST_CASE("socket_ref constexpr init", "[socket_ref]")
 {
     constexpr zmq::socket_ref sr;
-    (void) sr;
+    static_assert(sr.handle() == nullptr, "socket_ref handle should be constexpr");
+    static_assert(sr == nullptr, "socket_ref nullptr comparison should be constexpr");
 }
 #endif
 

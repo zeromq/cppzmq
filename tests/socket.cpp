@@ -18,7 +18,8 @@ TEST_CASE("socket default ctor", "[socket]")
 TEST_CASE("socket_base constexpr init", "[socket]")
 {
     constexpr zmq::detail::socket_base sb;
-    (void) sb;
+    static_assert(sb.handle() == nullptr, "socket_base handle should be constexpr");
+    static_assert(!sb, "socket_base bool conversion should be constexpr");
 }
 #endif
 
