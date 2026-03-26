@@ -308,7 +308,7 @@ class error_t : public std::exception
     {
         return zmq_strerror(errnum);
     }
-    int num() const ZMQ_NOTHROW { return errnum; }
+    ZMQ_CONSTEXPR_FN int num() const ZMQ_NOTHROW { return errnum; }
 
   private:
     int errnum;
@@ -751,8 +751,12 @@ class message_t
         std::swap(msg, other.msg);
     }
 
+#ifdef ZMQ_EXTENDED_CONSTEXPR
+    ZMQ_NODISCARD ZMQ_EXTENDED_CONSTEXPR zmq_msg_t *handle() ZMQ_NOTHROW { return &msg; }
+#else
     ZMQ_NODISCARD zmq_msg_t *handle() ZMQ_NOTHROW { return &msg; }
-    ZMQ_NODISCARD const zmq_msg_t *handle() const ZMQ_NOTHROW { return &msg; }
+#endif
+    ZMQ_NODISCARD ZMQ_CONSTEXPR_FN const zmq_msg_t *handle() const ZMQ_NOTHROW { return &msg; }
 
   private:
     //  The underlying message
@@ -910,11 +914,19 @@ class context_t
     //  Be careful with this, it's probably only useful for
     //  using the C api together with an existing C++ api.
     //  Normally you should never need to use this.
+#ifdef ZMQ_EXTENDED_CONSTEXPR
+    ZMQ_EXPLICIT ZMQ_EXTENDED_CONSTEXPR operator void *() ZMQ_NOTHROW { return ptr; }
+#else
     ZMQ_EXPLICIT operator void *() ZMQ_NOTHROW { return ptr; }
+#endif
 
-    ZMQ_EXPLICIT operator void const *() const ZMQ_NOTHROW { return ptr; }
+    ZMQ_EXPLICIT ZMQ_CONSTEXPR_FN operator void const *() const ZMQ_NOTHROW { return ptr; }
 
+#ifdef ZMQ_EXTENDED_CONSTEXPR
+    ZMQ_NODISCARD ZMQ_EXTENDED_CONSTEXPR void *handle() ZMQ_NOTHROW { return ptr; }
+#else
     ZMQ_NODISCARD void *handle() ZMQ_NOTHROW { return ptr; }
+#endif
 
     ZMQ_DEPRECATED("from 4.7.0, use handle() != nullptr instead")
     operator bool() const ZMQ_NOTHROW { return ptr != ZMQ_NULLPTR; }
@@ -1765,8 +1777,8 @@ namespace detail
 class socket_base
 {
   public:
-    socket_base() ZMQ_NOTHROW : _handle(ZMQ_NULLPTR) {}
-    ZMQ_EXPLICIT socket_base(void *handle) ZMQ_NOTHROW : _handle(handle) {}
+    ZMQ_CONSTEXPR_FN socket_base() ZMQ_NOTHROW : _handle(ZMQ_NULLPTR) {}
+    ZMQ_EXPLICIT ZMQ_CONSTEXPR_FN socket_base(void *handle) ZMQ_NOTHROW : _handle(handle) {}
 
     template<typename T>
     ZMQ_CPP11_DEPRECATED("from 4.7.0, use `set` taking option from zmq::sockopt")
@@ -2164,11 +2176,11 @@ ZMQ_CONSTEXPR_VAR from_handle_t from_handle =
 class socket_ref : public detail::socket_base
 {
   public:
-    socket_ref() ZMQ_NOTHROW : detail::socket_base() {}
+    ZMQ_CONSTEXPR_FN socket_ref() ZMQ_NOTHROW : detail::socket_base() {}
 #ifdef ZMQ_CPP11
-    socket_ref(std::nullptr_t) ZMQ_NOTHROW : detail::socket_base() {}
+    ZMQ_CONSTEXPR_FN socket_ref(std::nullptr_t) ZMQ_NOTHROW : detail::socket_base() {}
 #endif
-    socket_ref(from_handle_t /*fh*/, void *handle) ZMQ_NOTHROW
+    ZMQ_CONSTEXPR_FN socket_ref(from_handle_t /*fh*/, void *handle) ZMQ_NOTHROW
         : detail::socket_base(handle)
     {
     }
@@ -2281,9 +2293,13 @@ class socket_t : public detail::socket_base
 
     ~socket_t() ZMQ_NOTHROW { close(); }
 
+#ifdef ZMQ_EXTENDED_CONSTEXPR
+    ZMQ_EXTENDED_CONSTEXPR operator void *() ZMQ_NOTHROW { return _handle; }
+#else
     operator void *() ZMQ_NOTHROW { return _handle; }
+#endif
 
-    operator void const *() const ZMQ_NOTHROW { return _handle; }
+    ZMQ_CONSTEXPR_FN operator void const *() const ZMQ_NOTHROW { return _handle; }
 
     void close() ZMQ_NOTHROW
     {
