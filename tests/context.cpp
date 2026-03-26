@@ -9,8 +9,9 @@ static_assert(std::is_nothrow_swappable<zmq::context_t>::value,
 #ifdef ZMQ_CPP11
 constexpr zmq::recv_buffer_size truncated_size{0u, 1u};
 constexpr zmq::recv_buffer_size full_size{1u, 1u};
-static_assert(truncated_size.truncated(),
-              "recv_buffer_size::truncated should be constexpr for truncated buffers");
+static_assert(
+  truncated_size.truncated(),
+  "recv_buffer_size::truncated should be constexpr for truncated buffers");
 static_assert(!full_size.truncated(),
               "recv_buffer_size::truncated should be constexpr for full buffers");
 

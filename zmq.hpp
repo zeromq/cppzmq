@@ -752,11 +752,17 @@ class message_t
     }
 
 #ifdef ZMQ_EXTENDED_CONSTEXPR
-    ZMQ_NODISCARD ZMQ_EXTENDED_CONSTEXPR zmq_msg_t *handle() ZMQ_NOTHROW { return &msg; }
+    ZMQ_NODISCARD ZMQ_EXTENDED_CONSTEXPR zmq_msg_t *handle() ZMQ_NOTHROW
+    {
+        return &msg;
+    }
 #else
     ZMQ_NODISCARD zmq_msg_t *handle() ZMQ_NOTHROW { return &msg; }
 #endif
-    ZMQ_NODISCARD ZMQ_CONSTEXPR_FN const zmq_msg_t *handle() const ZMQ_NOTHROW { return &msg; }
+    ZMQ_NODISCARD ZMQ_CONSTEXPR_FN const zmq_msg_t *handle() const ZMQ_NOTHROW
+    {
+        return &msg;
+    }
 
   private:
     //  The underlying message
@@ -920,7 +926,10 @@ class context_t
     ZMQ_EXPLICIT operator void *() ZMQ_NOTHROW { return ptr; }
 #endif
 
-    ZMQ_EXPLICIT ZMQ_CONSTEXPR_FN operator void const *() const ZMQ_NOTHROW { return ptr; }
+    ZMQ_EXPLICIT ZMQ_CONSTEXPR_FN operator void const *() const ZMQ_NOTHROW
+    {
+        return ptr;
+    }
 
 #ifdef ZMQ_EXTENDED_CONSTEXPR
     ZMQ_NODISCARD ZMQ_EXTENDED_CONSTEXPR void *handle() ZMQ_NOTHROW { return ptr; }
@@ -977,7 +986,10 @@ template<class T> class trivial_optional
     using value_type = T;
 
     trivial_optional() = default;
-    ZMQ_CONSTEXPR_FN trivial_optional(T value) noexcept : _value(value), _has_value(true) {}
+    ZMQ_CONSTEXPR_FN trivial_optional(T value) noexcept :
+        _value(value), _has_value(true)
+    {
+    }
 
     const T *operator->() const noexcept
     {
@@ -1778,7 +1790,10 @@ class socket_base
 {
   public:
     ZMQ_CONSTEXPR_FN socket_base() ZMQ_NOTHROW : _handle(ZMQ_NULLPTR) {}
-    ZMQ_EXPLICIT ZMQ_CONSTEXPR_FN socket_base(void *handle) ZMQ_NOTHROW : _handle(handle) {}
+    ZMQ_EXPLICIT ZMQ_CONSTEXPR_FN socket_base(void *handle) ZMQ_NOTHROW
+        : _handle(handle)
+    {
+    }
 
     template<typename T>
     ZMQ_CPP11_DEPRECATED("from 4.7.0, use `set` taking option from zmq::sockopt")
@@ -2136,11 +2151,17 @@ class socket_base
 #endif
 
 #ifdef ZMQ_EXTENDED_CONSTEXPR
-    ZMQ_NODISCARD ZMQ_EXTENDED_CONSTEXPR void *handle() ZMQ_NOTHROW { return _handle; }
+    ZMQ_NODISCARD ZMQ_EXTENDED_CONSTEXPR void *handle() ZMQ_NOTHROW
+    {
+        return _handle;
+    }
 #else
     ZMQ_NODISCARD void *handle() ZMQ_NOTHROW { return _handle; }
 #endif
-    ZMQ_NODISCARD ZMQ_CONSTEXPR_FN const void *handle() const ZMQ_NOTHROW { return _handle; }
+    ZMQ_NODISCARD ZMQ_CONSTEXPR_FN const void *handle() const ZMQ_NOTHROW
+    {
+        return _handle;
+    }
 
     ZMQ_EXPLICIT ZMQ_CONSTEXPR_FN operator bool() const ZMQ_NOTHROW
     {
@@ -2195,7 +2216,9 @@ class socket_ref : public detail::socket_base
   public:
     ZMQ_CONSTEXPR_FN socket_ref() ZMQ_NOTHROW : detail::socket_base() {}
 #ifdef ZMQ_CPP11
-    ZMQ_CONSTEXPR_FN socket_ref(std::nullptr_t) ZMQ_NOTHROW : detail::socket_base() {}
+    ZMQ_CONSTEXPR_FN socket_ref(std::nullptr_t) ZMQ_NOTHROW : detail::socket_base()
+    {
+    }
 #endif
     ZMQ_CONSTEXPR_FN socket_ref(from_handle_t /*fh*/, void *handle) ZMQ_NOTHROW
         : detail::socket_base(handle)
