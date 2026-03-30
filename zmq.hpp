@@ -985,7 +985,7 @@ template<class T> class trivial_optional
     static_assert(std::is_trivial<T>::value, "T must be trivial");
     using value_type = T;
 
-    trivial_optional() = default;
+    ZMQ_CONSTEXPR_FN trivial_optional() = default;
     ZMQ_CONSTEXPR_FN trivial_optional(T value) noexcept :
         _value(value), _has_value(true)
     {
@@ -2337,11 +2337,7 @@ class socket_t : public detail::socket_base
 
     ~socket_t() ZMQ_NOTHROW { close(); }
 
-#ifdef ZMQ_EXTENDED_CONSTEXPR
     ZMQ_EXTENDED_CONSTEXPR operator void *() ZMQ_NOTHROW { return _handle; }
-#else
-    operator void *() ZMQ_NOTHROW { return _handle; }
-#endif
 
     ZMQ_CONSTEXPR_FN operator void const *() const ZMQ_NOTHROW { return _handle; }
 
