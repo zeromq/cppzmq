@@ -2337,7 +2337,11 @@ class socket_t : public detail::socket_base
 
     ~socket_t() ZMQ_NOTHROW { close(); }
 
+#ifdef ZMQ_EXTENDED_CONSTEXPR
     ZMQ_EXTENDED_CONSTEXPR operator void *() ZMQ_NOTHROW { return _handle; }
+#else
+    operator void *() ZMQ_NOTHROW { return _handle; }
+#endif
 
     ZMQ_CONSTEXPR_FN operator void const *() const ZMQ_NOTHROW { return _handle; }
 
