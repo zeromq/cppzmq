@@ -2899,7 +2899,8 @@ class timers
 
     id_t add(std::chrono::milliseconds interval, zmq_timer_fn handler, void *arg)
     {
-        id_t timer_id = zmq_timers_add(_timers, interval.count(), handler, arg);
+        id_t timer_id = zmq_timers_add(
+          _timers, static_cast<size_t>(interval.count()), handler, arg);
         if (timer_id == -1)
             throw zmq::error_t();
         return timer_id;
@@ -2914,7 +2915,8 @@ class timers
 
     void set_interval(id_t timer_id, std::chrono::milliseconds interval)
     {
-        int rc = zmq_timers_set_interval(_timers, timer_id, interval.count());
+        int rc = zmq_timers_set_interval(_timers, timer_id,
+                                         static_cast<size_t>(interval.count()));
         if (rc == -1)
             throw zmq::error_t();
     }
