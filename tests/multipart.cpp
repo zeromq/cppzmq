@@ -6,11 +6,19 @@
 #ifdef ZMQ_HAS_RVALUE_REFS
 
 #ifdef ZMQ_CPP17
-static_assert(std::is_invocable<decltype(&zmq::multipart_t::send),
+using multipart_send_int_t = bool (zmq::multipart_t::*)(zmq::socket_ref, int);
+using multipart_send_flags_t = bool (zmq::multipart_t::*)(zmq::socket_ref,
+                                                          zmq::send_flags);
+static_assert(std::is_invocable<multipart_send_int_t,
                                 zmq::multipart_t *,
                                 zmq::socket_ref,
                                 int>::value,
               "Can't multipart_t::send with socket_ref");
+static_assert(std::is_invocable<multipart_send_flags_t,
+                                zmq::multipart_t *,
+                                zmq::socket_ref,
+                                zmq::send_flags>::value,
+              "Can't multipart_t::send with send_flags");
 static_assert(std::is_invocable<decltype(&zmq::multipart_t::recv),
                                 zmq::multipart_t *,
                                 zmq::socket_ref,
@@ -60,7 +68,7 @@ TEST_CASE("multipart legacy test", "[multipart]")
     multipart.push(message_t("Hello", 5));
     assert(multipart.size() == 1);
 
-    ok = multipart.send(output);
+    ok = multipart.send(output, send_flags::none);
     assert(multipart.empty());
     assert(ok);
 

@@ -491,6 +491,13 @@ class multipart_t
         return true;
     }
 
+#ifdef ZMQ_CPP11
+    bool send(socket_ref socket, send_flags flags)
+    {
+        return send(socket, static_cast<int>(flags));
+    }
+#endif
+
     // Concatenate other multipart to front
     void prepend(multipart_t &&other)
     {
