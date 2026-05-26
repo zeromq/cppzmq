@@ -14,6 +14,15 @@ TEST_CASE("socket default ctor", "[socket]")
     zmq::socket_t socket;
 }
 
+#if defined(ZMQ_CPP11) && defined(ZMQ_CONSTEXPR_FN)
+TEST_CASE("socket_base constexpr init", "[socket]")
+{
+    constexpr zmq::detail::socket_base sb;
+    static_assert(sb.handle() == nullptr, "socket_base handle should be constexpr");
+    static_assert(!sb, "socket_base bool conversion should be constexpr");
+}
+#endif
+
 TEST_CASE("socket create destroy", "[socket]")
 {
     zmq::context_t context;
