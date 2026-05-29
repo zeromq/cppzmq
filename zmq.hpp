@@ -2970,6 +2970,11 @@ inline std::string curve_public(const std::string &secret)
     return public_key_buffer;
 }
 
+static constexpr char *curve_default_client_public_key = "Yne@$w-vo<fVvi]a<NY6T1ed:M$fCG*[IaLV{hID";
+static constexpr char *curve_default_client_secret_key = "D:)Q[IlAW!ahhC2ac:9*A}h:p?([4%wOTJ%JR%cs";
+static constexpr char *curve_default_server_public_key = "rq:rM>}U?@Lns47E1%kR.o@n%FcmmsL/@{H8]yf7";
+static constexpr char *curve_default_server_secret_key = "JTKVSB%%)wK0E.X)V>+}o?pNmC{O&4W4b!Ni{Lh6";
+
 #endif
 
 inline std::string z85_encode(const std::vector<uint8_t> &data)
