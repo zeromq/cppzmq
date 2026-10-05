@@ -6,6 +6,27 @@ static_assert(std::is_nothrow_swappable<zmq::context_t>::value,
               "context_t should be nothrow swappable");
 #endif
 
+#ifdef ZMQ_CPP11
+constexpr zmq::recv_buffer_size truncated_size{0u, 1u};
+constexpr zmq::recv_buffer_size full_size{1u, 1u};
+static_assert(
+  truncated_size.truncated(),
+  "recv_buffer_size::truncated should be constexpr for truncated buffers");
+static_assert(!full_size.truncated(),
+              "recv_buffer_size::truncated should be constexpr for full buffers");
+
+#if !CPPZMQ_HAS_OPTIONAL
+constexpr zmq::detail::trivial_optional<size_t> empty_optional;
+constexpr zmq::detail::trivial_optional<size_t> value_optional(42u);
+static_assert(!empty_optional.has_value(),
+              "trivial_optional::has_value should be constexpr for empty state");
+static_assert(value_optional.has_value(),
+              "trivial_optional::has_value should be constexpr for value state");
+static_assert(static_cast<bool>(value_optional),
+              "trivial_optional::operator bool should be constexpr");
+#endif
+#endif
+
 TEST_CASE("context construct default and destroy", "[context]")
 {
     zmq::context_t context;

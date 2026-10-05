@@ -19,6 +19,16 @@ TEST_CASE("socket_ref default init", "[socket_ref]")
     CHECK(sr.handle() == nullptr);
 }
 
+#if defined(ZMQ_CPP11) && defined(ZMQ_CONSTEXPR_FN)
+TEST_CASE("socket_ref constexpr init", "[socket_ref]")
+{
+    constexpr zmq::socket_ref sr;
+    static_assert(sr.handle() == nullptr, "socket_ref handle should be constexpr");
+    static_assert(sr == nullptr,
+                  "socket_ref nullptr comparison should be constexpr");
+}
+#endif
+
 TEST_CASE("socket_ref create from nullptr", "[socket_ref]")
 {
     zmq::socket_ref sr = nullptr;
