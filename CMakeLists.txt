@@ -27,7 +27,7 @@ if (NOT TARGET libzmq AND NOT TARGET libzmq-static)
   endif()
 endif()
 
-message(STATUS "cppzmq v${cppzmq_VERSION}")
+message(DEBUG "cppzmq v${cppzmq_VERSION}")
 
 set(CPPZMQ_HEADERS
     zmq.hpp
