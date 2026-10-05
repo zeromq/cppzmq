@@ -476,8 +476,8 @@ class multipart_t
         flags &= ~(ZMQ_SNDMORE);
         bool more = size() > 0;
         while (more) {
-            message_t message = pop();
-            more = size() > 0;
+            message_t &message = m_parts.front();
+            more = size() > 1;
 #ifdef ZMQ_CPP11
             if (!socket.send(message, static_cast<send_flags>(
                                         (more ? ZMQ_SNDMORE : 0) | flags)))
@@ -486,6 +486,7 @@ class multipart_t
             if (!socket.send(message, (more ? ZMQ_SNDMORE : 0) | flags))
                 return false;
 #endif
+            m_parts.pop_front();
         }
         clear();
         return true;
