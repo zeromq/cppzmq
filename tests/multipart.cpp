@@ -6,6 +6,51 @@
 
 #ifdef ZMQ_HAS_RVALUE_REFS
 
+TEST_CASE("multipart send handles empty messages", "[multipart]")
+{
+    zmq::context_t context;
+    zmq::socket_t output(context, zmq::socket_type::push);
+    zmq::multipart_t message;
+    REQUIRE(message.send(output, ZMQ_DONTWAIT | ZMQ_SNDMORE));
+    REQUIRE(
+      message.send(output, zmq::send_flags::dontwait | zmq::send_flags::sndmore));
+    CHECK(message.empty());
+}
+
+TEST_CASE("multipart send ignores caller SNDMORE", "[multipart]")
+{
+    const int part_count = GENERATE(1, 3);
+    zmq::context_t context;
+    zmq::socket_t output(context, zmq::socket_type::push);
+    zmq::socket_t input(context, zmq::socket_type::pull);
+    output.set(zmq::sockopt::linger, 0);
+    output.set(zmq::sockopt::sndtimeo, 1000);
+    input.set(zmq::sockopt::rcvtimeo, 1000);
+    output.bind("inproc://multipart.send.sndmore");
+    input.connect("inproc://multipart.send.sndmore");
+    zmq::multipart_t message;
+    message.addstr("");
+    if (part_count > 1) {
+        message.addstr("middle");
+        message.addstr("last");
+    }
+    const zmq::multipart_t expected = message.clone();
+
+    SECTION("integer flags")
+    {
+        REQUIRE(message.send(output, ZMQ_SNDMORE));
+    }
+    SECTION("send_flags overload")
+    {
+        REQUIRE(message.send(output, zmq::send_flags::sndmore));
+    }
+
+    CHECK(message.empty());
+    zmq::multipart_t received;
+    REQUIRE(received.recv(input));
+    CHECK(received == expected);
+}
+
 TEST_CASE("multipart send retains parts on EAGAIN", "[multipart]")
 {
     const int part_count = GENERATE(1, 3);
@@ -122,11 +167,10 @@ TEST_CASE("multipart send retains parts on exception", "[multipart]")
 using multipart_send_int_t = bool (zmq::multipart_t::*)(zmq::socket_ref, int);
 using multipart_send_flags_t = bool (zmq::multipart_t::*)(zmq::socket_ref,
                                                           zmq::send_flags);
-static_assert(std::is_invocable<multipart_send_int_t,
-                                zmq::multipart_t *,
-                                zmq::socket_ref,
-                                int>::value,
-              "Can't multipart_t::send with socket_ref");
+static_assert(
+  std::is_invocable<multipart_send_int_t, zmq::multipart_t *, zmq::socket_ref, int>::
+    value,
+  "Can't multipart_t::send with socket_ref");
 static_assert(std::is_invocable<multipart_send_flags_t,
                                 zmq::multipart_t *,
                                 zmq::socket_ref,
